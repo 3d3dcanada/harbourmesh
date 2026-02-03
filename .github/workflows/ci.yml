@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./app
+        run: npm ci
+
+      - name: Run linter
+        working-directory: ./app
+        run: npm run lint
+
+      - name: Run type check
+        working-directory: ./app
+        run: npm run type-check
+
+      - name: Run tests
+        working-directory: ./app
+        run: npm test -- --coverage
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          directory: ./app/coverage
+          fail_ci_if_error: true
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./app
+        run: npm ci
+
+      - name: Build DZIP package
+        working-directory: ./app
+        run: npm run build:dzip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: harbourmesh-dzip
+          path: app/dist/*.dzip
+
+  security-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run npm audit
+        working-directory: ./app
+        run: npm audit --production --audit-level=high
+
+      - name: Run dependency review
+        uses: actions/dependency-review-action@v4
+        with:
+          directory: ./app
