@@ -132,12 +132,21 @@ const artifactManifest: NBPilotChartPackageArtifactManifest = {
       sourceIds: ['geonb-nbhn-watercourse'],
       excludedSourceIds: ['chs-official-digital-products'],
       warnings: ['PMTiles pending'],
+      sourceFeatureCount: 3,
+      sourceFeatureSummaries: [{
+        sourceId: 'geonb-nbhn-watercourse',
+        sourceLabel: 'GeoNB NBHN watercourses',
+        fetchedFeatureCount: 3,
+        maxFeatures: 10,
+        truncated: false,
+      }],
       content: {
         type: 'FeatureCollection',
         metadata: {
           schemaVersion: 'harbourmesh.chart-package-artifact-content.v1',
           officialChartDataIncluded: false,
           referenceOnly: true,
+          sourceFeatureCount: 3,
         },
       },
     },
@@ -155,6 +164,14 @@ const artifactManifest: NBPilotChartPackageArtifactManifest = {
       sourceIds: ['geonb-nbhn-watercourse'],
       excludedSourceIds: ['chs-official-digital-products'],
       warnings: ['PMTiles pending'],
+      sourceFeatureCount: 3,
+      sourceFeatureSummaries: [{
+        sourceId: 'geonb-nbhn-watercourse',
+        sourceLabel: 'GeoNB NBHN watercourses',
+        fetchedFeatureCount: 3,
+        maxFeatures: 10,
+        truncated: false,
+      }],
       tileSummary: {
         layerName: 'harbourmesh_reference',
         minZoom: 6,

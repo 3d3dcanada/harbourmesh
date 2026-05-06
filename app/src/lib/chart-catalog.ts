@@ -92,12 +92,21 @@ export type NBPilotChartPackageArtifact = {
   sourceIds: string[];
   excludedSourceIds: string[];
   warnings: string[];
+  sourceFeatureCount: number;
+  sourceFeatureSummaries: Array<{
+    sourceId: string;
+    sourceLabel: string;
+    fetchedFeatureCount: number;
+    maxFeatures: number;
+    truncated: boolean;
+  }>;
   content?: {
     type: 'FeatureCollection';
     metadata: {
       schemaVersion: 'harbourmesh.chart-package-artifact-content.v1';
       officialChartDataIncluded: false;
       referenceOnly: true;
+      sourceFeatureCount: number;
     };
   };
   tileSummary?: {
@@ -192,6 +201,8 @@ function isChartPackageArtifactManifest(value: unknown): value is NBPilotChartPa
       /^[a-f0-9]{64}$/.test(artifact.sha256) &&
       Array.isArray(artifact.sourceIds) &&
       Array.isArray(artifact.excludedSourceIds) &&
+      typeof artifact.sourceFeatureCount === 'number' &&
+      Array.isArray(artifact.sourceFeatureSummaries) &&
       (
         artifact.format === 'geojson'
           ? artifact.content?.type === 'FeatureCollection' &&

@@ -5,11 +5,13 @@ import { join, resolve } from 'node:path';
 import geojsonvt from 'geojson-vt';
 import initSqlJs from 'sql.js';
 import { fromGeojsonVt } from 'vt-pbf';
-import type { FeatureCollection } from 'geojson';
+import type { Feature, FeatureCollection, GeoJsonProperties, Geometry } from 'geojson';
 import {
+  NB_PILOT_CHART_SOURCES,
   getNBPilotChartPackageManifest,
   type NBPilotChartPackage,
 } from './chart-catalog.js';
+import { fetchGeoNBSourceFeatures, type GeoNBFeatureFetchResult } from './geonb-feature-client.js';
 
 const require = createRequire(import.meta.url);
 const MBTILES_LAYER_NAME = 'harbourmesh_reference';
@@ -26,31 +28,14 @@ type PolygonGeometry = {
   ]];
 };
 
-type ChartPackageArtifactContent = {
-  type: 'FeatureCollection';
-  features: Array<{
-    type: 'Feature';
-    id: string;
-    geometry: PolygonGeometry;
-    properties: {
-      packageId: string;
-      label: string;
-      region: 'NB_PILOT';
-      intendedUse: 'reference_only';
-      minZoom: number;
-      maxZoom: number;
-      sourceIds: string[];
-      excludedSourceIds: string[];
-      communityOverlayIncluded: boolean;
-      officialChartDataIncluded: false;
-    };
-  }>;
+type ChartPackageArtifactContent = FeatureCollection<Geometry, GeoJsonProperties> & {
   metadata: {
     schemaVersion: 'harbourmesh.chart-package-artifact-content.v1';
     generatedAt: string;
     packageId: string;
     referenceOnly: true;
     officialChartDataIncluded: false;
+    sourceFeatureCount: number;
   };
 };
 
@@ -71,6 +56,14 @@ export type NBPilotChartPackageArtifact = {
   sourceIds: string[];
   excludedSourceIds: string[];
   warnings: string[];
+  sourceFeatureCount: number;
+  sourceFeatureSummaries: Array<{
+    sourceId: string;
+    sourceLabel: string;
+    fetchedFeatureCount: number;
+    maxFeatures: number;
+    truncated: boolean;
+  }>;
   content?: ChartPackageArtifactContent;
   tileSummary?: {
     layerName: typeof MBTILES_LAYER_NAME;
@@ -111,10 +104,24 @@ export type NBPilotChartPackageArtifactReleaseManifest = {
 export type WriteNBPilotChartPackageArtifactsOptions = {
   outputDir: string;
   generatedAt?: string;
+  includeGeoNBFeatures?: boolean;
+  maxGeoNBFeaturesPerSource?: number;
+  fetchImpl?: typeof fetch;
+};
+
+type BuildNBPilotChartPackageArtifactsOptions = {
+  includeGeoNBFeatures?: boolean;
+  maxGeoNBFeaturesPerSource?: number;
+  fetchImpl?: typeof fetch;
 };
 
 type BuiltNBPilotChartPackageArtifact = NBPilotChartPackageArtifact & {
   bytes: Buffer;
+};
+
+type PackageSourceFeatureBundle = {
+  features: Feature<Geometry, GeoJsonProperties>[];
+  summaries: NBPilotChartPackageArtifact['sourceFeatureSummaries'];
 };
 
 type TileAddress = {
@@ -150,7 +157,8 @@ function packageBoundsToPolygon(chartPackage: NBPilotChartPackage): PolygonGeome
 
 function buildArtifactContent(
   chartPackage: NBPilotChartPackage,
-  generatedAt: string
+  generatedAt: string,
+  sourceFeatures: Feature<Geometry, GeoJsonProperties>[] = []
 ): ChartPackageArtifactContent {
   return {
     type: 'FeatureCollection',
@@ -170,8 +178,10 @@ function buildArtifactContent(
           excludedSourceIds: chartPackage.excludedSourceIds,
           communityOverlayIncluded: chartPackage.communityOverlayIncluded,
           officialChartDataIncluded: false,
+          artifactKind: 'package_boundary',
         },
       },
+      ...sourceFeatures,
     ],
     metadata: {
       schemaVersion: 'harbourmesh.chart-package-artifact-content.v1',
@@ -179,6 +189,7 @@ function buildArtifactContent(
       packageId: chartPackage.id,
       referenceOnly: true,
       officialChartDataIncluded: false,
+      sourceFeatureCount: sourceFeatures.length,
     },
   };
 }
@@ -196,9 +207,10 @@ function hashBytes(bytes: Buffer | string): { byteLength: number; sha256: string
 
 function buildGeoJsonArtifact(
   chartPackage: NBPilotChartPackage,
-  generatedAt: string
+  generatedAt: string,
+  sourceBundle: PackageSourceFeatureBundle
 ): BuiltNBPilotChartPackageArtifact {
-  const content = buildArtifactContent(chartPackage, generatedAt);
+  const content = buildArtifactContent(chartPackage, generatedAt, sourceBundle.features);
   const bytes = Buffer.from(serializeArtifactContent(content));
   const { byteLength, sha256 } = hashBytes(bytes);
 
@@ -219,6 +231,8 @@ function buildGeoJsonArtifact(
       ...chartPackage.warnings,
       'GeoJSON is a reference package manifest artifact, not a certified navigation chart.',
     ],
+    sourceFeatureCount: sourceBundle.features.length,
+    sourceFeatureSummaries: sourceBundle.summaries,
     content,
     bytes,
   };
@@ -259,25 +273,18 @@ function enumerateTiles(bounds: NBPilotChartPackage['bounds'], minZoom: number, 
 function artifactContentToGeoJson(content: ChartPackageArtifactContent): FeatureCollection {
   return {
     type: 'FeatureCollection',
-    features: content.features.map((feature) => ({
-      type: 'Feature',
-      id: feature.id,
-      geometry: feature.geometry,
-      properties: {
-        ...feature.properties,
-        artifactKind: 'package_boundary',
-      },
-    })),
+    features: content.features,
   };
 }
 
 async function buildMbTilesArtifact(
   chartPackage: NBPilotChartPackage,
-  generatedAt: string
+  generatedAt: string,
+  sourceBundle: PackageSourceFeatureBundle
 ): Promise<BuiltNBPilotChartPackageArtifact> {
   const minZoom = chartPackage.minZoom;
   const maxZoom = Math.min(chartPackage.maxZoom, chartPackage.minZoom + MBTILES_ZOOM_SPAN);
-  const content = buildArtifactContent(chartPackage, generatedAt);
+  const content = buildArtifactContent(chartPackage, generatedAt, sourceBundle.features);
   const tileIndex = geojsonvt(artifactContentToGeoJson(content), {
     maxZoom,
     indexMaxZoom: maxZoom,
@@ -321,6 +328,8 @@ async function buildMbTilesArtifact(
               intendedUse: 'String',
               communityOverlayIncluded: 'Boolean',
               officialChartDataIncluded: 'Boolean',
+              harbourmeshSourceId: 'String',
+              harbourmeshReferenceOnly: 'Boolean',
             },
           },
         ],
@@ -362,8 +371,12 @@ async function buildMbTilesArtifact(
       excludedSourceIds: chartPackage.excludedSourceIds,
       warnings: [
         ...chartPackage.warnings,
-        'MBTiles contains starter reference boundary/source-policy vector tiles; eligible hydrography feature conversion still has to be expanded.',
+        sourceBundle.features.length > 0
+          ? 'MBTiles contains capped eligible GeoNB source features plus package boundary/source-policy tiles; full production tiling still has to remove pilot feature limits.'
+          : 'MBTiles contains starter reference boundary/source-policy vector tiles; eligible hydrography feature conversion still has to be expanded.',
       ],
+      sourceFeatureCount: sourceBundle.features.length,
+      sourceFeatureSummaries: sourceBundle.summaries,
       tileSummary: {
         layerName: MBTILES_LAYER_NAME,
         minZoom,
@@ -378,12 +391,58 @@ async function buildMbTilesArtifact(
   }
 }
 
-async function buildArtifacts(generatedAt: string): Promise<BuiltNBPilotChartPackageArtifact[]> {
+function summarizeGeoNBFetch(fetchResult: GeoNBFeatureFetchResult): NBPilotChartPackageArtifact['sourceFeatureSummaries'][number] {
+  return {
+    sourceId: fetchResult.sourceId,
+    sourceLabel: fetchResult.sourceLabel,
+    fetchedFeatureCount: fetchResult.fetchedFeatureCount,
+    maxFeatures: fetchResult.maxFeatures,
+    truncated: fetchResult.truncated,
+  };
+}
+
+async function loadPackageSourceFeatures(
+  chartPackage: NBPilotChartPackage,
+  options: BuildNBPilotChartPackageArtifactsOptions
+): Promise<PackageSourceFeatureBundle> {
+  if (!options.includeGeoNBFeatures) {
+    return {
+      features: [],
+      summaries: [],
+    };
+  }
+
+  const sourceById = new Map(NB_PILOT_CHART_SOURCES.map((source) => [source.id, source]));
+  const maxFeatures = options.maxGeoNBFeaturesPerSource ?? 100;
+  const fetchResults = await Promise.all(
+    chartPackage.sourceIds
+      .map((sourceId) => sourceById.get(sourceId))
+      .filter((source): source is typeof NB_PILOT_CHART_SOURCES[number] => source?.kind === 'wms')
+      .map((source) => fetchGeoNBSourceFeatures({
+        source,
+        packageId: chartPackage.id,
+        bounds: chartPackage.bounds,
+        maxFeatures,
+        fetchImpl: options.fetchImpl,
+      }))
+  );
+
+  return {
+    features: fetchResults.flatMap((result) => result.collection.features),
+    summaries: fetchResults.map(summarizeGeoNBFetch),
+  };
+}
+
+async function buildArtifacts(
+  generatedAt: string,
+  options: BuildNBPilotChartPackageArtifactsOptions = {}
+): Promise<BuiltNBPilotChartPackageArtifact[]> {
   const manifest = getNBPilotChartPackageManifest(generatedAt);
   const artifacts: BuiltNBPilotChartPackageArtifact[] = [];
   for (const chartPackage of manifest.packages) {
-    artifacts.push(buildGeoJsonArtifact(chartPackage, generatedAt));
-    artifacts.push(await buildMbTilesArtifact(chartPackage, generatedAt));
+    const sourceBundle = await loadPackageSourceFeatures(chartPackage, options);
+    artifacts.push(buildGeoJsonArtifact(chartPackage, generatedAt, sourceBundle));
+    artifacts.push(await buildMbTilesArtifact(chartPackage, generatedAt, sourceBundle));
   }
 
   return artifacts;
@@ -395,9 +454,10 @@ function toPublicArtifact(artifact: BuiltNBPilotChartPackageArtifact): NBPilotCh
 }
 
 export async function getNBPilotChartPackageArtifactManifest(
-  generatedAt = new Date().toISOString()
+  generatedAt = new Date().toISOString(),
+  options: BuildNBPilotChartPackageArtifactsOptions = {}
 ): Promise<NBPilotChartPackageArtifactManifest> {
-  const artifacts = await buildArtifacts(generatedAt);
+  const artifacts = await buildArtifacts(generatedAt, options);
 
   return {
     id: 'nb-pilot-chart-package-artifacts',
@@ -418,8 +478,13 @@ export async function writeNBPilotChartPackageArtifacts(
 ): Promise<NBPilotChartPackageArtifactReleaseManifest> {
   const outputDir = resolve(options.outputDir);
   const generatedAt = options.generatedAt ?? new Date().toISOString();
-  const manifest = await getNBPilotChartPackageArtifactManifest(generatedAt);
-  const builtArtifacts = await buildArtifacts(generatedAt);
+  const buildOptions: BuildNBPilotChartPackageArtifactsOptions = {
+    includeGeoNBFeatures: options.includeGeoNBFeatures,
+    maxGeoNBFeaturesPerSource: options.maxGeoNBFeaturesPerSource,
+    fetchImpl: options.fetchImpl,
+  };
+  const manifest = await getNBPilotChartPackageArtifactManifest(generatedAt, buildOptions);
+  const builtArtifacts = await buildArtifacts(generatedAt, buildOptions);
   await mkdir(outputDir, { recursive: true });
 
   const releaseFiles: NBPilotChartPackageArtifactReleaseFile[] = [];
@@ -439,6 +504,8 @@ export async function writeNBPilotChartPackageArtifacts(
       sourceIds: artifact.sourceIds,
       excludedSourceIds: artifact.excludedSourceIds,
       warnings: artifact.warnings,
+      sourceFeatureCount: artifact.sourceFeatureCount,
+      sourceFeatureSummaries: artifact.sourceFeatureSummaries,
       tileSummary: artifact.tileSummary,
       relativePath: artifact.fileName,
     });
