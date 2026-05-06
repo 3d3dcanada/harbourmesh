@@ -43,7 +43,7 @@ Observed state:
 
 Last light checks:
 
-- `npm run test:run`: passing, 91 web tests.
+- `npm run test:run`: passing, 100 web tests.
 - `npm test` in `server`: passing, 9 API tests.
 - `npm run type-check`: passing.
 - `npm run type-check` in `server`: passing.
@@ -56,6 +56,7 @@ Last light checks:
 - Server API auth tests cover missing keys, accepted header keys, accepted Bearer keys, protected device registry reads, and fail-closed production-style config.
 - Server hazard review tests cover pending hazards being withheld from public GeoJSON until accepted, accepted hazards becoming overlay-eligible, and unknown hazard review returning 404.
 - Server chart package tests cover `/api/charts/nb/packages`, planned NB coast and inland-waterway packages, PMTiles/MBTiles/GeoJSON format declarations, community-overlay inclusion, and official CHS exclusion.
+- Web NMEA regression tests cover longitude degree-width parsing, 1990s RMC date handling, checksum rejection, DBT meter depth parsing, and legacy utility parser parity.
 - Local API smoke on port 3101: `/health`, `POST /api/community/soundings`, and `/api/community/soundings/summary` returned expected responses.
 - Local API smoke on port 3102: `POST /api/devices/register` and `GET /api/devices` returned expected responses.
 - Local API smoke on port 3103: `/health`, `POST /api/community/hazards`, and `/api/community/hazards/summary` returned expected responses.
@@ -88,6 +89,7 @@ Completed in the active checkout:
 - Split the frontend into lazy-loaded section chunks so the initial production bundle is smaller and the main app shell no longer trips Vite's oversized chunk warning.
 - Added configurable pilot API-key enforcement for community uploads and device registry endpoints, with public chart catalog, summaries, and reference overlay endpoints left readable.
 - Added pending-by-default hazard review for backend community hazards so public GeoJSON overlays only include accepted hazards.
+- Added NMEA 0183 parser regressions and fixed GGA field indexing, longitude degree parsing, RMC date/time handling, checksum rejection, and DBT offset handling.
 
 Still not done:
 

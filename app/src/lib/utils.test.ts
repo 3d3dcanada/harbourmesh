@@ -17,6 +17,8 @@ import {
   nauticalMilesToMeters,
   knotsToKmh,
   kmhToKnots,
+  parseNMEAGGA,
+  parseNMEARMC,
 } from './utils';
 
 describe('cn (className utility)', () => {
@@ -159,5 +161,25 @@ describe('Unit Conversions', () => {
       expect(kmhToKnots(1.852)).toBeCloseTo(1, 4);
       expect(kmhToKnots(18.52)).toBeCloseTo(10, 4);
     });
+  });
+});
+
+describe('legacy NMEA utilities', () => {
+  it('parses GGA longitudes with three degree digits', () => {
+    const gga = parseNMEAGGA('$GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47');
+
+    expect(gga?.latitude).toBeCloseTo(48.1173, 8);
+    expect(gga?.longitude).toBeCloseTo(11.5166666667, 8);
+    expect(gga).toMatchObject({
+      fixQuality: 1,
+      satellites: 8,
+    });
+  });
+
+  it('parses western RMC longitudes and 1990s dates', () => {
+    const rmc = parseNMEARMC('$GPRMC,235947,A,5540.123,N,01231.456,W,5.5,84.4,230394,003.1,W');
+
+    expect(rmc?.longitude).toBeCloseTo(-12.5242666667, 8);
+    expect(rmc?.date.toISOString()).toBe('1994-03-23T00:00:00.000Z');
   });
 });

@@ -310,8 +310,9 @@ function parseNMEACoordinate(
   if (!coordinate || !direction) return 0;
 
   const isNegative = direction === 'S' || direction === 'W';
-  const degrees = parseInt(coordinate.substring(0, 2), 10);
-  const minutes = parseFloat(coordinate.substring(2));
+  const degreeDigits = direction === 'E' || direction === 'W' ? 3 : 2;
+  const degrees = parseInt(coordinate.substring(0, degreeDigits), 10);
+  const minutes = parseFloat(coordinate.substring(degreeDigits));
 
   let decimal = degrees + minutes / 60;
   if (isNegative) decimal = -decimal;
@@ -343,14 +344,15 @@ export function parseNMEARMC(sentence: string): {
   const dateStr = parts[9];
   const day = parseInt(dateStr.substring(0, 2), 10);
   const month = parseInt(dateStr.substring(2, 4), 10) - 1;
-  const year = 2000 + parseInt(dateStr.substring(4, 6), 10);
+  const yearPart = parseInt(dateStr.substring(4, 6), 10);
+  const year = yearPart >= 80 ? 1900 + yearPart : 2000 + yearPart;
 
   return {
     latitude: lat,
     longitude: lon,
     speed: speedKnots * 1.852, // Convert to km/h
     course,
-    date: new Date(year, month, day),
+    date: new Date(Date.UTC(year, month, day)),
     valid,
   };
 }

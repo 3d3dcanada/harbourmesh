@@ -152,7 +152,7 @@ export function isValidNMEASentence(raw: string): boolean {
   if (!raw.includes('*') && raw.length > 50) return false; // Sentences without checksum should be short
   
   const sentence = parseNMEASentence(raw);
-  return sentence.type.length === 3 && sentence.talker.length === 2;
+  return sentence.type.length === 3 && sentence.talker.length === 2 && sentence.isValid;
 }
 
 // ============================================================================
@@ -170,10 +170,10 @@ export function parseGGASentence(sentence: NMEASentence): GPSPosition | null {
   
   const lat = parseCoordinate(fields[1], fields[2]);
   const lon = parseCoordinate(fields[3], fields[4]);
-  const fixQuality = parseInt(fields[6], 10) as FixQuality;
-  const satellites = parseInt(fields[7], 10) || 0;
-  const hdop = parseFloat(fields[8]) || 0;
-  const altitude = parseFloat(fields[9]) || 0;
+  const fixQuality = parseInt(fields[5], 10) as FixQuality;
+  const satellites = parseInt(fields[6], 10) || 0;
+  const hdop = parseFloat(fields[7]) || 0;
+  const altitude = parseFloat(fields[8]) || 0;
   
   // Parse timestamp
   const timeStr = fields[0];
@@ -227,9 +227,14 @@ export function parseRMCSentence(sentence: NMEASentence): {
   const dateStr = fields[8];
   const day = parseInt(dateStr.substring(0, 2), 10) || 1;
   const month = parseInt(dateStr.substring(2, 4), 10) || 0;
-  const year = 2000 + parseInt(dateStr.substring(4, 6), 10);
-  
-  const date = new Date(Date.UTC(year, month - 1, day));
+  const yearPart = parseInt(dateStr.substring(4, 6), 10) || 0;
+  const year = yearPart >= 80 ? 1900 + yearPart : 2000 + yearPart;
+
+  const timeStr = fields[0];
+  const hours = parseInt(timeStr.substring(0, 2), 10) || 0;
+  const minutes = parseInt(timeStr.substring(2, 4), 10) || 0;
+  const seconds = parseFloat(timeStr.substring(4)) || 0;
+  const date = new Date(Date.UTC(year, month - 1, day, hours, minutes, Math.floor(seconds)));
   
   return {
     position: {
@@ -255,8 +260,9 @@ function parseCoordinate(coordinate: string, direction: string): number {
   if (!coordinate || !direction) return 0;
   
   const isNegative = direction === 'S' || direction === 'W';
-  const degrees = parseInt(coordinate.substring(0, 2), 10) || 0;
-  const minutes = parseFloat(coordinate.substring(2)) || 0;
+  const degreeDigits = direction === 'E' || direction === 'W' ? 3 : 2;
+  const degrees = parseInt(coordinate.substring(0, degreeDigits), 10) || 0;
+  const minutes = parseFloat(coordinate.substring(degreeDigits)) || 0;
   
   let decimal = degrees + minutes / 60;
   if (isNegative) decimal = -decimal;
@@ -369,11 +375,10 @@ export function parseDBTSentence(sentence: NMEASentence): DepthData | null {
   if (fields.length < 6) return null;
   
   const depthMeters = parseFloat(fields[2]) || 0;
-  const offset = parseFloat(fields[4]) || 0;
   
   return {
     depth: depthMeters,
-    offset,
+    offset: 0,
     timestamp: new Date(),
   };
 }
