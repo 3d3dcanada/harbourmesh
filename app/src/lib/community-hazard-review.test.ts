@@ -109,6 +109,26 @@ describe('community hazard review API client', () => {
     }));
   });
 
+  it('sends short-lived review sessions as Bearer credentials', async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
+      hazards: [],
+    }), { status: 200 }));
+
+    await expect(listCommunityHazardsForReview({
+      apiBaseUrl: 'http://localhost:3001',
+      apiKey: 'hm_session_v1.payload.signature',
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    })).resolves.toMatchObject({
+      hazards: [],
+    });
+
+    expect(fetchImpl).toHaveBeenCalledWith('http://localhost:3001/api/community/hazards/review', expect.objectContaining({
+      headers: expect.objectContaining({
+        Authorization: 'Bearer hm_session_v1.payload.signature',
+      }),
+    }));
+  });
+
   it('rejects malformed hazard review history', async () => {
     const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
       reviews: [{ hazardId: 'hazard-1', status: 'pending' }],

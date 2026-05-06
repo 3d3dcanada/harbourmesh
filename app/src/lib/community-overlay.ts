@@ -1,4 +1,4 @@
-import { resolvePilotApiKey } from './pilot-api-credentials';
+import { resolvePilotReviewCredential } from './pilot-api-credentials';
 
 export type CommunityOverlayFeature = {
   type: 'Feature';
@@ -388,10 +388,14 @@ function isCommunityHazardArtifactManifest(value: unknown): value is CommunityHa
   );
 }
 
-function buildJsonHeaders(apiKey?: string): Record<string, string> {
+function buildJsonHeaders(credential?: string): Record<string, string> {
   return {
     'Content-Type': 'application/json',
-    ...(apiKey ? { 'X-HarbourMesh-API-Key': apiKey } : {}),
+    ...(credential?.startsWith('hm_session_v1.')
+      ? { Authorization: `Bearer ${credential}` }
+      : credential
+        ? { 'X-HarbourMesh-API-Key': credential }
+        : {}),
   };
 }
 
@@ -585,7 +589,7 @@ export async function publishCommunityAggregateRelease(
   const endpoint = resolveEndpoint('/api/community/releases/aggregates', options.apiBaseUrl ?? import.meta.env.VITE_API_BASE_URL);
   const response = await fetchImpl(endpoint, {
     method: 'POST',
-    headers: buildJsonHeaders(resolvePilotApiKey(options.apiKey)),
+    headers: buildJsonHeaders(resolvePilotReviewCredential(options.apiKey)),
     body: JSON.stringify({
       ...(input.generatedBy?.trim() ? { generatedBy: input.generatedBy.trim() } : {}),
       ...(input.approval ? { approval: input.approval } : {}),

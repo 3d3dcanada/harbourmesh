@@ -1,3 +1,5 @@
+import { resolvePilotReviewCredential } from './pilot-api-credentials';
+
 export type CommunityHazardReviewStatus = 'pending' | 'accepted' | 'rejected';
 
 export type CommunityHazardReviewRecord = {
@@ -77,13 +79,17 @@ function resolveEndpoint(endpoint: string, apiBaseUrl?: string): string {
 }
 
 function resolveApiKey(apiKey?: string): string | undefined {
-  return resolvePilotApiKey(apiKey);
+  return resolvePilotReviewCredential(apiKey);
 }
 
-function buildJsonHeaders(apiKey?: string): Record<string, string> {
+function buildJsonHeaders(credential?: string): Record<string, string> {
   return {
     'Content-Type': 'application/json',
-    ...(apiKey ? { 'X-HarbourMesh-API-Key': apiKey } : {}),
+    ...(credential?.startsWith('hm_session_v1.')
+      ? { Authorization: `Bearer ${credential}` }
+      : credential
+        ? { 'X-HarbourMesh-API-Key': credential }
+        : {}),
   };
 }
 
@@ -212,4 +218,3 @@ export async function reviewCommunityHazard(
 
   return body;
 }
-import { resolvePilotApiKey } from './pilot-api-credentials';

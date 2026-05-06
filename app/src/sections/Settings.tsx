@@ -45,7 +45,9 @@ import {
 import {
   clearPilotApiCredentials,
   getPilotApiCredentials,
+  requestPilotOperatorSession,
   savePilotApiCredentials,
+  savePilotReviewSession,
 } from '@/lib/pilot-api-credentials';
 import { useSettingsStore, useAIStore, useAppStore, type TelemetryMode } from '@/store';
 import { ThemeMode, UnitSystem, AIProviderType, SharePositionLevel } from '@/types';
@@ -62,6 +64,8 @@ export function Settings() {
   const [pilotApiKeyInput, setPilotApiKeyInput] = useState(savedPilotApiCredentials?.apiKey ?? '');
   const [pilotOperatorIdInput, setPilotOperatorIdInput] = useState(savedPilotApiCredentials?.operatorId ?? '');
   const [pilotCredentialsSavedAt, setPilotCredentialsSavedAt] = useState(savedPilotApiCredentials?.savedAt ?? null);
+  const [pilotReviewSessionExpiresAt, setPilotReviewSessionExpiresAt] = useState(savedPilotApiCredentials?.reviewSessionExpiresAt ?? null);
+  const [pilotReviewSessionLoading, setPilotReviewSessionLoading] = useState(false);
   const [newProvider, setNewProvider] = useState({
     name: '',
     providerType: AIProviderType.LOCAL,
@@ -136,6 +140,7 @@ export function Settings() {
       operatorId: pilotOperatorIdInput,
     });
     setPilotCredentialsSavedAt(savedCredentials?.savedAt ?? null);
+    setPilotReviewSessionExpiresAt(savedCredentials?.reviewSessionExpiresAt ?? null);
     addNotification({
       type: savedCredentials ? 'success' : 'info',
       title: savedCredentials ? 'Pilot API Credentials Saved' : 'Pilot API Credentials Cleared',
@@ -150,11 +155,40 @@ export function Settings() {
     setPilotApiKeyInput('');
     setPilotOperatorIdInput('');
     setPilotCredentialsSavedAt(null);
+    setPilotReviewSessionExpiresAt(null);
     addNotification({
       type: 'info',
       title: 'Pilot API Credentials Cleared',
       message: 'Community requests will fall back to environment configuration.',
     });
+  };
+
+  const handleCreatePilotReviewSession = async () => {
+    setPilotReviewSessionLoading(true);
+
+    try {
+      const session = await requestPilotOperatorSession({
+        apiKey: pilotApiKeyInput,
+        operatorId: pilotOperatorIdInput,
+      });
+      const savedCredentials = savePilotReviewSession(session);
+      setPilotOperatorIdInput(savedCredentials?.operatorId ?? session.operatorId);
+      setPilotCredentialsSavedAt(savedCredentials?.savedAt ?? null);
+      setPilotReviewSessionExpiresAt(savedCredentials?.reviewSessionExpiresAt ?? session.expiresAt);
+      addNotification({
+        type: 'success',
+        title: 'Review Session Ready',
+        message: `Review calls will use a short-lived session until ${new Date(session.expiresAt).toLocaleString()}.`,
+      });
+    } catch (error) {
+      addNotification({
+        type: 'error',
+        title: 'Review Session Failed',
+        message: error instanceof Error ? error.message : 'Could not create review session.',
+      });
+    } finally {
+      setPilotReviewSessionLoading(false);
+    }
   };
 
   const handleExportLocalData = () => {
@@ -228,6 +262,9 @@ export function Settings() {
       setRegisteringDevice(false);
     }
   };
+
+  const pilotReviewSessionTimestamp = pilotReviewSessionExpiresAt ? Date.parse(pilotReviewSessionExpiresAt) : NaN;
+  const pilotReviewSessionActive = Number.isFinite(pilotReviewSessionTimestamp) && pilotReviewSessionTimestamp > Date.now();
   
   return (
     <div className="space-y-6">
@@ -697,17 +734,32 @@ export function Settings() {
                 </div>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm text-muted-foreground">
-                  {pilotCredentialsSavedAt
-                    ? `Saved ${new Date(pilotCredentialsSavedAt).toLocaleString()}`
-                    : 'No local pilot credentials saved'}
-                </p>
-                <div className="flex gap-2">
+                <div className="space-y-1 text-sm text-muted-foreground">
+                  <p>
+                    {pilotCredentialsSavedAt
+                      ? `Saved ${new Date(pilotCredentialsSavedAt).toLocaleString()}`
+                      : 'No local pilot credentials saved'}
+                  </p>
+                  <p className={pilotReviewSessionActive ? 'text-emerald-700 dark:text-emerald-300' : undefined}>
+                    {pilotReviewSessionExpiresAt
+                      ? `Review session ${pilotReviewSessionActive ? 'active' : 'expired'} ${new Date(pilotReviewSessionExpiresAt).toLocaleString()}`
+                      : 'No review session minted'}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
                   <Button variant="outline" onClick={handleClearPilotApiCredentials}>
                     Clear
                   </Button>
                   <Button onClick={handleSavePilotApiCredentials}>
                     Save Credentials
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleCreatePilotReviewSession}
+                    disabled={pilotReviewSessionLoading}
+                  >
+                    <RefreshCw className={cn('h-4 w-4 mr-2', pilotReviewSessionLoading && 'animate-spin')} />
+                    {pilotReviewSessionActive ? 'Refresh Session' : 'Create Session'}
                   </Button>
                 </div>
               </div>

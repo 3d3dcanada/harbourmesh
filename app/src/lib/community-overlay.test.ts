@@ -548,4 +548,29 @@ describe('community overlay client', () => {
       }),
     }));
   });
+
+  it('publishes aggregate releases with a short-lived review session', async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
+      ok: true,
+      release: aggregateRelease,
+    }), { status: 201 }));
+
+    await expect(publishCommunityAggregateRelease(
+      { generatedBy: 'nb-pilot-reviewer' },
+      {
+        apiBaseUrl: 'http://localhost:3001',
+        apiKey: 'hm_session_v1.payload.signature',
+        fetchImpl: fetchImpl as unknown as typeof fetch,
+      }
+    )).resolves.toMatchObject({
+      id: aggregateRelease.id,
+    });
+
+    expect(fetchImpl).toHaveBeenCalledWith('http://localhost:3001/api/community/releases/aggregates', expect.objectContaining({
+      method: 'POST',
+      headers: expect.objectContaining({
+        Authorization: 'Bearer hm_session_v1.payload.signature',
+      }),
+    }));
+  });
 });
