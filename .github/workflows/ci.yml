@@ -33,7 +33,7 @@ jobs:
 
       - name: Run tests
         working-directory: ./app
-        run: npm test -- --coverage
+        run: npm run test:coverage
 
       - name: Upload coverage
         uses: codecov/codecov-action@v3
@@ -58,15 +58,15 @@ jobs:
         working-directory: ./app
         run: npm ci
 
-      - name: Build DZIP package
+      - name: Build web app
         working-directory: ./app
-        run: npm run build:dzip
+        run: npm run build
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: harbourmesh-dzip
-          path: app/dist/*.dzip
+          name: harbourmesh-web-dist
+          path: app/dist/**
 
   security-audit:
     runs-on: ubuntu-latest
@@ -75,7 +75,7 @@ jobs:
 
       - name: Run npm audit
         working-directory: ./app
-        run: npm audit --production --audit-level=high
+        run: npm audit --omit=dev --audit-level=high
 
       - name: Run dependency review
         uses: actions/dependency-review-action@v4

@@ -4,7 +4,10 @@
  */
 
 import { useEffect, useRef, useCallback, useState } from 'react';
-import { useTelemetryStore, useAppStore } from '@/store';
+import { useTelemetryStore, useAppStore, useSettingsStore, useCommunityDataStore } from '@/store';
+import { createSoundingsFromTelemetry, type SoundingSourceProtocol } from '@/lib/community-soundings';
+import { buildSignalKStreamUrl, mapSignalKDeltaToTelemetry, type SignalKDelta } from '@/lib/signalk';
+import { mapRecordedSignalKDelta } from '@/lib/signalk-replay';
 import type { TelemetryMessage, GeoPosition } from '@/types';
 
 interface UseTelemetryOptions {
@@ -138,74 +141,246 @@ export function useTelemetry(options: UseTelemetryOptions = {}): UseTelemetryRet
   const reconnectAttemptsRef = useRef(0);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const simulationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const connectionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const manualDisconnectRef = useRef(false);
+  const replayIndexRef = useRef(0);
   
   const { addMessage, latestPosition, latestMotion, latestEnvironment, latestEngine, aisTargets } = useTelemetryStore();
   const { setConnectionStatus, addNotification } = useAppStore();
+  const boatNode = useSettingsStore((state) => state.boatNode);
+  const consent = useSettingsStore((state) => state.consent);
+  const addRawSoundings = useCommunityDataStore((state) => state.addRawSoundings);
+
+  const stopStreams = useCallback(() => {
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+
+    if (connectionTimeoutRef.current) {
+      clearTimeout(connectionTimeoutRef.current);
+      connectionTimeoutRef.current = null;
+    }
+
+    if (simulationIntervalRef.current) {
+      clearInterval(simulationIntervalRef.current);
+      simulationIntervalRef.current = null;
+    }
+
+    if (wsRef.current) {
+      const socket = wsRef.current;
+      wsRef.current = null;
+      socket.close();
+    }
+  }, []);
+
+  const pushMessages = useCallback((messages: TelemetryMessage[], sourceProtocol: SoundingSourceProtocol) => {
+    for (const message of messages) {
+      addMessage(message);
+    }
+
+    const storeMessages = useTelemetryStore.getState().messages;
+    const soundings = createSoundingsFromTelemetry([...messages, ...storeMessages], consent, {
+      vesselId: consent?.vesselId ?? 'demo-vessel',
+      sourceProtocol,
+      offsets: {
+        surfaceToTransducerMeters: boatNode.surfaceToTransducerMeters,
+        transducerToKeelMeters: boatNode.transducerToKeelMeters,
+      },
+    });
+
+    if (soundings.length > 0) {
+      addRawSoundings(soundings);
+    }
+  }, [
+    addMessage,
+    addRawSoundings,
+    boatNode.surfaceToTransducerMeters,
+    boatNode.transducerToKeelMeters,
+    consent,
+  ]);
+
+  const startReplay = useCallback((notify = true) => {
+    stopStreams();
+    setError(null);
+    setIsConnected(true);
+    setIsConnecting(false);
+    setConnectionStatus('online');
+
+    simulationIntervalRef.current = setInterval(() => {
+      const messages = mapRecordedSignalKDelta(replayIndexRef.current, {
+        vesselId: 'demo-vessel',
+        sourceDeviceId: 'recorded-signalk',
+      });
+      replayIndexRef.current += 1;
+      pushMessages(messages, 'replay');
+    }, 2000);
+
+    if (notify) {
+      addNotification({
+        type: 'info',
+        title: 'Telemetry Replay Active',
+        message: 'Using recorded Signal K data for the New Brunswick pilot map.',
+      });
+    }
+  }, [addNotification, pushMessages, setConnectionStatus, stopStreams]);
+
+  const startSimulation = useCallback(() => {
+    stopStreams();
+    setError(null);
+    setIsConnected(true);
+    setIsConnecting(false);
+    setConnectionStatus('online');
+
+    simulationIntervalRef.current = setInterval(() => {
+      pushMessages([generateSimulatedTelemetry()], 'simulated');
+    }, 2000);
+
+    addNotification({
+      type: 'info',
+      title: 'Telemetry Simulation Active',
+      message: 'Using generated demo telemetry.',
+    });
+  }, [addNotification, pushMessages, setConnectionStatus, stopStreams]);
   
   // Connect to WebSocket
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
     
+    manualDisconnectRef.current = false;
+    stopStreams();
     setIsConnecting(true);
+    setConnectionStatus('connecting');
     setError(null);
-    
+
+    if (boatNode.telemetryMode === 'replay') {
+      startReplay();
+      return;
+    }
+
+    if (boatNode.telemetryMode === 'simulated') {
+      startSimulation();
+      return;
+    }
+
+    const fallbackToReplay = () => {
+      if (boatNode.fallbackToReplay) {
+        startReplay();
+        return true;
+      }
+      return false;
+    };
+
     try {
-      // In production, this would connect to the actual Boat Node WebSocket
-      // For demo, we'll use simulated data
-      
-      // Simulate connection
-      setTimeout(() => {
+      const streamUrl = buildSignalKStreamUrl(boatNode.signalKBaseUrl, boatNode.signalKSubscribe);
+      const socket = new WebSocket(streamUrl);
+      wsRef.current = socket;
+
+      connectionTimeoutRef.current = setTimeout(() => {
+        if (wsRef.current === socket && socket.readyState !== WebSocket.OPEN) {
+          socket.close();
+          if (!fallbackToReplay()) {
+            setError(new Error('Signal K connection timed out'));
+            setIsConnected(false);
+            setIsConnecting(false);
+            setConnectionStatus('error');
+          }
+        }
+      }, boatNode.connectionTimeoutSeconds * 1000);
+
+      socket.onopen = () => {
+        if (wsRef.current !== socket) return;
+        if (connectionTimeoutRef.current) {
+          clearTimeout(connectionTimeoutRef.current);
+          connectionTimeoutRef.current = null;
+        }
+
         setIsConnected(true);
         setIsConnecting(false);
         setConnectionStatus('online');
         reconnectAttemptsRef.current = 0;
-        
-        // Start simulation
-        simulationIntervalRef.current = setInterval(() => {
-          const message = generateSimulatedTelemetry();
-          addMessage(message);
-        }, 2000);
-        
+
         addNotification({
           type: 'success',
-          title: 'Telemetry Connected',
-          message: 'Connected to vessel data stream',
+          title: 'Signal K Connected',
+          message: 'Receiving live Boat Node telemetry.',
         });
-      }, 1000);
-      
+      };
+
+      socket.onmessage = (event) => {
+        try {
+          const parsed = JSON.parse(event.data) as SignalKDelta | SignalKDelta[];
+          const deltas = Array.isArray(parsed) ? parsed : [parsed];
+          for (const delta of deltas) {
+            pushMessages(mapSignalKDeltaToTelemetry(delta, {
+              vesselId: 'demo-vessel',
+              sourceDeviceId: 'signalk',
+            }), 'signalk');
+          }
+        } catch {
+          setError(new Error('Signal K stream sent invalid JSON'));
+        }
+      };
+
+      socket.onerror = () => {
+        if (wsRef.current !== socket) return;
+        setError(new Error('Signal K stream error'));
+      };
+
+      socket.onclose = () => {
+        if (wsRef.current !== socket || manualDisconnectRef.current) return;
+        wsRef.current = null;
+
+        if (connectionTimeoutRef.current) {
+          clearTimeout(connectionTimeoutRef.current);
+          connectionTimeoutRef.current = null;
+        }
+
+        setIsConnected(false);
+        setIsConnecting(false);
+
+        if (fallbackToReplay()) return;
+
+        setConnectionStatus('error');
+        if (reconnectAttemptsRef.current < maxReconnectAttempts) {
+          reconnectAttemptsRef.current++;
+          reconnectTimeoutRef.current = setTimeout(connect, reconnectInterval);
+        }
+      };
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to connect'));
-      setIsConnecting(false);
-      setConnectionStatus('error');
-      
-      // Attempt reconnection
-      if (reconnectAttemptsRef.current < maxReconnectAttempts) {
-        reconnectAttemptsRef.current++;
-        reconnectTimeoutRef.current = setTimeout(connect, reconnectInterval);
+      const nextError = err instanceof Error ? err : new Error('Failed to connect');
+      setError(nextError);
+      if (!fallbackToReplay()) {
+        setIsConnected(false);
+        setIsConnecting(false);
+        setConnectionStatus('error');
       }
     }
-  }, [addMessage, setConnectionStatus, addNotification, reconnectInterval, maxReconnectAttempts]);
+  }, [
+    boatNode.connectionTimeoutSeconds,
+    boatNode.fallbackToReplay,
+    boatNode.signalKBaseUrl,
+    boatNode.signalKSubscribe,
+    boatNode.telemetryMode,
+    addNotification,
+    maxReconnectAttempts,
+    pushMessages,
+    reconnectInterval,
+    setConnectionStatus,
+    startReplay,
+    startSimulation,
+    stopStreams,
+  ]);
   
   // Disconnect from WebSocket
   const disconnect = useCallback(() => {
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-      reconnectTimeoutRef.current = null;
-    }
-    
-    if (simulationIntervalRef.current) {
-      clearInterval(simulationIntervalRef.current);
-      simulationIntervalRef.current = null;
-    }
-    
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
-    }
+    manualDisconnectRef.current = true;
+    stopStreams();
     
     setIsConnected(false);
+    setIsConnecting(false);
     setConnectionStatus('offline');
-  }, [setConnectionStatus]);
+  }, [setConnectionStatus, stopStreams]);
   
   // Send command to boat node
   const sendCommand = useCallback((command: unknown) => {

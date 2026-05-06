@@ -82,22 +82,24 @@ npm run dev
 npm test
 ```
 
-### Building for Production
+### Current Build Commands
 
 ```bash
-# Build DZIP universal package
-npm run build:dzip
+# Check the app without starting a server
+npm run lint
+npm run type-check
+npm run test:run
 
-# Platform-specific builds
-npm run build:pi      # Raspberry Pi
-npm run build:linux   # Linux x64
-npm run build:win     # Windows
-npm run build:mac     # macOS
+# Build the current web app
+npm run build
 ```
+
+DZIP and platform-specific packages are planned but are not implemented in this checkout yet. See [New Brunswick Launch Plan](docs/HARBOURMESH_NB_LAUNCH_PLAN_2026_05_06.md) for the completion path.
 
 ## Documentation
 
 - [Architecture Audit](docs/ARCHITECTURE_AUDIT.md)
+- [New Brunswick Launch Plan](docs/HARBOURMESH_NB_LAUNCH_PLAN_2026_05_06.md)
 - [Security Audit](docs/SECURITY_AUDIT.md)
 - [DZIP Format Specification](docs/DZIP_FORMAT.md)
 - [Deployment Guide](docs/DEPLOYMENT_GUIDE.md)

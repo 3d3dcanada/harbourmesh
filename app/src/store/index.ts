@@ -23,7 +23,16 @@ import {
   type Space,
   type SystemComponent,
   type GeoPosition,
+  type Route,
 } from '@/types';
+import { NB_PILOT_REFERENCE_ROUTE } from '@/lib/navigation-planning';
+import {
+  buildCommunitySoundingUploadBatch,
+  prepareSoundingForCommunityUpload,
+  type CommunitySoundingUpload,
+  type CommunitySoundingUploadBatch,
+  type RawDepthSounding,
+} from '@/lib/community-soundings';
 
 // ============================================================================
 // APP STORE
@@ -402,7 +411,7 @@ export const useTelemetryStore = create<TelemetryStore>()((set, get) => ({
       
       // Update derived state based on message type
       switch (message.messageType) {
-        case 'position':
+        case 'position': {
           const pos = message.payload as { latitude: number; longitude: number; cog: number; sog: number };
           newState.latestPosition = {
             latitude: pos.latitude,
@@ -413,11 +422,13 @@ export const useTelemetryStore = create<TelemetryStore>()((set, get) => ({
             timestamp: message.timestamp,
           };
           break;
-        case 'motion':
+        }
+        case 'motion': {
           const motion = message.payload as { roll: number; pitch: number; yaw: number };
           newState.latestMotion = motion;
           break;
-        case 'environment':
+        }
+        case 'environment': {
           const env = message.payload as {
             depth?: number;
             waterTemperature?: number;
@@ -433,7 +444,8 @@ export const useTelemetryStore = create<TelemetryStore>()((set, get) => ({
             barometricPressure: env.barometricPressure,
           };
           break;
-        case 'engine':
+        }
+        case 'engine': {
           const eng = message.payload as { engineId: string; rpm?: number; temperature?: number; runtimeHours: number };
           newState.latestEngine = {
             ...state.latestEngine,
@@ -444,7 +456,8 @@ export const useTelemetryStore = create<TelemetryStore>()((set, get) => ({
             },
           };
           break;
-        case 'ais':
+        }
+        case 'ais': {
           const ais = message.payload as {
             mmsi: string;
             name?: string;
@@ -465,6 +478,7 @@ export const useTelemetryStore = create<TelemetryStore>()((set, get) => ({
             },
           ].slice(-50);
           break;
+        }
       }
       
       return newState as TelemetryStore;
@@ -483,6 +497,73 @@ export const useTelemetryStore = create<TelemetryStore>()((set, get) => ({
   getLatestByType: (type) =>
     get().messages.find((m) => m.messageType === type),
 }));
+
+// ============================================================================
+// NAVIGATION PLAN STORE
+// ============================================================================
+
+interface NavigationPlanStore {
+  routes: Route[];
+  activeRouteId: string | null;
+
+  setRoutes: (routes: Route[]) => void;
+  addRoute: (route: Route) => void;
+  updateRoute: (id: string, updates: Partial<Route>) => void;
+  deleteRoute: (id: string) => void;
+  setActiveRoute: (routeId: string | null) => void;
+  getActiveRoute: () => Route | null;
+  seedNBPilotReferenceRoute: () => void;
+}
+
+export const useNavigationPlanStore = create<NavigationPlanStore>()(
+  persist(
+    (set, get) => ({
+      routes: [NB_PILOT_REFERENCE_ROUTE],
+      activeRouteId: NB_PILOT_REFERENCE_ROUTE.id,
+
+      setRoutes: (routes) => set({ routes }),
+      addRoute: (route) =>
+        set((state) => ({
+          routes: [route, ...state.routes.filter((existingRoute) => existingRoute.id !== route.id)],
+          activeRouteId: route.id,
+        })),
+      updateRoute: (id, updates) =>
+        set((state) => ({
+          routes: state.routes.map((route) =>
+            route.id === id ? { ...route, ...updates, updatedAt: new Date().toISOString() } : route
+          ),
+        })),
+      deleteRoute: (id) =>
+        set((state) => {
+          const routes = state.routes.filter((route) => route.id !== id);
+          return {
+            routes,
+            activeRouteId: state.activeRouteId === id ? routes[0]?.id ?? null : state.activeRouteId,
+          };
+        }),
+      setActiveRoute: (routeId) => set({ activeRouteId: routeId }),
+      getActiveRoute: () => {
+        const state = get();
+        return state.routes.find((route) => route.id === state.activeRouteId) ?? null;
+      },
+      seedNBPilotReferenceRoute: () =>
+        set((state) => ({
+          routes: [
+            NB_PILOT_REFERENCE_ROUTE,
+            ...state.routes.filter((route) => route.id !== NB_PILOT_REFERENCE_ROUTE.id),
+          ],
+          activeRouteId: NB_PILOT_REFERENCE_ROUTE.id,
+        })),
+    }),
+    {
+      name: 'harbormesh-navigation-plans',
+      partialize: (state) => ({
+        routes: state.routes,
+        activeRouteId: state.activeRouteId,
+      }),
+    }
+  )
+);
 
 // ============================================================================
 // AI STORE
@@ -553,6 +634,28 @@ export const useAIStore = create<AIStore>()(
 // SETTINGS STORE
 // ============================================================================
 
+export type TelemetryMode = 'replay' | 'signalk' | 'simulated';
+
+export interface BoatNodeSettings {
+  telemetryMode: TelemetryMode;
+  signalKBaseUrl: string;
+  signalKSubscribe: 'self' | 'all' | 'none';
+  connectionTimeoutSeconds: number;
+  fallbackToReplay: boolean;
+  surfaceToTransducerMeters: number;
+  transducerToKeelMeters: number;
+}
+
+export const DEFAULT_BOAT_NODE_SETTINGS: BoatNodeSettings = {
+  telemetryMode: 'replay',
+  signalKBaseUrl: 'http://192.168.1.100:3000',
+  signalKSubscribe: 'self',
+  connectionTimeoutSeconds: 10,
+  fallbackToReplay: true,
+  surfaceToTransducerMeters: 0.5,
+  transducerToKeelMeters: 0.3,
+};
+
 interface SettingsStore {
   consent: ConsentSettings | null;
   userPreferences: {
@@ -563,12 +666,14 @@ interface SettingsStore {
     dateFormat: string;
     timeFormat: '12h' | '24h';
   };
+  boatNode: BoatNodeSettings;
   
   // Actions
   setConsent: (consent: ConsentSettings) => void;
   updateConsent: (updates: Partial<ConsentSettings>) => void;
   setUserPreferences: (preferences: SettingsStore['userPreferences']) => void;
   updateUserPreferences: (updates: Partial<SettingsStore['userPreferences']>) => void;
+  updateBoatNodeSettings: (updates: Partial<BoatNodeSettings>) => void;
 }
 
 export const useSettingsStore = create<SettingsStore>()(
@@ -579,24 +684,157 @@ export const useSettingsStore = create<SettingsStore>()(
         theme: ThemeMode.AUTO,
         unitSystem: 'nautical' as const,
         language: 'en',
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        dateFormat: 'YYYY-MM-DD',
-        timeFormat: '24h' as const,
-      },
-      
-      setConsent: (consent) => set({ consent }),
+	        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+	        dateFormat: 'YYYY-MM-DD',
+	        timeFormat: '24h' as const,
+	      },
+	      boatNode: DEFAULT_BOAT_NODE_SETTINGS,
+	      
+	      setConsent: (consent) => set({ consent }),
       updateConsent: (updates) =>
         set((state) => ({
           consent: state.consent ? { ...state.consent, ...updates } : null,
         })),
       setUserPreferences: (preferences) => set({ userPreferences: preferences }),
-      updateUserPreferences: (updates) =>
-        set((state) => ({
-          userPreferences: { ...state.userPreferences, ...updates },
-        })),
-    }),
+	      updateUserPreferences: (updates) =>
+	        set((state) => ({
+	          userPreferences: { ...state.userPreferences, ...updates },
+	        })),
+	      updateBoatNodeSettings: (updates) =>
+	        set((state) => ({
+	          boatNode: { ...state.boatNode, ...updates },
+	        })),
+	    }),
     {
       name: 'harbormesh-settings',
+    }
+  )
+);
+
+// ============================================================================
+// COMMUNITY DATA STORE
+// ============================================================================
+
+interface CommunityDataStore {
+  rawSoundings: RawDepthSounding[];
+  uploadBatches: CommunitySyncBatch[];
+  addRawSoundings: (soundings: RawDepthSounding[]) => void;
+  getShareableSoundings: () => CommunitySoundingUpload[];
+  queueShareableSoundingBatch: (options?: QueueCommunitySoundingBatchOptions) => CommunitySyncBatch | null;
+  markUploadBatchStatus: (
+    batchId: string,
+    status: CommunitySyncBatchStatus,
+    details?: { updatedAt?: string; acknowledgedId?: string; error?: string }
+  ) => void;
+  getQueuedUploadBatches: () => CommunitySyncBatch[];
+}
+
+export type CommunitySyncBatchStatus = 'queued' | 'sent' | 'acknowledged' | 'failed';
+
+export type CommunitySyncBatch = {
+  id: string;
+  status: CommunitySyncBatchStatus;
+  queuedAt: string;
+  updatedAt: string;
+  endpoint: string;
+  attemptCount: number;
+  acknowledgedId?: string;
+  lastError?: string;
+  payload: CommunitySoundingUploadBatch;
+};
+
+export type QueueCommunitySoundingBatchOptions = {
+  now?: string;
+  endpoint?: string;
+  region?: string;
+  maxRecords?: number;
+};
+
+const DEFAULT_COMMUNITY_SOUNDING_ENDPOINT = '/api/community/soundings';
+
+export const useCommunityDataStore = create<CommunityDataStore>()(
+  persist(
+    (set, get) => ({
+      rawSoundings: [],
+      uploadBatches: [],
+      addRawSoundings: (soundings) =>
+        set((state) => {
+          const byId = new Map(state.rawSoundings.map((sounding) => [sounding.id, sounding]));
+
+          for (const sounding of soundings) {
+            byId.set(sounding.id, sounding);
+          }
+
+          return {
+            rawSoundings: [...byId.values()]
+              .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+              .slice(0, 5000),
+          };
+        }),
+      getShareableSoundings: () =>
+        get().rawSoundings.flatMap((sounding) => {
+          const upload = prepareSoundingForCommunityUpload(sounding);
+          return upload ? [upload] : [];
+        }),
+      queueShareableSoundingBatch: (options) => {
+        const state = get();
+        const now = options?.now ?? new Date().toISOString();
+        const endpoint = options?.endpoint ?? DEFAULT_COMMUNITY_SOUNDING_ENDPOINT;
+        const queuedRecordIds = new Set(
+          state.uploadBatches
+            .filter((batch) => batch.status !== 'failed')
+            .flatMap((batch) => batch.payload.records.map((record) => record.id))
+        );
+        const candidateSoundings = state.rawSoundings.filter((sounding) => !queuedRecordIds.has(sounding.id));
+        const payload = buildCommunitySoundingUploadBatch(candidateSoundings, {
+          batchId: crypto.randomUUID(),
+          createdAt: now,
+          uploadEndpoint: endpoint,
+          region: options?.region,
+          maxRecords: options?.maxRecords,
+        });
+
+        if (!payload) return null;
+
+        const batch: CommunitySyncBatch = {
+          id: payload.id,
+          status: 'queued',
+          queuedAt: now,
+          updatedAt: now,
+          endpoint,
+          attemptCount: 0,
+          payload,
+        };
+
+        set((current) => ({
+          uploadBatches: [batch, ...current.uploadBatches].slice(0, 100),
+        }));
+
+        return batch;
+      },
+      markUploadBatchStatus: (batchId, status, details) =>
+        set((state) => ({
+          uploadBatches: state.uploadBatches.map((batch) =>
+            batch.id === batchId
+              ? {
+                  ...batch,
+                  status,
+                  updatedAt: details?.updatedAt ?? new Date().toISOString(),
+                  attemptCount: status === 'sent' ? batch.attemptCount + 1 : batch.attemptCount,
+                  acknowledgedId: details?.acknowledgedId ?? batch.acknowledgedId,
+                  lastError: status === 'failed' ? details?.error ?? 'Upload failed' : undefined,
+                }
+              : batch
+          ),
+        })),
+      getQueuedUploadBatches: () => get().uploadBatches.filter((batch) => batch.status === 'queued'),
+    }),
+    {
+      name: 'harbormesh-community-data',
+      partialize: (state) => ({
+        rawSoundings: state.rawSoundings,
+        uploadBatches: state.uploadBatches,
+      }),
     }
   )
 );

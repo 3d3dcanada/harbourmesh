@@ -1,728 +1,371 @@
-/**
- * HarborMesh - Boat Map Section
- * Interactive vessel layout and space management
- */
-
-import React, { useState, useRef } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
-  Map,
-  Plus,
-  Search,
-  Filter,
-  Grid3X3,
-  Layers,
-  Maximize2,
-  Minimize2,
-  Edit3,
-  Save,
-  X,
-  Package,
-  QrCode,
-  MoreHorizontal,
-  ChevronRight,
-  Box,
   Anchor,
-  Droplets,
-  Zap,
-  Wind,
-  Settings,
   Bed,
+  Box,
+  ChevronRight,
+  Droplets,
+  Edit3,
+  Map,
+  Maximize2,
+  Plus,
+  Save,
+  Settings,
   Utensils,
-  Wrench,
-  LifeBuoy,
+  X,
+  Zap,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { useVesselStore } from '@/store';
-import { SpaceType, ItemCategory, type Space, type Item } from '@/types';
+import { SpaceType, type Space } from '@/types';
 
-// Space type icons
-const spaceTypeIcons: Record<string, React.ElementType> = {
-  [SpaceType.COCKPIT]: Map,
-  [SpaceType.CABIN]: Bed,
-  [SpaceType.LOCKER]: Box,
-  [SpaceType.COMPARTMENT]: Grid3X3,
-  [SpaceType.BILGE]: Droplets,
-  [SpaceType.GALLEY]: Utensils,
-  [SpaceType.HEAD]: Droplets,
-  [SpaceType.BERTH]: Bed,
-  [SpaceType.SALON]: Map,
-  [SpaceType.ENGINE_ROOM]: Zap,
-  [SpaceType.LAZARETTE]: Box,
-  [SpaceType.ANCHOR_LOCKER]: Anchor,
-  [SpaceType.DECK_STORAGE]: Box,
-  [SpaceType.FLYBRIDGE]: Map,
-  [SpaceType.TENDER_GARAGE]: Box,
-  [SpaceType.FUEL_TANK]: Droplets,
-  [SpaceType.WATER_TANK]: Droplets,
-  [SpaceType.HOLD]: Box,
-  [SpaceType.CUSTOM]: Settings,
+const spaceTypeConfig: Record<string, { label: string; icon: React.ElementType; color: string; darkColor: string }> = {
+  [SpaceType.COCKPIT]: { label: 'Cockpit', icon: Map, color: '#3b82f6', darkColor: '#1d4ed8' },
+  [SpaceType.CABIN]: { label: 'Cabin', icon: Bed, color: '#8b5cf6', darkColor: '#6d28d9' },
+  [SpaceType.LOCKER]: { label: 'Locker', icon: Box, color: '#6b7280', darkColor: '#374151' },
+  [SpaceType.COMPARTMENT]: { label: 'Compartment', icon: Box, color: '#6b7280', darkColor: '#374151' },
+  [SpaceType.BILGE]: { label: 'Bilge', icon: Droplets, color: '#06b6d4', darkColor: '#0e7490' },
+  [SpaceType.GALLEY]: { label: 'Galley', icon: Utensils, color: '#f97316', darkColor: '#c2410c' },
+  [SpaceType.HEAD]: { label: 'Head', icon: Droplets, color: '#14b8a6', darkColor: '#0d9488' },
+  [SpaceType.BERTH]: { label: 'Berth', icon: Bed, color: '#a78bfa', darkColor: '#7c3aed' },
+  [SpaceType.SALON]: { label: 'Salon', icon: Map, color: '#f59e0b', darkColor: '#d97706' },
+  [SpaceType.ENGINE_ROOM]: { label: 'Engine Room', icon: Zap, color: '#ef4444', darkColor: '#b91c1c' },
+  [SpaceType.LAZARETTE]: { label: 'Lazarette', icon: Box, color: '#78716c', darkColor: '#44403c' },
+  [SpaceType.ANCHOR_LOCKER]: { label: 'Anchor Locker', icon: Anchor, color: '#64748b', darkColor: '#334155' },
+  [SpaceType.DECK_STORAGE]: { label: 'Deck Storage', icon: Box, color: '#84cc16', darkColor: '#4d7c0f' },
+  [SpaceType.FLYBRIDGE]: { label: 'Flybridge', icon: Map, color: '#22d3ee', darkColor: '#0891b2' },
+  [SpaceType.TENDER_GARAGE]: { label: 'Tender Garage', icon: Box, color: '#a3a3a3', darkColor: '#525252' },
+  [SpaceType.FUEL_TANK]: { label: 'Fuel Tank', icon: Droplets, color: '#dc2626', darkColor: '#991b1b' },
+  [SpaceType.WATER_TANK]: { label: 'Water Tank', icon: Droplets, color: '#2563eb', darkColor: '#1e40af' },
+  [SpaceType.HOLD]: { label: 'Hold', icon: Box, color: '#a16207', darkColor: '#713f12' },
+  [SpaceType.CUSTOM]: { label: 'Custom', icon: Settings, color: '#d946ef', darkColor: '#a21caf' },
 };
 
-// Item category icons
-const itemCategoryIcons: Record<string, React.ElementType> = {
-  [ItemCategory.FASTENERS]: Wrench,
-  [ItemCategory.SPARES]: Box,
-  [ItemCategory.TOOLS]: Wrench,
-  [ItemCategory.GALLEY]: Utensils,
-  [ItemCategory.SAFETY]: LifeBuoy,
-  [ItemCategory.ELECTRONICS]: Zap,
-  [ItemCategory.ELECTRICAL]: Zap,
-  [ItemCategory.PLUMBING]: Droplets,
-  [ItemCategory.RIGGING]: Wind,
-  [ItemCategory.ENGINE]: Zap,
-  [ItemCategory.NAVIGATION]: Map,
-  [ItemCategory.COMMUNICATION]: Zap,
-  [ItemCategory.CLEANING]: Droplets,
-  [ItemCategory.LINES]: Wind,
-  [ItemCategory.FENDERS]: Box,
-  [ItemCategory.ANCHORING]: Anchor,
-  [ItemCategory.CANVAS]: Box,
-  [ItemCategory.DOCUMENTS]: Map,
-  [ItemCategory.MEDICAL]: LifeBuoy,
-  [ItemCategory.FISHING]: Anchor,
-  [ItemCategory.DIVING]: Droplets,
-  [ItemCategory.TENDER]: Box,
-  [ItemCategory.CUSTOM]: Settings,
-};
-
-// Demo spaces
+// Demo spaces positioned like a real sailboat layout (SVG coords: 0-800 x, 0-300 y, bow at top)
 const demoSpaces: Space[] = [
-  {
-    id: 'space-001',
-    vesselId: 'demo-vessel',
-    name: 'Cockpit',
-    type: SpaceType.COCKPIT,
-    deck: 0,
-    deckName: 'Main Deck',
-    description: 'Main steering and control area',
-    geometry: { x: 50, y: 10, width: 40, height: 20 },
-    createdAt: '2023-01-01',
-    updatedAt: '2023-01-01',
-  },
-  {
-    id: 'space-002',
-    vesselId: 'demo-vessel',
-    name: 'Main Salon',
-    type: SpaceType.SALON,
-    deck: 0,
-    deckName: 'Main Deck',
-    description: 'Primary living area',
-    geometry: { x: 10, y: 30, width: 80, height: 30 },
-    createdAt: '2023-01-01',
-    updatedAt: '2023-01-01',
-  },
-  {
-    id: 'space-003',
-    vesselId: 'demo-vessel',
-    name: 'Galley',
-    type: SpaceType.GALLEY,
-    deck: 0,
-    deckName: 'Main Deck',
-    description: 'Kitchen and food preparation',
-    geometry: { x: 10, y: 60, width: 30, height: 20 },
-    createdAt: '2023-01-01',
-    updatedAt: '2023-01-01',
-  },
-  {
-    id: 'space-004',
-    vesselId: 'demo-vessel',
-    name: 'Forward Cabin',
-    type: SpaceType.CABIN,
-    deck: 0,
-    deckName: 'Main Deck',
-    description: 'Master berth and storage',
-    geometry: { x: 50, y: 60, width: 40, height: 25 },
-    createdAt: '2023-01-01',
-    updatedAt: '2023-01-01',
-  },
-  {
-    id: 'space-005',
-    vesselId: 'demo-vessel',
-    name: 'Engine Room',
-    type: SpaceType.ENGINE_ROOM,
-    deck: -1,
-    deckName: 'Lower Deck',
-    description: 'Engine and mechanical systems',
-    geometry: { x: 10, y: 10, width: 35, height: 25 },
-    createdAt: '2023-01-01',
-    updatedAt: '2023-01-01',
-  },
-  {
-    id: 'space-006',
-    vesselId: 'demo-vessel',
-    name: 'Port Locker',
-    type: SpaceType.LOCKER,
-    deck: 0,
-    deckName: 'Main Deck',
-    description: 'Storage locker port side',
-    geometry: { x: 5, y: 10, width: 15, height: 15 },
-    createdAt: '2023-01-01',
-    updatedAt: '2023-01-01',
-  },
-  {
-    id: 'space-007',
-    vesselId: 'demo-vessel',
-    name: 'Anchor Locker',
-    type: SpaceType.ANCHOR_LOCKER,
-    deck: 0,
-    deckName: 'Main Deck',
-    description: 'Anchor and windlass storage',
-    geometry: { x: 70, y: 85, width: 20, height: 10 },
-    createdAt: '2023-01-01',
-    updatedAt: '2023-01-01',
-  },
-  {
-    id: 'space-008',
-    vesselId: 'demo-vessel',
-    name: 'Lazarette',
-    type: SpaceType.LAZARETTE,
-    deck: 0,
-    deckName: 'Main Deck',
-    description: 'Aft storage compartment',
-    geometry: { x: 5, y: 85, width: 25, height: 10 },
-    createdAt: '2023-01-01',
-    updatedAt: '2023-01-01',
-  },
+  { id: 'sp-anchor', vesselId: 'v1', name: 'Anchor Locker', type: SpaceType.ANCHOR_LOCKER, deck: 0, deckName: 'Main Deck', geometry: { x: 340, y: 8, width: 120, height: 35 }, description: 'Forward chain locker', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
+  { id: 'sp-fwd-cabin', vesselId: 'v1', name: 'Forward Cabin', type: SpaceType.BERTH, deck: 0, deckName: 'Main Deck', geometry: { x: 300, y: 50, width: 200, height: 55 }, description: 'V-berth forward', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
+  { id: 'sp-head', vesselId: 'v1', name: 'Head', type: SpaceType.HEAD, deck: 0, deckName: 'Main Deck', geometry: { x: 220, y: 110, width: 80, height: 50 }, description: 'Marine head', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
+  { id: 'sp-salon', vesselId: 'v1', name: 'Salon', type: SpaceType.SALON, deck: 0, deckName: 'Main Deck', geometry: { x: 310, y: 110, width: 180, height: 55 }, description: 'Main salon', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
+  { id: 'sp-galley', vesselId: 'v1', name: 'Galley', type: SpaceType.GALLEY, deck: 0, deckName: 'Main Deck', geometry: { x: 500, y: 110, width: 80, height: 50 }, description: 'Galley to starboard', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
+  { id: 'sp-nav', vesselId: 'v1', name: 'Nav Station', type: SpaceType.COMPARTMENT, deck: 0, deckName: 'Main Deck', geometry: { x: 220, y: 168, width: 90, height: 35 }, description: 'Chart table and instruments', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
+  { id: 'sp-engine', vesselId: 'v1', name: 'Engine Room', type: SpaceType.ENGINE_ROOM, deck: -1, deckName: 'Lower Deck', geometry: { x: 340, y: 170, width: 120, height: 50 }, description: 'Yanmar 3YM30', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
+  { id: 'sp-aft-cabin', vesselId: 'v1', name: 'Aft Cabin', type: SpaceType.BERTH, deck: 0, deckName: 'Main Deck', geometry: { x: 500, y: 168, width: 80, height: 40 }, description: 'Aft cabin starboard', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
+  { id: 'sp-cockpit', vesselId: 'v1', name: 'Cockpit', type: SpaceType.COCKPIT, deck: 0, deckName: 'Main Deck', geometry: { x: 280, y: 220, width: 240, height: 45 }, description: 'Main cockpit', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
+  { id: 'sp-laz', vesselId: 'v1', name: 'Lazarette', type: SpaceType.LAZARETTE, deck: -1, deckName: 'Lower Deck', geometry: { x: 350, y: 268, width: 100, height: 22 }, description: 'Aft storage', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
+  { id: 'sp-fuel', vesselId: 'v1', name: 'Fuel Tank', type: SpaceType.FUEL_TANK, deck: -1, deckName: 'Lower Deck', geometry: { x: 220, y: 170, width: 60, height: 50 }, description: '75L diesel', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
+  { id: 'sp-water', vesselId: 'v1', name: 'Water Tank', type: SpaceType.WATER_TANK, deck: -1, deckName: 'Lower Deck', geometry: { x: 520, y: 170, width: 60, height: 50 }, description: '150L water', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
 ];
 
-// Demo items
-const demoItems: Item[] = [
-  {
-    id: 'item-001',
-    vesselId: 'demo-vessel',
-    spaceId: 'space-006',
-    category: ItemCategory.SAFETY,
-    name: 'Fire Extinguisher',
-    description: 'ABC dry chemical extinguisher',
-    quantity: 2,
-    unit: 'each',
-    partNumber: 'FE-ABC-5LB',
-    manufacturer: 'Kidde',
-    reorderThreshold: 1,
-    expiryDate: '2026-05-15',
-    tags: ['safety', 'required', 'inspection'],
-    createdAt: '2023-01-01',
-    updatedAt: '2023-01-01',
-  },
-  {
-    id: 'item-002',
-    vesselId: 'demo-vessel',
-    spaceId: 'space-006',
-    category: ItemCategory.FASTENERS,
-    name: 'Stainless Steel Screws',
-    description: '#10 x 1" Phillips head',
-    quantity: 50,
-    unit: 'pieces',
-    reorderThreshold: 10,
-    tags: ['hardware', 'stainless'],
-    createdAt: '2023-01-01',
-    updatedAt: '2023-01-01',
-  },
-  {
-    id: 'item-003',
-    vesselId: 'demo-vessel',
-    spaceId: 'space-003',
-    category: ItemCategory.GALLEY,
-    name: 'Coffee Filters',
-    description: '#4 cone filters',
-    quantity: 100,
-    unit: 'each',
-    reorderThreshold: 20,
-    tags: ['consumable', 'galley'],
-    createdAt: '2023-01-01',
-    updatedAt: '2023-01-01',
-  },
-  {
-    id: 'item-004',
-    vesselId: 'demo-vessel',
-    spaceId: 'space-008',
-    category: ItemCategory.LINES,
-    name: 'Dock Lines',
-    description: '3/4" x 25\' nylon double-braid',
-    quantity: 4,
-    unit: 'each',
-    partNumber: 'DL-34-25',
-    reorderThreshold: 2,
-    tags: ['docking', 'lines'],
-    createdAt: '2023-01-01',
-    updatedAt: '2023-01-01',
-  },
-  {
-    id: 'item-005',
-    vesselId: 'demo-vessel',
-    spaceId: 'space-005',
-    category: ItemCategory.SPARES,
-    name: 'Fuel Filter',
-    description: 'Primary fuel filter element',
-    quantity: 2,
-    unit: 'each',
-    partNumber: 'FF-1234',
-    manufacturer: 'Racor',
-    reorderThreshold: 1,
-    tags: ['engine', 'maintenance', 'spare'],
-    createdAt: '2023-01-01',
-    updatedAt: '2023-01-01',
-  },
-];
+// SVG hull path — a sailboat profile (bow up, stern down)
+const HULL_PATH = 'M 400 5 C 380 5, 290 20, 260 60 C 230 110, 220 170, 220 210 C 220 250, 260 285, 300 295 L 500 295 C 540 285, 580 250, 580 210 C 580 170, 570 110, 540 60 C 510 20, 420 5, 400 5 Z';
 
 export function BoatMap() {
-  const { spaces, items, setSpaces, setItems } = useVesselStore();
-  const [selectedSpace, setSelectedSpace] = useState<Space | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterCategory, setFilterCategory] = useState<string>('all');
-  const [isEditing, setIsEditing] = useState(false);
-  const [showAddSpace, setShowAddSpace] = useState(false);
-  const [showAddItem, setShowAddItem] = useState(false);
+  const { spaces: storeSpaces } = useVesselStore();
+  const svgRef = useRef<SVGSVGElement>(null);
   const [activeDeck, setActiveDeck] = useState<number>(0);
   const [zoom, setZoom] = useState(1);
-  
-  // Initialize with demo data
-  React.useEffect(() => {
-    if (spaces.length === 0) setSpaces(demoSpaces);
-    if (items.length === 0) setItems(demoItems);
-  }, [spaces.length, items.length, setSpaces, setItems]);
-  
-  const currentSpaces = spaces.length > 0 ? spaces : demoSpaces;
-  const currentItems = items.length > 0 ? items : demoItems;
-  
-  // Filter spaces by deck
-  const deckSpaces = currentSpaces.filter((s) => s.deck === activeDeck);
-  
-  // Filter items
-  const filteredItems = currentItems.filter((item) => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         item.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = filterCategory === 'all' || item.category === filterCategory;
-    return matchesSearch && matchesCategory;
-  });
-  
-  // Get items for selected space
-  const spaceItems = selectedSpace 
-    ? currentItems.filter((i) => i.spaceId === selectedSpace.id)
-    : [];
-  
-  // Get unique decks
-  const decks = Array.from(new Set(currentSpaces.map((s) => s.deck))).sort();
-  
-  // Get space name for item
-  const getSpaceName = (spaceId: string) => {
-    const space = currentSpaces.find((s) => s.id === spaceId);
-    return space?.name || 'Unknown';
-  };
-  
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingSpace, setEditingSpace] = useState<Space | null>(null);
+
+  const currentSpaces = storeSpaces.length > 0 ? storeSpaces : demoSpaces;
+  const decks = useMemo(() => [...new Set(currentSpaces.map((s) => s.deck ?? 0))].sort((a, b) => b - a), [currentSpaces]);
+  const deckSpaces = useMemo(() => currentSpaces.filter((s) => (s.deck ?? 0) === activeDeck), [currentSpaces, activeDeck]);
+  const selected = useMemo(() => currentSpaces.find((s) => s.id === selectedSpaceId) ?? null, [currentSpaces, selectedSpaceId]);
+
+  const handleZoom = useCallback((delta: number) => {
+    setZoom((z) => Math.min(3, Math.max(0.3, z + delta)));
+  }, []);
+
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    handleZoom(delta);
+  }, [handleZoom]);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button === 1 || (e.button === 0 && e.altKey)) {
+      setIsPanning(true);
+      setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+      e.preventDefault();
+    }
+  }, [pan]);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (isPanning) {
+      setPan({ x: e.clientX - panStart.x, y: e.clientY - panStart.y });
+    }
+  }, [isPanning, panStart]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsPanning(false);
+  }, []);
+
+  const resetView = useCallback(() => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  }, []);
+
+  const handleSpaceClick = useCallback((space: Space) => {
+    setSelectedSpaceId(space.id);
+  }, []);
+
+  const handleSpaceDoubleClick = useCallback((space: Space) => {
+    setEditingSpace(space);
+    setIsEditDialogOpen(true);
+  }, []);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Boat Map & Inventory</h1>
-          <p className="text-muted-foreground mt-1">
-            Visual layout and item tracking
-          </p>
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <Map className="h-6 w-6 text-primary" /> Boat Map
+          </h1>
+          <p className="text-muted-foreground mt-1">Interactive deck plan — click spaces, scroll to zoom, Alt+drag to pan</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setShowAddSpace(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Space
-          </Button>
-          <Button size="sm" onClick={() => setShowAddItem(true)}>
-            <Package className="h-4 w-4 mr-2" />
-            Add Item
-          </Button>
-        </div>
+        <Button><Plus className="h-4 w-4 mr-2" /> Add Space</Button>
       </div>
-      
-      {/* Main Content */}
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Left Column - Deck Plan */}
-        <div className="lg:col-span-2 space-y-4">
-          {/* Deck Selector */}
-          <div className="flex items-center gap-2">
-            <Layers className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Deck:</span>
-            <div className="flex gap-1">
-              {decks.map((deck) => (
-                <Button
-                  key={deck}
-                  variant={activeDeck === deck ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setActiveDeck(deck)}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* SVG Deck Plan */}
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                {/* Deck Selector */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">Deck:</span>
+                  {decks.map((deck) => (
+                    <Button key={deck} variant={activeDeck === deck ? 'default' : 'outline'} size="sm" onClick={() => setActiveDeck(deck)}>
+                      {deck === 0 ? 'Main' : deck > 0 ? `Upper ${deck}` : 'Lower'}
+                    </Button>
+                  ))}
+                </div>
+                {/* Zoom Controls */}
+                <div className="flex items-center gap-1">
+                  <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleZoom(-0.2)}><ZoomOut className="h-4 w-4" /></Button>
+                  <span className="text-sm text-muted-foreground w-12 text-center">{Math.round(zoom * 100)}%</span>
+                  <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleZoom(0.2)}><ZoomIn className="h-4 w-4" /></Button>
+                  <Button variant="outline" size="icon" className="h-8 w-8" onClick={resetView}><Maximize2 className="h-4 w-4" /></Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div
+                className="relative bg-muted/30 dark:bg-muted/10 rounded-lg border overflow-hidden"
+                style={{ height: '500px', cursor: isPanning ? 'grabbing' : 'default' }}
+                onWheel={handleWheel}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+              >
+                <svg
+                  ref={svgRef}
+                  viewBox="0 0 800 300"
+                  className="w-full h-full"
+                  style={{ transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`, transformOrigin: 'center center', transition: isPanning ? 'none' : 'transform 0.15s ease' }}
                 >
-                  {deck === 0 ? 'Main' : deck > 0 ? `+${deck}` : `${deck}`}
-                </Button>
-              ))}
-            </div>
-            <div className="flex-1" />
-            <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" onClick={() => setZoom((z) => Math.max(0.5, z - 0.25))}>
-                <Minimize2 className="h-4 w-4" />
-              </Button>
-              <span className="text-sm text-muted-foreground w-12 text-center">{Math.round(zoom * 100)}%</span>
-              <Button variant="ghost" size="icon" onClick={() => setZoom((z) => Math.min(2, z + 0.25))}>
-                <Maximize2 className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          
-          {/* Deck Plan Canvas */}
-          <Card className="overflow-hidden">
-            <CardContent className="p-0">
-              <div className="relative bg-slate-100 dark:bg-slate-900 overflow-auto" style={{ minHeight: '400px' }}>
-                <div 
-                  className="relative"
-                  style={{ 
-                    width: '100%', 
-                    height: '500px',
-                    transform: `scale(${zoom})`,
-                    transformOrigin: 'top left',
-                  }}
-                >
-                  {/* Grid background */}
-                  <div 
-                    className="absolute inset-0 opacity-10"
-                    style={{
-                      backgroundImage: `
-                        linear-gradient(to right, currentColor 1px, transparent 1px),
-                        linear-gradient(to bottom, currentColor 1px, transparent 1px)
-                      `,
-                      backgroundSize: '20px 20px',
-                    }}
-                  />
-                  
+                  {/* Grid lines */}
+                  <defs>
+                    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="0.3" opacity="0.15" />
+                    </pattern>
+                  </defs>
+                  <rect width="800" height="300" fill="url(#grid)" />
+
+                  {/* Hull outline */}
+                  <path d={HULL_PATH} fill="none" stroke="currentColor" strokeWidth="2" opacity="0.4" />
+                  <path d={HULL_PATH} fill="currentColor" opacity="0.03" />
+
+                  {/* Centerline */}
+                  <line x1="400" y1="5" x2="400" y2="295" stroke="currentColor" strokeWidth="0.5" strokeDasharray="8,4" opacity="0.2" />
+
+                  {/* Bow label */}
+                  <text x="400" y="2" textAnchor="middle" className="fill-muted-foreground text-[10px]">BOW</text>
+                  {/* Stern label */}
+                  <text x="400" y="298" textAnchor="middle" className="fill-muted-foreground text-[10px]">STERN</text>
+                  {/* Port/Starboard */}
+                  <text x="225" y="150" textAnchor="middle" className="fill-muted-foreground text-[9px]">PORT</text>
+                  <text x="575" y="150" textAnchor="middle" className="fill-muted-foreground text-[9px]">STBD</text>
+
                   {/* Spaces */}
                   {deckSpaces.map((space) => {
-                    const Icon = spaceTypeIcons[space.type] || Box;
-                    const isSelected = selectedSpace?.id === space.id;
-                    const spaceItemCount = currentItems.filter((i) => i.spaceId === space.id).length;
-                    
+                    const config = spaceTypeConfig[space.type];
+                    const isSelected = selectedSpaceId === space.id;
+                    const geo = space.geometry;
+                    if (!geo) return null;
+                    const fill = config?.color || '#6b7280';
+
                     return (
-                      <div
-                        key={space.id}
-                        className={cn(
-                          'absolute border-2 rounded-lg cursor-pointer transition-all',
-                          'hover:shadow-lg hover:scale-[1.02]',
-                          isSelected 
-                            ? 'border-primary bg-primary/10 shadow-lg' 
-                            : 'border-slate-300 dark:border-slate-700 bg-card/80 hover:bg-card'
-                        )}
-                        style={{
-                          left: `${space.geometry?.x || 0}%`,
-                          top: `${space.geometry?.y || 0}%`,
-                          width: `${space.geometry?.width || 20}%`,
-                          height: `${space.geometry?.height || 15}%`,
-                        }}
-                        onClick={() => setSelectedSpace(space)}
-                      >
-                        <div className="p-2 h-full flex flex-col">
-                          <div className="flex items-center gap-1.5">
-                            <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-                            <span className="text-xs font-medium truncate">{space.name}</span>
-                          </div>
-                          {spaceItemCount > 0 && (
-                            <div className="mt-auto flex items-center gap-1">
-                              <Package className="h-3 w-3 text-muted-foreground" />
-                              <span className="text-xs text-muted-foreground">{spaceItemCount}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                      <g key={space.id} onClick={() => handleSpaceClick(space)} onDoubleClick={() => handleSpaceDoubleClick(space)} style={{ cursor: 'pointer' }}>
+                        <rect
+                          x={geo.x} y={geo.y} width={geo.width} height={geo.height}
+                          rx={4} ry={4}
+                          fill={fill} fillOpacity={isSelected ? 0.35 : 0.15}
+                          stroke={isSelected ? fill : 'currentColor'}
+                          strokeWidth={isSelected ? 2 : 1}
+                          strokeOpacity={isSelected ? 1 : 0.4}
+                          className="transition-all duration-150"
+                        />
+                        {/* Space label */}
+                        <text
+                          x={geo.x + geo.width / 2} y={geo.y + geo.height / 2 - 4}
+                          textAnchor="middle" dominantBaseline="middle"
+                          className="fill-foreground text-[10px] font-medium pointer-events-none select-none"
+                        >
+                          {space.name}
+                        </text>
+                        <text
+                          x={geo.x + geo.width / 2} y={geo.y + geo.height / 2 + 8}
+                          textAnchor="middle" dominantBaseline="middle"
+                          className="fill-muted-foreground text-[8px] pointer-events-none select-none"
+                        >
+                          {config?.label || space.type}
+                        </text>
+                      </g>
                     );
                   })}
-                </div>
+                </svg>
               </div>
             </CardContent>
           </Card>
-          
-          {/* Legend */}
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(SpaceType).slice(0, 8).map(([key, value]) => {
-              const Icon = spaceTypeIcons[value] || Box;
-              return (
-                <div key={key} className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted text-xs">
-                  <Icon className="h-3.5 w-3.5" />
-                  <span className="capitalize">{value.replace(/_/g, ' ')}</span>
-                </div>
-              );
-            })}
-          </div>
         </div>
-        
-        {/* Right Column - Details Panel */}
+
+        {/* Right Panel - Space Details */}
         <div className="space-y-4">
-          {/* Selected Space Details */}
-          {selectedSpace ? (
+          {/* Selected Space Detail */}
+          {selected ? (
             <Card>
               <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      {React.createElement(spaceTypeIcons[selectedSpace.type] || Box, { className: 'h-5 w-5 text-muted-foreground' })}
-                      {selectedSpace.name}
-                    </CardTitle>
-                    <CardDescription className="capitalize">
-                      {selectedSpace.type.replace(/_/g, ' ')} • {selectedSpace.deckName}
-                    </CardDescription>
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setIsEditing(true)}>
-                        <Edit3 className="h-4 w-4 mr-2" />
-                        Edit Space
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <QrCode className="h-4 w-4 mr-2" />
-                        Print QR Code
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    {React.createElement(spaceTypeConfig[selected.type]?.icon || Box, { className: 'h-4 w-4' })}
+                    {selected.name}
+                  </CardTitle>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedSpaceId(null)}><X className="h-4 w-4" /></Button>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {selectedSpace.description && (
-                  <p className="text-sm text-muted-foreground">{selectedSpace.description}</p>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div><span className="text-muted-foreground">Type:</span> <span className="font-medium">{spaceTypeConfig[selected.type]?.label || selected.type}</span></div>
+                  <div><span className="text-muted-foreground">Deck:</span> <span className="font-medium">{selected.deckName || (selected.deck === 0 ? 'Main' : `Level ${selected.deck}`)}</span></div>
+                </div>
+                {selected.description && <p className="text-sm text-muted-foreground">{selected.description}</p>}
+                {selected.geometry && (
+                  <div className="text-xs text-muted-foreground">
+                    Position: ({selected.geometry.x}, {selected.geometry.y}) · {selected.geometry.width}×{selected.geometry.height}
+                  </div>
                 )}
-                
-                <Separator />
-                
-                {/* Items in this space */}
-                <div>
-                  <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-                    <Package className="h-4 w-4" />
-                    Items ({spaceItems.length})
-                  </h4>
-                  {spaceItems.length === 0 ? (
-                    <p className="text-sm text-muted-foreground py-2">No items in this space</p>
-                  ) : (
-                    <ScrollArea className="h-[200px]">
-                      <div className="space-y-2 pr-4">
-                        {spaceItems.map((item) => {
-                          const Icon = itemCategoryIcons[item.category] || Box;
-                          return (
-                            <div 
-                              key={item.id} 
-                              className="flex items-center justify-between p-2 rounded-md bg-muted/50 hover:bg-muted cursor-pointer"
-                            >
-                              <div className="flex items-center gap-2">
-                                <Icon className="h-4 w-4 text-muted-foreground" />
-                                <div>
-                                  <p className="text-sm font-medium">{item.name}</p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {item.quantity} {item.unit}
-                                  </p>
-                                </div>
-                              </div>
-                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </ScrollArea>
-                  )}
-                  <Button variant="outline" size="sm" className="w-full mt-2" onClick={() => setShowAddItem(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Item to Space
-                  </Button>
+                <div className="flex gap-2 pt-2">
+                  <Button variant="outline" size="sm" className="flex-1" onClick={() => handleSpaceDoubleClick(selected)}><Edit3 className="h-3 w-3 mr-1" /> Edit</Button>
+                  <Button variant="outline" size="sm" className="flex-1"><ChevronRight className="h-3 w-3 mr-1" /> Items</Button>
                 </div>
               </CardContent>
             </Card>
           ) : (
-            <Card className="bg-muted/50">
-              <CardContent className="py-8 text-center">
-                <Map className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
-                <p className="text-muted-foreground">Select a space on the deck plan to view details</p>
+            <Card>
+              <CardContent className="pt-6 text-center">
+                <Map className="h-10 w-10 mx-auto mb-2 text-muted-foreground/30" />
+                <p className="text-sm text-muted-foreground">Click a space on the deck plan to see details</p>
               </CardContent>
             </Card>
           )}
-          
-          {/* Inventory Search */}
+
+          {/* Space List */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2">
-                <Search className="h-5 w-5 text-muted-foreground" />
-                Find Items
-              </CardTitle>
+              <CardTitle className="text-base">Spaces ({deckSpaces.length})</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Search items..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1"
-                />
-                <Select value={filterCategory} onValueChange={setFilterCategory}>
-                  <SelectTrigger className="w-[130px]">
-                    <Filter className="h-4 w-4 mr-2" />
-                    <span>Filter</span>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {Object.entries(ItemCategory).map(([key, value]) => (
-                      <SelectItem key={key} value={value}>
-                        {value.replace(/_/g, ' ')}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <ScrollArea className="h-[200px]">
-                <div className="space-y-2 pr-4">
-                  {filteredItems.slice(0, 10).map((item) => {
-                    const Icon = itemCategoryIcons[item.category] || Box;
+            <CardContent>
+              <ScrollArea className="h-[300px]">
+                <div className="space-y-1">
+                  {deckSpaces.map((space) => {
+                    const config = spaceTypeConfig[space.type];
+                    const Icon = config?.icon || Box;
                     return (
-                      <div 
-                        key={item.id} 
-                        className="flex items-center justify-between p-2 rounded-md bg-muted/50 hover:bg-muted cursor-pointer"
-                        onClick={() => {
-                          const space = currentSpaces.find((s) => s.id === item.spaceId);
-                          if (space) setSelectedSpace(space);
-                        }}
+                      <button
+                        key={space.id}
+                        className={cn('w-full flex items-center gap-3 p-2 rounded-lg text-left hover:bg-muted/50 transition-colors', selectedSpaceId === space.id && 'bg-muted')}
+                        onClick={() => handleSpaceClick(space)}
                       >
-                        <div className="flex items-center gap-2">
-                          <Icon className="h-4 w-4 text-muted-foreground" />
-                          <div>
-                            <p className="text-sm font-medium">{item.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              in {getSpaceName(item.spaceId)}
-                            </p>
-                          </div>
+                        <div className="h-8 w-8 rounded flex items-center justify-center" style={{ backgroundColor: `${config?.color || '#6b7280'}20` }}>
+                          <Icon className="h-4 w-4" style={{ color: config?.color || '#6b7280' }} />
                         </div>
-                        <Badge variant="outline" className="text-xs">
-                          {item.quantity}
-                        </Badge>
-                      </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{space.name}</p>
+                          <p className="text-xs text-muted-foreground">{config?.label || space.type}</p>
+                        </div>
+                      </button>
                     );
                   })}
-                  {filteredItems.length === 0 && (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      No items found
-                    </p>
-                  )}
                 </div>
               </ScrollArea>
             </CardContent>
           </Card>
         </div>
       </div>
-      
-      {/* Add Space Dialog */}
-      <Dialog open={showAddSpace} onOpenChange={setShowAddSpace}>
+
+      {/* Edit Space Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add New Space</DialogTitle>
-            <DialogDescription>
-              Create a new compartment or area on your vessel
-            </DialogDescription>
+            <DialogTitle>Edit Space: {editingSpace?.name}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Name</Label>
-              <Input placeholder="e.g., Port Storage Locker" />
-            </div>
-            <div className="space-y-2">
-              <Label>Type</Label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select space type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(SpaceType).map(([key, value]) => (
-                    <SelectItem key={key} value={value}>
-                      {value.replace(/_/g, ' ')}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Description</Label>
-              <Input placeholder="Optional description" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddSpace(false)}>Cancel</Button>
-            <Button onClick={() => setShowAddSpace(false)}>Add Space</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Add Item Dialog */}
-      <Dialog open={showAddItem} onOpenChange={setShowAddItem}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Add New Item</DialogTitle>
-            <DialogDescription>
-              Track an item in your vessel inventory
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Name</Label>
-              <Input placeholder="Item name" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
+          {editingSpace && (
+            <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label>Category</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
+                <Label>Name</Label>
+                <Input defaultValue={editingSpace.name} />
+              </div>
+              <div className="space-y-2">
+                <Label>Type</Label>
+                <Select defaultValue={editingSpace.type}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {Object.entries(ItemCategory).map(([key, value]) => (
-                      <SelectItem key={key} value={value}>
-                        {value.replace(/_/g, ' ')}
-                      </SelectItem>
+                    {Object.entries(spaceTypeConfig).map(([key, cfg]) => (
+                      <SelectItem key={key} value={key}>{cfg.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Space</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select location" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {currentSpaces.map((space) => (
-                      <SelectItem key={space.id} value={space.id}>
-                        {space.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>Description</Label>
+                <Input defaultValue={editingSpace.description || ''} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Deck</Label>
+                  <Select defaultValue={String(editingSpace.deck)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="-1">Lower Deck</SelectItem>
+                      <SelectItem value="0">Main Deck</SelectItem>
+                      <SelectItem value="1">Upper Deck</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Quantity</Label>
-                <Input type="number" placeholder="0" />
-              </div>
-              <div className="space-y-2">
-                <Label>Unit</Label>
-                <Input placeholder="e.g., pieces, liters" />
-              </div>
-            </div>
-          </div>
+          )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddItem(false)}>Cancel</Button>
-            <Button onClick={() => setShowAddItem(false)}>Add Item</Button>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+            <Button onClick={() => setIsEditDialogOpen(false)}><Save className="h-4 w-4 mr-2" /> Save</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

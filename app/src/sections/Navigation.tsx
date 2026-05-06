@@ -3,7 +3,7 @@
  * Real-time HUD with charts, AIS, and telemetry display
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   Compass,
   Navigation as NavigationIcon,
@@ -34,7 +34,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { cn, formatCoordinate, formatHeading, formatSpeed, formatDepth, formatTemperature } from '@/lib/utils';
 import { useTelemetry } from '@/hooks/useTelemetry';
-import type { TelemetryMessage } from '@/types';
+import { NBPilotChart } from '@/components/NBPilotChart';
+import { useNavigationPlanStore } from '@/store';
 
 // Compass rose component
 function CompassRose({ heading, course, size = 200 }: { heading: number; course?: number; size?: number }) {
@@ -195,95 +196,6 @@ function AttitudeIndicator({ roll, pitch }: { roll: number; pitch: number }) {
   );
 }
 
-// Mini chart/map component
-function MiniChart({ position, heading, aisTargets }: { 
-  position: { latitude: number; longitude: number } | null;
-  heading: number;
-  aisTargets: Array<{ mmsi: string; position: { latitude: number; longitude: number }; name?: string }>;
-}) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || !position) return;
-    
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Draw grid
-    ctx.strokeStyle = 'rgba(148, 163, 184, 0.2)';
-    ctx.lineWidth = 1;
-    for (let i = 0; i < canvas.width; i += 40) {
-      ctx.beginPath();
-      ctx.moveTo(i, 0);
-      ctx.lineTo(i, canvas.height);
-      ctx.stroke();
-    }
-    for (let i = 0; i < canvas.height; i += 40) {
-      ctx.beginPath();
-      ctx.moveTo(0, i);
-      ctx.lineTo(canvas.width, i);
-      ctx.stroke();
-    }
-    
-    // Draw own vessel (center)
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    
-    ctx.save();
-    ctx.translate(centerX, centerY);
-    ctx.rotate((heading * Math.PI) / 180);
-    
-    // Vessel shape
-    ctx.fillStyle = '#0ea5e9';
-    ctx.beginPath();
-    ctx.moveTo(0, -12);
-    ctx.lineTo(-6, 8);
-    ctx.lineTo(0, 4);
-    ctx.lineTo(6, 8);
-    ctx.closePath();
-    ctx.fill();
-    
-    ctx.restore();
-    
-    // Draw AIS targets
-    aisTargets.forEach((target) => {
-      // Calculate relative position (simplified)
-      const dLat = target.position.latitude - position.latitude;
-      const dLon = target.position.longitude - position.longitude;
-      const scale = 10000; // Scale factor for display
-      
-      const targetX = centerX + dLon * scale;
-      const targetY = centerY - dLat * scale;
-      
-      // Only draw if within canvas bounds
-      if (targetX >= 0 && targetX <= canvas.width && targetY >= 0 && targetY <= canvas.height) {
-        ctx.fillStyle = '#ef4444';
-        ctx.beginPath();
-        ctx.arc(targetX, targetY, 4, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Label
-        ctx.fillStyle = '#64748b';
-        ctx.font = '10px sans-serif';
-        ctx.fillText(target.name || target.mmsi.slice(-4), targetX + 6, targetY - 4);
-      }
-    });
-  }, [position, heading, aisTargets]);
-  
-  return (
-    <canvas
-      ref={canvasRef}
-      width={300}
-      height={200}
-      className="w-full h-full rounded-lg bg-card"
-    />
-  );
-}
-
 export function Navigation() {
   const { 
     latestPosition, 
@@ -296,9 +208,16 @@ export function Navigation() {
   
   const [activeView, setActiveView] = useState('hud');
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const {
+    routes,
+    activeRouteId,
+    setActiveRoute,
+    seedNBPilotReferenceRoute,
+  } = useNavigationPlanStore();
   
   // Get first engine data
   const engineData = Object.entries(latestEngine)[0]?.[1];
+  const activeRoute = routes.find((route) => route.id === activeRouteId) ?? null;
   
   return (
     <div className={cn(
@@ -485,36 +404,104 @@ export function Navigation() {
         
         {/* Chart View */}
         <TabsContent value="chart" className="mt-4">
-          <Card className="h-[500px]">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Layers className="h-5 w-5" />
-                  Chart View
-                </CardTitle>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline">
-                    <Ship className="h-3 w-3 mr-1" />
-                    Own Vessel
-                  </Badge>
-                  <Badge variant="outline" className="text-red-500 border-red-200">
-                    <Ship className="h-3 w-3 mr-1" />
-                    AIS Target
-                  </Badge>
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
+            <Card className="h-[560px]">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between gap-3">
+                  <CardTitle className="flex items-center gap-2">
+                    <Layers className="h-5 w-5" />
+                    Chart View
+                  </CardTitle>
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    <Badge variant="outline">
+                      <Ship className="h-3 w-3 mr-1" />
+                      Own Vessel
+                    </Badge>
+                    <Badge variant="outline" className="text-red-500 border-red-200">
+                      <Ship className="h-3 w-3 mr-1" />
+                      AIS Target
+                    </Badge>
+                    <Badge variant="outline" className="text-emerald-500 border-emerald-200">
+                      <MapPin className="h-3 w-3 mr-1" />
+                      {routes.length} Route{routes.length === 1 ? '' : 's'}
+                    </Badge>
+                  </div>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent className="h-[calc(100%-60px)]">
-              <MiniChart 
-                position={latestPosition ? {
-                  latitude: latestPosition.latitude,
-                  longitude: latestPosition.longitude,
-                } : null}
-                heading={latestMotion?.yaw || 0}
-                aisTargets={aisTargets}
-              />
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent className="h-[calc(100%-60px)]">
+                <NBPilotChart
+                  position={latestPosition ? {
+                    latitude: latestPosition.latitude,
+                    longitude: latestPosition.longitude,
+                  } : null}
+                  heading={latestMotion?.yaw || 0}
+                  aisTargets={aisTargets}
+                  routes={routes}
+                  activeRouteId={activeRouteId}
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <MapPin className="h-5 w-5" />
+                  Routes
+                </CardTitle>
+                <CardDescription>
+                  Local planning routes render as reference overlays on the NB pilot chart.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {routes.length === 0 ? (
+                  <div className="rounded-lg border border-dashed p-6 text-center">
+                    <p className="text-sm text-muted-foreground">No local routes saved.</p>
+                    <Button size="sm" className="mt-3" onClick={seedNBPilotReferenceRoute}>
+                      Add NB Reference Route
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {routes.map((route) => (
+                      <button
+                        key={route.id}
+                        type="button"
+                        onClick={() => setActiveRoute(route.id)}
+                        className={cn(
+                          'w-full rounded-lg border p-3 text-left transition-colors hover:bg-muted',
+                          route.id === activeRouteId && 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20'
+                        )}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-medium">{route.name}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {route.waypoints.length} waypoints · {route.totalDistance.toFixed(1)} nm
+                            </p>
+                          </div>
+                          <Badge variant={route.id === activeRouteId ? 'default' : 'outline'}>
+                            {route.status}
+                          </Badge>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {activeRoute && (
+                  <div className="mt-4 rounded-lg bg-muted p-3 text-sm">
+                    <div className="flex items-center gap-2 font-medium">
+                      <Clock className="h-4 w-4" />
+                      {activeRoute.estimatedDuration} min
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Distance and duration are planning estimates only.
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
         
         {/* Engine View */}

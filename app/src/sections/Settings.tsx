@@ -42,13 +42,14 @@ import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import { useSettingsStore, useAIStore, useAppStore } from '@/store';
+import { buildSignalKStreamUrl } from '@/lib/signalk';
+import { useSettingsStore, useAIStore, useAppStore, type TelemetryMode } from '@/store';
 import { ThemeMode, UnitSystem, AIProviderType, SharePositionLevel } from '@/types';
 
 export function Settings() {
-  const { userPreferences, updateUserPreferences, consent, setConsent } = useSettingsStore();
+  const { userPreferences, updateUserPreferences, consent, setConsent, boatNode, updateBoatNodeSettings } = useSettingsStore();
   const { providers, activeProvider, setActiveProvider, addProvider } = useAIStore();
-  const { connectionStatus } = useAppStore();
+  const { connectionStatus, addNotification } = useAppStore();
   const [showAddAI, setShowAddAI] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [newProvider, setNewProvider] = useState({
@@ -100,6 +101,22 @@ export function Settings() {
       providerType: AIProviderType.LOCAL,
       apiUrl: 'http://localhost:11434',
       apiKey: '',
+    });
+  };
+
+  const signalKStreamUrl = (() => {
+    try {
+      return buildSignalKStreamUrl(boatNode.signalKBaseUrl, boatNode.signalKSubscribe);
+    } catch {
+      return 'Invalid Boat Node URL';
+    }
+  })();
+
+  const applyBoatNodeSettings = () => {
+    addNotification({
+      type: 'info',
+      title: 'Boat Node Settings Saved',
+      message: 'Navigation will reconnect with the current telemetry source.',
     });
   };
   
@@ -548,30 +565,119 @@ export function Settings() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Connection Status</p>
-                  <p className="text-sm text-muted-foreground">
-                    {connectionStatus === 'online' ? 'Connected to Boat Node' : 'Offline'}
-                  </p>
-                </div>
-                <Badge variant={connectionStatus === 'online' ? 'default' : 'destructive'}>
-                  {connectionStatus === 'online' ? 'Online' : 'Offline'}
-                </Badge>
-              </div>
-              <Separator />
-              <div className="space-y-2">
-                <Label>Boat Node URL</Label>
-                <Input defaultValue="ws://192.168.1.100:8080" />
-              </div>
-              <div className="space-y-2">
-                <Label>Connection Timeout (seconds)</Label>
-                <Input type="number" defaultValue="30" />
-              </div>
-              <Button>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Test Connection
-              </Button>
+	              <div className="flex items-center justify-between">
+	                <div>
+	                  <p className="font-medium">Connection Status</p>
+	                  <p className="text-sm text-muted-foreground">
+	                    {connectionStatus === 'online' ? 'Telemetry source active' : connectionStatus}
+	                  </p>
+	                </div>
+	                <Badge variant={connectionStatus === 'online' ? 'default' : 'destructive'}>
+	                  {connectionStatus}
+	                </Badge>
+	              </div>
+	              <Separator />
+	              <div className="space-y-2">
+	                <Label>Telemetry Source</Label>
+	                <Select
+	                  value={boatNode.telemetryMode}
+	                  onValueChange={(value) => updateBoatNodeSettings({ telemetryMode: value as TelemetryMode })}
+	                >
+	                  <SelectTrigger>
+	                    <SelectValue />
+	                  </SelectTrigger>
+	                  <SelectContent>
+	                    <SelectItem value="replay">Recorded Signal K replay</SelectItem>
+	                    <SelectItem value="signalk">Live Signal K Boat Node</SelectItem>
+	                    <SelectItem value="simulated">Generated simulation</SelectItem>
+	                  </SelectContent>
+	                </Select>
+	              </div>
+	              <div className="space-y-2">
+	                <Label>Boat Node URL</Label>
+	                <Input
+	                  value={boatNode.signalKBaseUrl}
+	                  onChange={(event) => updateBoatNodeSettings({ signalKBaseUrl: event.target.value })}
+	                />
+	                <p className="break-all text-xs text-muted-foreground">{signalKStreamUrl}</p>
+	              </div>
+	              <div className="space-y-2">
+	                <Label>Signal K Subscription</Label>
+	                <Select
+	                  value={boatNode.signalKSubscribe}
+	                  onValueChange={(value) => updateBoatNodeSettings({ signalKSubscribe: value as typeof boatNode.signalKSubscribe })}
+	                >
+	                  <SelectTrigger>
+	                    <SelectValue />
+	                  </SelectTrigger>
+	                  <SelectContent>
+	                    <SelectItem value="self">Self vessel</SelectItem>
+	                    <SelectItem value="all">All vessel contexts</SelectItem>
+	                    <SelectItem value="none">No automatic subscription</SelectItem>
+	                  </SelectContent>
+	                </Select>
+	              </div>
+	              <div className="space-y-2">
+	                <Label>Connection Timeout (seconds)</Label>
+	                <Input
+	                  type="number"
+	                  min={3}
+	                  max={60}
+	                  value={boatNode.connectionTimeoutSeconds}
+	                  onChange={(event) => {
+	                    const nextValue = Number(event.target.value);
+	                    if (Number.isFinite(nextValue)) {
+	                      updateBoatNodeSettings({ connectionTimeoutSeconds: Math.min(60, Math.max(3, nextValue)) });
+	                    }
+	                  }}
+	                />
+	              </div>
+	              <div className="grid gap-4 sm:grid-cols-2">
+	                <div className="space-y-2">
+	                  <Label>Surface To Transducer (m)</Label>
+	                  <Input
+	                    type="number"
+	                    step="0.1"
+	                    min={0}
+	                    value={boatNode.surfaceToTransducerMeters}
+	                    onChange={(event) => {
+	                      const nextValue = Number(event.target.value);
+	                      if (Number.isFinite(nextValue)) {
+	                        updateBoatNodeSettings({ surfaceToTransducerMeters: Math.max(0, nextValue) });
+	                      }
+	                    }}
+	                  />
+	                </div>
+	                <div className="space-y-2">
+	                  <Label>Transducer To Keel (m)</Label>
+	                  <Input
+	                    type="number"
+	                    step="0.1"
+	                    min={0}
+	                    value={boatNode.transducerToKeelMeters}
+	                    onChange={(event) => {
+	                      const nextValue = Number(event.target.value);
+	                      if (Number.isFinite(nextValue)) {
+	                        updateBoatNodeSettings({ transducerToKeelMeters: Math.max(0, nextValue) });
+	                      }
+	                    }}
+	                  />
+	                </div>
+	              </div>
+	              <div className="flex items-center justify-between rounded-lg border p-3">
+	                <div>
+	                  <p className="font-medium">Fallback Replay</p>
+	                  <p className="text-sm text-muted-foreground">Use recorded NB Signal K data if live Boat Node connection fails.</p>
+	                </div>
+	                <Switch
+	                  checked={boatNode.fallbackToReplay}
+	                  onCheckedChange={(checked) => updateBoatNodeSettings({ fallbackToReplay: checked })}
+	                />
+	              </div>
+	              <Button onClick={applyBoatNodeSettings}>
+	                <RefreshCw className="h-4 w-4 mr-2" />
+	                Apply Settings
+	              </Button>
             </CardContent>
           </Card>
         </TabsContent>

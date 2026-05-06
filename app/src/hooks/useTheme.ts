@@ -18,80 +18,78 @@ interface ThemeState {
 export function useTheme(): ThemeState {
   const { userPreferences, updateUserPreferences } = useSettingsStore();
   const theme = userPreferences.theme;
-  
+
   const [effectiveTheme, setEffectiveTheme] = useState<'day' | 'night'>('day');
-  
+
   // Determine effective theme based on mode and system/time
   const calculateEffectiveTheme = useCallback((): 'day' | 'night' => {
     if (theme === ThemeMode.DAY) return 'day';
     if (theme === ThemeMode.NIGHT) return 'night';
-    
+
     // Auto mode - check system preference or time of day
     if (typeof window !== 'undefined') {
       // Check system preference first
       const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      
+
       // Also check time of day (night = 20:00 - 06:00)
       const hour = new Date().getHours();
       const isNightTime = hour >= 20 || hour < 6;
-      
+
       return systemPrefersDark || isNightTime ? 'night' : 'day';
     }
-    
+
     return 'day';
   }, [theme]);
-  
+
   // Update effective theme when theme changes
   useEffect(() => {
     setEffectiveTheme(calculateEffectiveTheme());
   }, [calculateEffectiveTheme]);
-  
+
   // Listen for system theme changes
   useEffect(() => {
     if (theme !== ThemeMode.AUTO) return;
-    
+
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = () => {
       setEffectiveTheme(calculateEffectiveTheme());
     };
-    
+
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, [theme, calculateEffectiveTheme]);
-  
+
   // Update time-based theme every minute
   useEffect(() => {
     if (theme !== ThemeMode.AUTO) return;
-    
+
     const interval = setInterval(() => {
       setEffectiveTheme(calculateEffectiveTheme());
     }, 60000);
-    
+
     return () => clearInterval(interval);
   }, [theme, calculateEffectiveTheme]);
-  
-  // Apply theme class to document
+
+  // Apply theme class to document — 'dark' class activates Tailwind dark mode
   useEffect(() => {
     const root = document.documentElement;
-    
-    if (effectiveTheme === 'night') {
-      root.classList.add('night-mode');
-      root.classList.remove('day-mode');
-    } else {
-      root.classList.add('day-mode');
-      root.classList.remove('night-mode');
-    }
+    const isNight = effectiveTheme === 'night';
+
+    // Tailwind requires 'dark' class on <html> for dark: variants to work
+    root.classList.toggle('dark', isNight);
+    root.classList.toggle('night-mode', isNight);
+    root.classList.toggle('day-mode', !isNight);
   }, [effectiveTheme]);
-  
+
   const setTheme = useCallback((newTheme: ThemeMode) => {
     updateUserPreferences({ theme: newTheme });
   }, [updateUserPreferences]);
-  
+
   const toggleTheme = useCallback(() => {
     const newTheme = effectiveTheme === 'day' ? ThemeMode.NIGHT : ThemeMode.DAY;
     updateUserPreferences({ theme: newTheme });
   }, [effectiveTheme, updateUserPreferences]);
-  
+
   return {
     theme,
     effectiveTheme,
@@ -104,7 +102,7 @@ export function useTheme(): ThemeState {
 // Hook for accessing CSS variables based on theme
 export function useThemeColors() {
   const { effectiveTheme } = useTheme();
-  
+
   const colors = {
     day: {
       background: '#ffffff',
@@ -137,6 +135,6 @@ export function useThemeColors() {
       info: '#60a5fa',
     },
   };
-  
+
   return colors[effectiveTheme];
 }

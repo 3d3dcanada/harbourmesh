@@ -3,11 +3,10 @@
  * Opt-in community telemetry network and shared safety features
  */
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Users,
   Map,
-  Navigation,
   Wind,
   Waves,
   AlertTriangle,
@@ -15,15 +14,12 @@ import {
   CheckCircle2,
   Shield,
   Eye,
-  EyeOff,
-  TrendingUp,
   Activity,
-  Anchor,
   Ship,
-  Radio,
   BarChart3,
+  Database,
+  Droplets,
   Globe,
-  Settings,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,8 +28,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { useSettingsStore, useTelemetryStore } from '@/store';
+import { useCommunityDataStore, useSettingsStore, useTelemetryStore, type CommunitySyncBatch } from '@/store';
 import { SharePositionLevel } from '@/types';
+import { prepareSoundingForCommunityUpload, type RawDepthSounding } from '@/lib/community-soundings';
 
 // Demo community data
 const demoVessels = [
@@ -56,11 +53,55 @@ const demoHazards = [
   { id: 'h3', type: 'obstruction', severity: 'high', description: 'Debris reported in channel', reported: '5 min ago' },
 ];
 
+function getConfidenceClass(sounding: RawDepthSounding): string {
+  if (sounding.quality.rejected) return 'text-red-500 border-red-200';
+  if (sounding.quality.confidence >= 0.75) return 'text-emerald-500 border-emerald-200';
+  if (sounding.quality.confidence >= 0.5) return 'text-amber-500 border-amber-200';
+  return 'text-red-500 border-red-200';
+}
+
+function getBatchStatusClass(batch: CommunitySyncBatch): string {
+  if (batch.status === 'acknowledged') return 'text-emerald-500 border-emerald-200';
+  if (batch.status === 'sent') return 'text-blue-500 border-blue-200';
+  if (batch.status === 'failed') return 'text-red-500 border-red-200';
+  return 'text-amber-500 border-amber-200';
+}
+
 export function Community() {
   const { consent, setConsent } = useSettingsStore();
   const { aisTargets } = useTelemetryStore();
+  const {
+    rawSoundings,
+    uploadBatches,
+    getShareableSoundings,
+    queueShareableSoundingBatch,
+  } = useCommunityDataStore();
   const [activeTab, setActiveTab] = useState('map');
   const [isOptedIn, setIsOptedIn] = useState(consent?.shareTelemetryForCommunity || false);
+  const shareableSoundings = getShareableSoundings();
+  const queuedBatches = useMemo(() => uploadBatches.filter((batch) => batch.status === 'queued'), [uploadBatches]);
+  const queuedRecordIds = useMemo(
+    () =>
+      new Set(
+        uploadBatches
+          .filter((batch) => batch.status !== 'failed')
+          .flatMap((batch) => batch.payload.records.map((record) => record.id))
+      ),
+    [uploadBatches]
+  );
+  const pendingShareableCount = useMemo(
+    () => shareableSoundings.filter((record) => !queuedRecordIds.has(record.id)).length,
+    [queuedRecordIds, shareableSoundings]
+  );
+  const queuedRecordCount = useMemo(
+    () => queuedBatches.reduce((total, batch) => total + batch.payload.recordCount, 0),
+    [queuedBatches]
+  );
+  const rejectedSoundings = useMemo(() => rawSoundings.filter((sounding) => sounding.quality.rejected), [rawSoundings]);
+  const averageConfidence = useMemo(() => {
+    if (rawSoundings.length === 0) return 0;
+    return rawSoundings.reduce((total, sounding) => total + sounding.quality.confidence, 0) / rawSoundings.length;
+  }, [rawSoundings]);
   
   const handleOptIn = (enabled: boolean) => {
     setIsOptedIn(enabled);
@@ -71,6 +112,10 @@ export function Community() {
         shareLivePosition: enabled ? SharePositionLevel.BLURRED : SharePositionLevel.NONE,
       });
     }
+  };
+
+  const handleQueueSoundings = () => {
+    queueShareableSoundingBatch();
   };
   
   return (
@@ -176,13 +221,17 @@ export function Community() {
             <Waves className="h-4 w-4 mr-2" />
             Conditions
           </TabsTrigger>
-          <TabsTrigger value="hazards">
-            <AlertTriangle className="h-4 w-4 mr-2" />
-            Hazards
-          </TabsTrigger>
-          <TabsTrigger value="stats">
-            <BarChart3 className="h-4 w-4 mr-2" />
-            Statistics
+	          <TabsTrigger value="hazards">
+	            <AlertTriangle className="h-4 w-4 mr-2" />
+	            Hazards
+	          </TabsTrigger>
+	          <TabsTrigger value="bathymetry">
+	            <Droplets className="h-4 w-4 mr-2" />
+	            Bathymetry
+	          </TabsTrigger>
+	          <TabsTrigger value="stats">
+	            <BarChart3 className="h-4 w-4 mr-2" />
+	            Statistics
           </TabsTrigger>
         </TabsList>
         
@@ -384,10 +433,180 @@ export function Community() {
             <AlertTriangle className="h-4 w-4 mr-2" />
             Report Hazard
           </Button>
-        </TabsContent>
-        
-        {/* Stats View */}
-        <TabsContent value="stats" className="mt-4">
+	        </TabsContent>
+	        
+	        {/* Bathymetry View */}
+	        <TabsContent value="bathymetry" className="mt-4">
+	          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+	            <Card>
+	              <CardContent className="py-4">
+	                <div className="flex items-center gap-3">
+	                  <div className="rounded-lg bg-blue-50 p-2 text-blue-500 dark:bg-blue-950/30">
+	                    <Database className="h-5 w-5" />
+	                  </div>
+	                  <div>
+	                    <p className="text-sm text-muted-foreground">Raw Soundings</p>
+	                    <p className="text-2xl font-bold">{rawSoundings.length}</p>
+	                  </div>
+	                </div>
+	              </CardContent>
+	            </Card>
+	            <Card>
+	              <CardContent className="py-4">
+	                <div className="flex items-center gap-3">
+	                  <div className="rounded-lg bg-emerald-50 p-2 text-emerald-500 dark:bg-emerald-950/30">
+	                    <Shield className="h-5 w-5" />
+	                  </div>
+	                  <div>
+	                    <p className="text-sm text-muted-foreground">Shareable</p>
+	                    <p className="text-2xl font-bold">{shareableSoundings.length}</p>
+	                  </div>
+	                </div>
+	              </CardContent>
+	            </Card>
+	            <Card>
+	              <CardContent className="py-4">
+	                <div className="flex items-center gap-3">
+	                  <div className="rounded-lg bg-amber-50 p-2 text-amber-500 dark:bg-amber-950/30">
+	                    <Database className="h-5 w-5" />
+	                  </div>
+	                  <div>
+	                    <p className="text-sm text-muted-foreground">Queued</p>
+	                    <p className="text-2xl font-bold">{queuedRecordCount}</p>
+	                  </div>
+	                </div>
+	              </CardContent>
+	            </Card>
+	            <Card>
+	              <CardContent className="py-4">
+	                <div className="flex items-center gap-3">
+	                  <div className="rounded-lg bg-red-50 p-2 text-red-500 dark:bg-red-950/30">
+	                    <AlertTriangle className="h-5 w-5" />
+	                  </div>
+	                  <div>
+	                    <p className="text-sm text-muted-foreground">Rejected</p>
+	                    <p className="text-2xl font-bold">{rejectedSoundings.length}</p>
+	                  </div>
+	                </div>
+	              </CardContent>
+	            </Card>
+	            <Card>
+	              <CardContent className="py-4">
+	                <div className="flex items-center gap-3">
+	                  <div className="rounded-lg bg-purple-50 p-2 text-purple-500 dark:bg-purple-950/30">
+	                    <BarChart3 className="h-5 w-5" />
+	                  </div>
+	                  <div>
+	                    <p className="text-sm text-muted-foreground">Confidence</p>
+	                    <p className="text-2xl font-bold">{Math.round(averageConfidence * 100)}%</p>
+	                  </div>
+	                </div>
+	              </CardContent>
+	            </Card>
+	          </div>
+
+	          <Card className="mt-4">
+	            <CardHeader>
+	              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+	                <div>
+	                  <CardTitle className="flex items-center gap-2 text-base">
+	                    <Droplets className="h-5 w-5" />
+	                    Recent Soundings
+	                  </CardTitle>
+	                  <CardDescription>
+	                    Raw depth observations stay local. Upload records are derived only after consent, quality, and position-sharing rules.
+	                  </CardDescription>
+	                </div>
+	                <Button size="sm" onClick={handleQueueSoundings} disabled={pendingShareableCount === 0}>
+	                  <Database className="mr-2 h-4 w-4" />
+	                  Queue Batch
+	                </Button>
+	              </div>
+	            </CardHeader>
+	            <CardContent>
+	              {rawSoundings.length === 0 ? (
+	                <div className="rounded-lg border border-dashed p-8 text-center">
+	                  <Droplets className="mx-auto mb-3 h-10 w-10 text-muted-foreground/50" />
+	                  <p className="text-sm text-muted-foreground">No depth soundings captured yet.</p>
+	                </div>
+	              ) : (
+	                <div className="divide-y">
+	                  {rawSoundings.slice(0, 8).map((sounding) => {
+	                    const upload = prepareSoundingForCommunityUpload(sounding);
+	                    return (
+	                      <div key={sounding.id} className="flex flex-col gap-3 py-3 md:flex-row md:items-center md:justify-between">
+	                        <div>
+	                          <div className="flex flex-wrap items-center gap-2">
+	                            <p className="font-medium">{sounding.depthMeters.toFixed(1)} m</p>
+	                            <Badge variant="outline" className={cn('text-xs', getConfidenceClass(sounding))}>
+	                              {Math.round(sounding.quality.confidence * 100)}%
+	                            </Badge>
+	                            <Badge variant="outline" className="text-xs">
+	                              {sounding.depthReference.replace(/_/g, ' ')}
+	                            </Badge>
+	                          </div>
+	                          <p className="mt-1 text-xs text-muted-foreground">
+	                            {new Date(sounding.timestamp).toLocaleString()} · {sounding.sourceProtocol}
+	                          </p>
+	                        </div>
+	                        <div className="text-sm md:text-right">
+	                          <p className="font-medium capitalize">{sounding.sharing.state.replace(/_/g, ' ')}</p>
+	                          <p className="text-xs text-muted-foreground">
+	                            {upload ? `${upload.latitude.toFixed(2)}, ${upload.longitude.toFixed(2)}` : 'local only'}
+	                          </p>
+	                        </div>
+	                      </div>
+	                    );
+	                  })}
+	                </div>
+	              )}
+	            </CardContent>
+	          </Card>
+
+	          <Card className="mt-4">
+	            <CardHeader>
+	              <CardTitle className="flex items-center gap-2 text-base">
+	                <Database className="h-5 w-5" />
+	                Sync Queue
+	              </CardTitle>
+	              <CardDescription>
+	                Queued batches are stored locally until a community backend is available.
+	              </CardDescription>
+	            </CardHeader>
+	            <CardContent>
+	              {uploadBatches.length === 0 ? (
+	                <div className="rounded-lg border border-dashed p-6 text-center">
+	                  <p className="text-sm text-muted-foreground">No community sounding batches queued.</p>
+	                </div>
+	              ) : (
+	                <div className="divide-y">
+	                  {uploadBatches.slice(0, 5).map((batch) => (
+	                    <div key={batch.id} className="flex flex-col gap-2 py-3 md:flex-row md:items-center md:justify-between">
+	                      <div>
+	                        <div className="flex flex-wrap items-center gap-2">
+	                          <p className="font-medium">{batch.payload.recordCount} records</p>
+	                          <Badge variant="outline" className={cn('text-xs capitalize', getBatchStatusClass(batch))}>
+	                            {batch.status}
+	                          </Badge>
+	                        </div>
+	                        <p className="mt-1 text-xs text-muted-foreground">
+	                          {new Date(batch.queuedAt).toLocaleString()} · {batch.payload.region} · {batch.endpoint}
+	                        </p>
+	                      </div>
+	                      <div className="text-sm md:text-right">
+	                        <p className="font-medium">Attempt {batch.attemptCount}</p>
+	                        <p className="text-xs text-muted-foreground">{batch.payload.schemaVersion}</p>
+	                      </div>
+	                    </div>
+	                  ))}
+	                </div>
+	              )}
+	            </CardContent>
+	          </Card>
+	        </TabsContent>
+	        
+	        {/* Stats View */}
+	        <TabsContent value="stats" className="mt-4">
           <div className="grid md:grid-cols-4 gap-4">
             <Card>
               <CardContent className="py-4">

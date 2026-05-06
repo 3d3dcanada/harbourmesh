@@ -5,8 +5,20 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useAppStore, useVesselStore, useDocumentStore, useLogTaskStore } from './index';
+import {
+  DEFAULT_BOAT_NODE_SETTINGS,
+  useAppStore,
+  useVesselStore,
+  useDocumentStore,
+  useLogTaskStore,
+  useSettingsStore,
+  useCommunityDataStore,
+  useNavigationPlanStore,
+} from './index';
 import { createMockVessel, createMockLogEntry, createMockTask, createMockDocument, createMockItem } from '../test/setup';
+import { SharePositionLevel } from '../types';
+import type { RawDepthSounding } from '../lib/community-soundings';
+import { NB_PILOT_REFERENCE_ROUTE } from '../lib/navigation-planning';
 
 describe('App Store', () => {
   beforeEach(() => {
@@ -413,5 +425,295 @@ describe('Log & Task Store', () => {
     
     const overdueTasks = result.current.getOverdueTasks();
     expect(overdueTasks.length).toBe(1);
+  });
+});
+
+describe('Settings Store', () => {
+  beforeEach(() => {
+    useSettingsStore.setState({
+      boatNode: DEFAULT_BOAT_NODE_SETTINGS,
+    });
+  });
+
+  it('defaults telemetry to recorded replay for hardware-free NB testing', () => {
+    const { result } = renderHook(() => useSettingsStore());
+
+    expect(result.current.boatNode.telemetryMode).toBe('replay');
+    expect(result.current.boatNode.fallbackToReplay).toBe(true);
+  });
+
+  it('updates Boat Node settings without replacing the full settings object', () => {
+    const { result } = renderHook(() => useSettingsStore());
+
+    act(() => {
+      result.current.updateBoatNodeSettings({
+        telemetryMode: 'signalk',
+        signalKBaseUrl: 'http://boat-node.local:3000',
+        connectionTimeoutSeconds: 15,
+      });
+    });
+
+    expect(result.current.boatNode).toMatchObject({
+      telemetryMode: 'signalk',
+      signalKBaseUrl: 'http://boat-node.local:3000',
+      connectionTimeoutSeconds: 15,
+      fallbackToReplay: true,
+    });
+  });
+});
+
+describe('Navigation Plan Store', () => {
+  beforeEach(() => {
+    useNavigationPlanStore.setState({
+      routes: [],
+      activeRouteId: null,
+    });
+  });
+
+  it('seeds the NB pilot reference route without duplicating it', () => {
+    const { result } = renderHook(() => useNavigationPlanStore());
+
+    act(() => {
+      result.current.seedNBPilotReferenceRoute();
+      result.current.seedNBPilotReferenceRoute();
+    });
+
+    expect(result.current.routes).toHaveLength(1);
+    expect(result.current.routes[0].id).toBe(NB_PILOT_REFERENCE_ROUTE.id);
+    expect(result.current.activeRouteId).toBe(NB_PILOT_REFERENCE_ROUTE.id);
+  });
+
+  it('sets and returns the active route', () => {
+    const { result } = renderHook(() => useNavigationPlanStore());
+
+    act(() => {
+      result.current.addRoute(NB_PILOT_REFERENCE_ROUTE);
+      result.current.setActiveRoute(NB_PILOT_REFERENCE_ROUTE.id);
+    });
+
+    expect(result.current.getActiveRoute()?.id).toBe(NB_PILOT_REFERENCE_ROUTE.id);
+  });
+});
+
+describe('Community Data Store', () => {
+  const createRawSounding = (overrides: Partial<RawDepthSounding> = {}): RawDepthSounding => ({
+    id: 'sounding-1',
+    vesselId: 'vessel-1',
+    sourceDeviceId: 'signalk',
+    sourceProtocol: 'signalk',
+    rawMessageId: 'env-1',
+    timestamp: '2026-05-06T12:00:00.000Z',
+    receivedAt: '2026-05-06T12:00:01.000Z',
+    position: { latitude: 45.27, longitude: -66.06 },
+    rawDepthMeters: 12,
+    depthMeters: 12.5,
+    depthReference: 'below_transducer',
+    tideCorrectionApplied: false,
+    waterLevelCorrectionApplied: false,
+    offsets: { surfaceToTransducerMeters: 0.5 },
+    consent: {
+      shareTelemetryForCommunity: true,
+      shareLivePosition: SharePositionLevel.BLURRED,
+      telemetryAnonymization: 'full',
+      capturedAt: '2026-05-06T12:00:00.000Z',
+    },
+    sharing: {
+      state: 'shareable_blurred',
+      uploadLatitude: 45.27,
+      uploadLongitude: -66.06,
+    },
+    quality: {
+      confidence: 0.9,
+      rejected: false,
+      flags: [],
+    },
+    ...overrides,
+  });
+
+  beforeEach(() => {
+    useCommunityDataStore.setState({
+      rawSoundings: [],
+      uploadBatches: [],
+    });
+  });
+
+  it('deduplicates raw soundings by id', () => {
+    const { result } = renderHook(() => useCommunityDataStore());
+    const sounding = {
+      id: 'sounding-1',
+      vesselId: 'vessel-1',
+      sourceDeviceId: 'signalk',
+      sourceProtocol: 'signalk',
+      rawMessageId: 'env-1',
+      timestamp: '2026-05-06T12:00:00.000Z',
+      receivedAt: '2026-05-06T12:00:01.000Z',
+      position: { latitude: 45.27, longitude: -66.06 },
+      rawDepthMeters: 12,
+      depthMeters: 12.5,
+      depthReference: 'below_transducer',
+      tideCorrectionApplied: false,
+      waterLevelCorrectionApplied: false,
+      offsets: { surfaceToTransducerMeters: 0.5 },
+      consent: {
+        shareTelemetryForCommunity: true,
+        shareLivePosition: 'blurred',
+        telemetryAnonymization: 'full',
+        capturedAt: '2026-05-06T12:00:00.000Z',
+      },
+      sharing: {
+        state: 'shareable_blurred',
+        uploadLatitude: 45.27,
+        uploadLongitude: -66.06,
+      },
+      quality: {
+        confidence: 0.9,
+        rejected: false,
+        flags: [],
+      },
+    };
+
+    act(() => {
+      result.current.addRawSoundings([sounding as never, { ...sounding, depthMeters: 12.7 } as never]);
+    });
+
+    expect(result.current.rawSoundings).toHaveLength(1);
+    expect(result.current.rawSoundings[0].depthMeters).toBe(12.7);
+  });
+
+  it('returns only shareable sounding upload records', () => {
+    const { result } = renderHook(() => useCommunityDataStore());
+
+    act(() => {
+      result.current.addRawSoundings([
+        {
+          id: 'sounding-1',
+          vesselId: 'vessel-1',
+          sourceDeviceId: 'signalk',
+          sourceProtocol: 'signalk',
+          rawMessageId: 'env-1',
+          timestamp: '2026-05-06T12:00:00.000Z',
+          receivedAt: '2026-05-06T12:00:01.000Z',
+          position: { latitude: 45.27, longitude: -66.06 },
+          rawDepthMeters: 12,
+          depthMeters: 12.5,
+          depthReference: 'below_transducer',
+          tideCorrectionApplied: false,
+          waterLevelCorrectionApplied: false,
+          offsets: { surfaceToTransducerMeters: 0.5 },
+          consent: {
+            shareTelemetryForCommunity: true,
+            shareLivePosition: 'blurred',
+            telemetryAnonymization: 'full',
+            capturedAt: '2026-05-06T12:00:00.000Z',
+          },
+          sharing: {
+            state: 'shareable_blurred',
+            uploadLatitude: 45.27,
+            uploadLongitude: -66.06,
+          },
+          quality: {
+            confidence: 0.9,
+            rejected: false,
+            flags: [],
+          },
+        } as never,
+        {
+          id: 'sounding-2',
+          vesselId: 'vessel-1',
+          sourceDeviceId: 'signalk',
+          sourceProtocol: 'signalk',
+          rawMessageId: 'env-2',
+          timestamp: '2026-05-06T12:01:00.000Z',
+          receivedAt: '2026-05-06T12:01:01.000Z',
+          position: { latitude: 45.28, longitude: -66.07 },
+          rawDepthMeters: 0,
+          depthMeters: 0,
+          depthReference: 'below_transducer',
+          tideCorrectionApplied: false,
+          waterLevelCorrectionApplied: false,
+          offsets: {},
+          consent: {
+            shareTelemetryForCommunity: true,
+            shareLivePosition: 'blurred',
+            telemetryAnonymization: 'full',
+            capturedAt: '2026-05-06T12:00:00.000Z',
+          },
+          sharing: {
+            state: 'shareable_blurred',
+            uploadLatitude: 45.28,
+            uploadLongitude: -66.07,
+          },
+          quality: {
+            confidence: 0.1,
+            rejected: true,
+            flags: ['depth_out_of_range'],
+          },
+        } as never,
+      ]);
+    });
+
+    expect(result.current.getShareableSoundings()).toHaveLength(1);
+  });
+
+  it('queues shareable soundings once for offline-first sync', () => {
+    const { result } = renderHook(() => useCommunityDataStore());
+    let firstBatch = null;
+    let secondBatch = null;
+
+    act(() => {
+      result.current.addRawSoundings([
+        createRawSounding(),
+        createRawSounding({
+          id: 'sounding-2',
+          rawMessageId: 'env-2',
+          timestamp: '2026-05-06T12:01:00.000Z',
+        }),
+      ]);
+      firstBatch = result.current.queueShareableSoundingBatch({
+        now: '2026-05-06T12:02:00.000Z',
+        endpoint: '/api/community/soundings',
+      });
+      secondBatch = result.current.queueShareableSoundingBatch({
+        now: '2026-05-06T12:03:00.000Z',
+        endpoint: '/api/community/soundings',
+      });
+    });
+
+    expect(firstBatch).toMatchObject({
+      status: 'queued',
+      endpoint: '/api/community/soundings',
+      payload: {
+        recordCount: 2,
+        policy: {
+          officialChartDataIncluded: false,
+          rawLocalPositionsIncluded: false,
+        },
+      },
+    });
+    expect(secondBatch).toBeNull();
+    expect(result.current.getQueuedUploadBatches()).toHaveLength(1);
+  });
+
+  it('tracks community sounding upload batch status', () => {
+    const { result } = renderHook(() => useCommunityDataStore());
+    let batchId = '';
+
+    act(() => {
+      result.current.addRawSoundings([createRawSounding()]);
+      const batch = result.current.queueShareableSoundingBatch({
+        now: '2026-05-06T12:02:00.000Z',
+      });
+      batchId = batch?.id ?? '';
+      result.current.markUploadBatchStatus(batchId, 'sent', {
+        updatedAt: '2026-05-06T12:03:00.000Z',
+      });
+    });
+
+    expect(result.current.uploadBatches[0]).toMatchObject({
+      id: batchId,
+      status: 'sent',
+      updatedAt: '2026-05-06T12:03:00.000Z',
+      attemptCount: 1,
+    });
   });
 });

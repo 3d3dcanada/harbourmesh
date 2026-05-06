@@ -16,20 +16,20 @@ export function cn(...inputs: ClassValue[]) {
 export function formatDate(date: string | Date, _format?: string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   if (isNaN(d.getTime())) return 'Invalid date';
-  
+
   const options: Intl.DateTimeFormatOptions = {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
   };
-  
+
   return d.toLocaleDateString('en-US', options);
 }
 
 export function formatDateTime(date: string | Date): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   if (isNaN(d.getTime())) return 'Invalid date';
-  
+
   return d.toLocaleString('en-US', {
     year: 'numeric',
     month: 'short',
@@ -42,7 +42,7 @@ export function formatDateTime(date: string | Date): string {
 export function formatTime(date: string | Date, format24h: boolean = true): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   if (isNaN(d.getTime())) return '--:--';
-  
+
   return d.toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
@@ -54,17 +54,17 @@ export function formatRelativeTime(date: string | Date): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
   const diff = now.getTime() - d.getTime();
-  
+
   const seconds = Math.floor(diff / 1000);
   const minutes = Math.floor(seconds / 60);
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
-  
+
   if (seconds < 60) return 'just now';
   if (minutes < 60) return `${minutes}m ago`;
   if (hours < 24) return `${hours}h ago`;
   if (days < 7) return `${days}d ago`;
-  
+
   return formatDate(d);
 }
 
@@ -170,12 +170,19 @@ export function calculateBearing(
 
 /**
  * Format coordinates as degrees/minutes/seconds
+ * Accepts undefined values gracefully (returns placeholder)
  */
+export function formatCoordinate(value: number | undefined, axis: 'lat' | 'lon'): string;
 export function formatCoordinate(
-  latitude: number,
-  longitude: number
-): { lat: string; lon: string } {
-  const formatDMS = (decimal: number, isLatitude: boolean): string => {
+  latitude: number | undefined,
+  longitude: number | undefined
+): { lat: string; lon: string };
+export function formatCoordinate(
+  latitude: number | undefined,
+  longitudeOrAxis: number | undefined | 'lat' | 'lon'
+): string | { lat: string; lon: string } {
+  const formatDMS = (decimal: number | undefined, isLatitude: boolean): string => {
+    if (decimal == null || isNaN(decimal)) return '--°--\'--.0"';
     const direction = isLatitude
       ? decimal >= 0 ? 'N' : 'S'
       : decimal >= 0 ? 'E' : 'W';
@@ -186,10 +193,75 @@ export function formatCoordinate(
     return `${degrees}°${minutes}'${seconds}"${direction}`;
   };
 
+  if (longitudeOrAxis === 'lat' || longitudeOrAxis === 'lon') {
+    return formatDMS(latitude, longitudeOrAxis === 'lat');
+  }
+
   return {
     lat: formatDMS(latitude, true),
-    lon: formatDMS(longitude, false),
+    lon: formatDMS(longitudeOrAxis, false),
   };
+}
+
+/**
+ * Format heading in degrees with compass cardinal
+ * Accepts undefined values gracefully
+ */
+export function formatHeading(degrees: number | undefined): string {
+  if (degrees == null || isNaN(degrees)) return '--° ---';
+  const normalized = ((degrees % 360) + 360) % 360;
+  const cardinals = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  const index = Math.round(normalized / 45) % 8;
+  return `${normalized.toFixed(0)}° ${cardinals[index]}`;
+}
+
+/**
+ * Format speed in knots
+ * Accepts undefined values gracefully
+ */
+export function formatSpeed(knots: number | undefined): string {
+  if (knots == null || isNaN(knots)) return '-- kn';
+  if (knots < 0.1) return '0.0 kn';
+  return `${knots.toFixed(1)} kn`;
+}
+
+/**
+ * Format depth in meters
+ * Accepts undefined values gracefully
+ */
+export function formatDepth(meters: number | undefined): string {
+  if (meters == null || isNaN(meters)) return '-- m';
+  if (meters <= 0) return '-- m';
+  return `${meters.toFixed(1)} m`;
+}
+
+/**
+ * Format temperature in Celsius
+ * Accepts undefined values gracefully
+ */
+export function formatTemperature(celsius: number | undefined): string {
+  if (celsius == null || isNaN(celsius)) return '--°C';
+  return `${celsius.toFixed(1)}°C`;
+}
+
+/**
+ * Truncate a string to a max length with ellipsis
+ */
+export function truncate(str: string, maxLength: number = 50): string {
+  if (!str) return '';
+  if (str.length <= maxLength) return str;
+  return str.slice(0, maxLength - 1) + '…';
+}
+
+/**
+ * Format distance in nautical miles or meters
+ */
+export function formatDistance(meters: number | undefined): string {
+  if (meters == null || isNaN(meters)) return '--';
+  if (meters >= 1852) {
+    return `${(meters / 1852).toFixed(1)} nm`;
+  }
+  return `${Math.round(meters)} m`;
 }
 
 /**
@@ -312,12 +384,14 @@ export function deepClone<T>(obj: T): T {
 /**
  * Debounce a function
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
   let timeout: ReturnType<typeof setTimeout> | null = null;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return function (this: any, ...args: Parameters<T>) {
     if (timeout) clearTimeout(timeout);
     timeout = setTimeout(() => func.apply(this, args), wait);
@@ -327,12 +401,14 @@ export function debounce<T extends (...args: any[]) => any>(
 /**
  * Throttle a function
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function throttle<T extends (...args: any[]) => any>(
   func: T,
   limit: number
 ): (...args: Parameters<T>) => void {
   let inThrottle = false;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return function (this: any, ...args: Parameters<T>) {
     if (!inThrottle) {
       func.apply(this, args);
@@ -355,7 +431,7 @@ export function isValidEmail(email: string): boolean {
  */
 export function isValidMMSI(mmsi: string): boolean {
   if (!/^\d{9}$/.test(mmsi)) return false;
-  
+
   // MID (first 3 digits) must be valid
   const mid = parseInt(mmsi.substring(0, 3), 10);
   return mid >= 200 && mid <= 999;
@@ -366,11 +442,11 @@ export function isValidMMSI(mmsi: string): boolean {
  */
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 Bytes';
-  
+
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
+
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
@@ -390,7 +466,7 @@ export async function retry<T>(
   baseDelay: number = 1000
 ): Promise<T> {
   let lastError: Error | undefined;
-  
+
   for (let i = 0; i < maxRetries; i++) {
     try {
       return await fn();
@@ -401,6 +477,6 @@ export async function retry<T>(
       }
     }
   }
-  
+
   throw lastError;
 }
