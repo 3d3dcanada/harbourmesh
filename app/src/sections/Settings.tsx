@@ -3,7 +3,7 @@
  * Application preferences, AI configuration, and consent management
  */
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   User,
   Shield,
@@ -35,6 +35,12 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { cn } from '@/lib/utils';
 import { buildSignalKStreamUrl } from '@/lib/signalk';
 import { buildBoatNodeRegistrationPayload, registerBoatNode } from '@/lib/device-registration';
+import {
+  buildLocalDataExport,
+  importLocalDataExport,
+  parseLocalDataExport,
+  serializeLocalDataExport,
+} from '@/lib/local-data-portability';
 import { useSettingsStore, useAIStore, useAppStore, type TelemetryMode } from '@/store';
 import { ThemeMode, UnitSystem, AIProviderType, SharePositionLevel } from '@/types';
 
@@ -45,6 +51,7 @@ export function Settings() {
   const [showAddAI, setShowAddAI] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [registeringDevice, setRegisteringDevice] = useState(false);
+  const importInputRef = useRef<HTMLInputElement>(null);
   const [newProvider, setNewProvider] = useState({
     name: '',
     providerType: AIProviderType.LOCAL,
@@ -111,6 +118,53 @@ export function Settings() {
       title: 'Boat Node Settings Saved',
       message: 'Navigation will reconnect with the current telemetry source.',
     });
+  };
+
+  const handleExportLocalData = () => {
+    try {
+      const bundle = buildLocalDataExport();
+      const blob = new Blob([serializeLocalDataExport(bundle)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `harbourmesh-local-data-${bundle.exportedAt.slice(0, 10)}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      addNotification({
+        type: 'success',
+        title: 'Local Data Exported',
+        message: `${Object.keys(bundle.stores).length} local data stores exported. AI provider keys were excluded.`,
+      });
+    } catch (error) {
+      addNotification({
+        type: 'error',
+        title: 'Local Data Export Failed',
+        message: error instanceof Error ? error.message : 'Export failed.',
+      });
+    }
+  };
+
+  const handleImportLocalData = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.currentTarget.files?.[0];
+    if (!file) return;
+
+    try {
+      const bundle = parseLocalDataExport(await file.text());
+      const result = importLocalDataExport(bundle);
+      addNotification({
+        type: 'success',
+        title: 'Local Data Imported',
+        message: `${result.importedStores.length} local data stores imported. Refresh the app to load them.`,
+      });
+    } catch (error) {
+      addNotification({
+        type: 'error',
+        title: 'Local Data Import Failed',
+        message: error instanceof Error ? error.message : 'Import failed.',
+      });
+    } finally {
+      event.currentTarget.value = '';
+    }
   };
 
   const handleRegisterBoatNode = async () => {
@@ -792,14 +846,21 @@ export function Settings() {
               </div>
               <Separator />
               <div className="flex gap-2">
-                <Button variant="outline">
+                <Button variant="outline" onClick={handleExportLocalData}>
                   <Download className="h-4 w-4 mr-2" />
                   Export All Data
                 </Button>
-                <Button variant="outline">
+                <Button variant="outline" onClick={() => importInputRef.current?.click()}>
                   <Upload className="h-4 w-4 mr-2" />
                   Import Data
                 </Button>
+                <input
+                  ref={importInputRef}
+                  type="file"
+                  accept="application/json,.json"
+                  className="hidden"
+                  onChange={handleImportLocalData}
+                />
               </div>
             </CardContent>
           </Card>

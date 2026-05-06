@@ -43,14 +43,14 @@ Observed state:
 
 Last light checks:
 
-- `npm run test:run`: passing, 104 web tests.
-- `npm test` in `server`: passing, 9 API tests.
+- `npm run test:run`: passing, 107 web tests.
+- `npm test` in `server`: passing, 14 API tests.
 - `npm run type-check`: passing.
 - `npm run type-check` in `server`: passing.
 - `npm run lint`: passing with 0 warnings.
 - `npm audit --json`: 0 vulnerabilities.
 - `npm run build`: passing for the web app.
-- `npm run build`: section-level code splitting is active; the initial app JS chunk is 278.93 kB / 88.63 kB gzip and the prior Vite oversized chunk warning is gone.
+- `npm run build`: section-level code splitting is active; the initial app JS chunk is 279.29 kB / 88.74 kB gzip and the prior Vite oversized chunk warning is gone.
 - `npm run build` in `server`: passing.
 - `npm audit --json` in `server`: 0 vulnerabilities.
 - Server API auth tests cover missing keys, accepted header keys, accepted Bearer keys, protected device registry reads, and fail-closed production-style config.
@@ -59,6 +59,7 @@ Last light checks:
 - Web NMEA regression tests cover longitude degree-width parsing, 1990s RMC date handling, checksum rejection, DBT meter depth parsing, and legacy utility parser parity.
 - Web demo-source notice tests cover accessible status rendering for simulated/demo data surfaces.
 - Web local persistence tests cover vessel/items, documents, logs, and tasks writing to named local-first stores.
+- Web local data portability tests cover export/import round trips and verify AI provider secret stores are excluded.
 - Local API smoke on port 3101: `/health`, `POST /api/community/soundings`, and `/api/community/soundings/summary` returned expected responses.
 - Local API smoke on port 3102: `POST /api/devices/register` and `GET /api/devices` returned expected responses.
 - Local API smoke on port 3103: `/health`, `POST /api/community/hazards`, and `/api/community/hazards/summary` returned expected responses.
@@ -67,6 +68,7 @@ Last light checks:
 - Browser smoke on port 5175: Community map rendered at 1280x900 and 360x780 with seeded local sounding and hazard overlay markers.
 - Browser smoke on port 5176: Dashboard and Community lazy-loaded through sidebar navigation at 1280x900 and the Community view rendered at 360x780.
 - Browser smoke on port 5176: demo-data notices rendered on Inventory, Documents, Logs & Tasks, Vessel, and Boat Map after sidebar navigation.
+- Browser smoke on port 5176: Settings Data & Storage rendered the Export All Data and Import Data controls at 1280x900.
 - No live Signal K hardware test or real-vessel API load test was run for this snapshot.
 
 ## Implementation Progress On 2026-05-06
@@ -95,6 +97,7 @@ Completed in the active checkout:
 - Added NMEA 0183 parser regressions and fixed GGA field indexing, longitude degree parsing, RMC date/time handling, checksum rejection, and DBT offset handling.
 - Added shared demo-data notices to vessel, boat map, inventory, documents, logs/tasks, and fleet surfaces, and stopped auto-saving demo documents/logs/tasks/vessel data into local stores.
 - Added local-first persistence for user-owned vessel data, items, documents, logs, and tasks.
+- Wired Settings data export/import to a versioned local-data bundle that excludes AI provider secret storage.
 
 Still not done:
 
