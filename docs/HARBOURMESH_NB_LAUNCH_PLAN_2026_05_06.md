@@ -43,14 +43,14 @@ Observed state:
 
 Last light checks:
 
-- `npm run test:run`: passing, 143 web tests.
+- `npm run test:run`: passing, 147 web tests.
 - `npm test` in `server`: passing, 42 server tests.
 - `npm run type-check`: passing.
 - `npm run type-check` in `server`: passing.
 - `npm run lint`: passing with 0 warnings.
 - `npm audit --json`: 0 vulnerabilities.
 - `npm run build`: passing for the web app.
-- `npm run build`: section-level code splitting is active; the initial app JS chunk is 286.92 kB / 90.39 kB gzip, the Navigation section chunk is 30.75 kB / 7.22 kB gzip, the Settings section chunk is 45.71 kB / 9.36 kB gzip, the Community section chunk is 74.28 kB / 12.21 kB gzip, the pilot API credential chunk is 7.14 kB / 2.87 kB gzip, the checkbox chunk is 4.24 kB / 1.82 kB gzip, and the prior Vite oversized chunk warning is gone.
+- `npm run build`: section-level code splitting is active; the initial app JS chunk is 286.92 kB / 90.40 kB gzip, the Navigation section chunk is 30.75 kB / 7.21 kB gzip, the Settings section chunk is 45.71 kB / 9.36 kB gzip, the Community section chunk is 84.94 kB / 13.37 kB gzip, the pilot API credential chunk is 7.14 kB / 2.87 kB gzip, the checkbox chunk is 4.24 kB / 1.82 kB gzip, and the prior Vite oversized chunk warning is gone.
 - `npm run build` in `server`: passing.
 - `npm audit --json` in `server`: 0 vulnerabilities.
 - Cloudflare Pages config exists at `app/wrangler.toml` with `pages_build_output_dir = "./dist"` and a manual GitHub deploy workflow at `.github/workflows/cloudflare-pages.yml`; no live Cloudflare deployment was run in this snapshot.
@@ -89,6 +89,7 @@ Last light checks:
 - Web sounding quality tests cover abrupt depth-jump rejection before upload and slower depth changes outside the jump window staying valid.
 - Web observation tests cover consent-safe telemetry observation derivation, raw sensor payload exclusion, AIS identifier omission from metrics, upload batch policy, local queue de-duplication, status tracking, and upload receipt validation.
 - Web hazard moderation tests cover protected review-queue loading, review history loading, review receipt validation, API error handling, and invalid receipt rejection.
+- Web sounding review tests cover protected queue/history loading, review decisions, short-lived Bearer sessions, malformed responses, and API error handling.
 - Web aggregate overlay tests cover aggregate GeoJSON fetching, positioned observation counts, aggregate release manifest/history/cell/artifact fetching, release publishing, privacy metadata validation, and rejection when raw IDs or official chart data are exposed.
 - Web chart artifact tests cover `/api/charts/nb/package-artifacts` client validation, GeoJSON, MBTiles, and PMTiles artifact manifest loading, generated-format media types, and rejection of artifacts that include official chart data.
 - Local API smoke on port 3101: `/health`, `POST /api/community/soundings`, and `/api/community/soundings/summary` returned expected responses.
@@ -123,6 +124,7 @@ Last light checks:
 - Browser smoke on port 5180 with a temporary API on port 3122: Navigation Chart View loaded 2 GeoJSON, 2 MBTiles, and 2 PMTiles NB reference artifacts at 1280x900 and 360x800, rendered coast/inland `Download` links to `/api/charts/nb/package-artifacts/:packageId/:format`, and the pass had 0 console errors and 0 warnings.
 - Browser smoke on port 5182 with a temporary API on port 3130: Community Map rendered the approval checklist at 1280x900 and 360x800, checked `Attach approval`, clicked `Publish Release`, and rendered 1 aggregate cell, the approved aggregate release card, `nb-release-approver` as the server-side approver, GeoJSON/MBTiles/PMTiles `Download` links, and 0 console errors or warnings.
 - Browser smoke on port 5183 with a temporary API on port 3131: Community Hazards loaded accepted hazard products at 1280x900 and 360x800, rendered Public Hazards 1, Vector Tiles Ready, GeoJSON/MBTiles/PMTiles `Download` links, and 0 console errors or warnings.
+- Browser smoke on port 5185 with a temporary API on port 3133: a seeded community sounding loaded in the Sounding Quality Review panel, rejecting it returned `POST /api/community/soundings/sounding-ui-1/review => 202`, the UI moved it to rejected, console stayed at 0 errors/warnings, and `/api/community/aggregates.geojson` reported `acceptedSoundings: 0`, `rejectedSoundings: 1`, `aggregateCells: 0`.
 - No live Signal K hardware test or real-vessel API load test was run for this snapshot.
 
 ## Implementation Progress On 2026-05-06
@@ -184,6 +186,7 @@ Completed in the active checkout:
 - Wired accepted hazard artifact loading into the Community Hazards tab with public/omitted counts, vector tile readiness, and GeoJSON/MBTiles/PMTiles download cards.
 - Added the first PostGIS migration for vessels, devices, soundings, hazards, reviews, aggregate cells, and release manifests with spatial indexes and legal/privacy checks.
 - Added review-scoped sounding moderation endpoints and PostGIS/JSONL review persistence so rejected sonar/depth points stay out of public overlays and aggregate products.
+- Wired sounding review into the web Community section so operators can load shared soundings, accept/reject depth points, and inspect recent sounding decisions with the same review credential/session path as hazard moderation.
 - Added `HARBOURMESH_DATABASE_URL` PostGIS runtime repositories for devices, community soundings, governed observations, hazards, hazard review history, aggregate release manifests, and aggregate cells while preserving JSONL as the no-database local fallback.
 - Hardened the first PostGIS migration so existing pilot databases can pick up position JSON columns and runtime device-kind parity without relying on a fresh schema.
 - Added review-scoped `/api/community/hazards/reviews` so hazard moderation decisions are queryable as audit history.

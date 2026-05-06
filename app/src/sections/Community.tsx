@@ -41,6 +41,13 @@ import {
   type CommunityHazardReviewRecord,
 } from '@/lib/community-hazard-review';
 import {
+  listCommunitySoundingReviews,
+  listCommunitySoundingsForReview,
+  reviewCommunitySounding,
+  type CommunitySoundingReviewHistoryEntry,
+  type CommunitySoundingReviewRecord,
+} from '@/lib/community-sounding-review';
+import {
   fetchCommunityAggregateReleaseArtifacts,
   fetchCommunityAggregateReleaseHistory,
   fetchCommunityAggregateReleaseManifest,
@@ -69,7 +76,7 @@ import {
 } from '@/store';
 import { SharePositionLevel } from '@/types';
 
-function getConfidenceClass(sounding: RawDepthSounding): string {
+function getConfidenceClass(sounding: { quality: RawDepthSounding['quality'] }): string {
   if (sounding.quality.rejected) return 'text-red-500 border-red-200';
   if (sounding.quality.confidence >= 0.75) return 'text-emerald-500 border-emerald-200';
   if (sounding.quality.confidence >= 0.5) return 'text-amber-500 border-amber-200';
@@ -137,6 +144,13 @@ export function Community() {
   const [reviewLoadedAt, setReviewLoadedAt] = useState<string | null>(null);
   const [reviewHistory, setReviewHistory] = useState<CommunityHazardReviewHistoryEntry[]>([]);
   const [reviewHistoryLoading, setReviewHistoryLoading] = useState(false);
+  const [reviewSoundings, setReviewSoundings] = useState<CommunitySoundingReviewRecord[]>([]);
+  const [soundingReviewLoading, setSoundingReviewLoading] = useState(false);
+  const [reviewingSoundingId, setReviewingSoundingId] = useState<string | null>(null);
+  const [soundingReviewError, setSoundingReviewError] = useState<string | null>(null);
+  const [soundingReviewLoadedAt, setSoundingReviewLoadedAt] = useState<string | null>(null);
+  const [soundingReviewHistory, setSoundingReviewHistory] = useState<CommunitySoundingReviewHistoryEntry[]>([]);
+  const [soundingReviewHistoryLoading, setSoundingReviewHistoryLoading] = useState(false);
   const [aggregateFeatures, setAggregateFeatures] = useState<CommunityAggregateFeature[]>([]);
   const [aggregateLoading, setAggregateLoading] = useState(false);
   const [aggregateError, setAggregateError] = useState<string | null>(null);
@@ -258,6 +272,17 @@ export function Community() {
   const pendingReviewHazards = useMemo(
     () => reviewHazards.filter((hazard) => hazard.reviewStatus === 'pending'),
     [reviewHazards]
+  );
+  const soundingReviewCounts = useMemo(() => {
+    const counts = { unreviewed: 0, accepted: 0, rejected: 0 };
+    for (const sounding of reviewSoundings) {
+      counts[sounding.reviewStatus] += 1;
+    }
+    return counts;
+  }, [reviewSoundings]);
+  const unreviewedSoundings = useMemo(
+    () => reviewSoundings.filter((sounding) => sounding.reviewStatus === 'unreviewed'),
+    [reviewSoundings]
   );
 
   const handleOptIn = (enabled: boolean) => {
@@ -516,6 +541,80 @@ export function Community() {
       setReviewError(error instanceof Error ? error.message : 'Hazard review failed');
     } finally {
       setReviewingHazardId(null);
+    }
+  };
+
+  const handleLoadSoundingReviewQueue = async () => {
+    setSoundingReviewLoading(true);
+    setSoundingReviewError(null);
+
+    try {
+      const queue = await listCommunitySoundingsForReview();
+      setReviewSoundings(queue.soundings);
+      setSoundingReviewLoadedAt(new Date().toISOString());
+    } catch (error) {
+      setSoundingReviewError(error instanceof Error ? error.message : 'Sounding review queue failed');
+    } finally {
+      setSoundingReviewLoading(false);
+    }
+  };
+
+  const handleLoadSoundingReviewHistory = async () => {
+    setSoundingReviewHistoryLoading(true);
+    setSoundingReviewError(null);
+
+    try {
+      const history = await listCommunitySoundingReviews();
+      setSoundingReviewHistory(history.reviews.slice().reverse());
+    } catch (error) {
+      setSoundingReviewError(error instanceof Error ? error.message : 'Sounding review history failed');
+    } finally {
+      setSoundingReviewHistoryLoading(false);
+    }
+  };
+
+  const handleReviewSounding = async (
+    soundingId: string,
+    status: 'accepted' | 'rejected'
+  ) => {
+    const reviewedBy = resolvePilotOperatorId() ?? consent?.vesselId ?? boatNode.deviceId ?? 'local-operator';
+    const reason = status === 'rejected' ? 'outlier' : 'other';
+
+    setReviewingSoundingId(`${soundingId}:${status}`);
+    setSoundingReviewError(null);
+
+    try {
+      const receipt = await reviewCommunitySounding({
+        soundingId,
+        status,
+        reviewedBy,
+        reason,
+      });
+      setReviewSoundings((currentSoundings) => currentSoundings.map((sounding) => (
+        sounding.id === soundingId
+          ? {
+              ...sounding,
+              reviewStatus: receipt.status,
+              reviewedAt: receipt.reviewedAt,
+              reviewedBy,
+              reviewReason: reason,
+            }
+          : sounding
+      )));
+      setSoundingReviewHistory((currentHistory) => [
+        {
+          soundingId,
+          status: receipt.status,
+          reviewedBy,
+          reviewedAt: receipt.reviewedAt,
+          reason,
+        },
+        ...currentHistory,
+      ]);
+    } catch (error) {
+      setSoundingReviewError(error instanceof Error ? error.message : 'Sounding review failed');
+    } finally {
+      setReviewingSoundingId(null);
     }
   };
 
@@ -828,6 +927,135 @@ export function Community() {
               <p className="text-sm text-muted-foreground">
                 Conditions shown here are derived from local telemetry, AIS targets, and captured soundings. Sea-state estimation is not enabled until motion calibration and backend aggregation are implemented.
               </p>
+            </CardContent>
+          </Card>
+
+          <Card className="mt-4">
+            <CardHeader>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Droplets className="h-5 w-5" />
+                    Sounding Quality Review
+                  </CardTitle>
+                  <CardDescription>
+                    Rejected depth points are excluded from public overlays and aggregate chart products.
+                  </CardDescription>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" onClick={handleLoadSoundingReviewQueue} disabled={soundingReviewLoading}>
+                    <RefreshCw className={cn('mr-2 h-4 w-4', soundingReviewLoading && 'animate-spin')} />
+                    {soundingReviewLoading ? 'Loading' : 'Load Soundings'}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={handleLoadSoundingReviewHistory} disabled={soundingReviewHistoryLoading}>
+                    <RefreshCw className={cn('mr-2 h-4 w-4', soundingReviewHistoryLoading && 'animate-spin')} />
+                    {soundingReviewHistoryLoading ? 'Loading' : 'Load Sounding History'}
+                  </Button>
+                </div>
+              </div>
+              {soundingReviewLoadedAt && (
+                <p className="text-xs text-muted-foreground">
+                  Loaded {new Date(soundingReviewLoadedAt).toLocaleString()} · {unreviewedSoundings.length} unreviewed
+                </p>
+              )}
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-lg border p-3">
+                  <p className="text-xs text-muted-foreground">Unreviewed</p>
+                  <p className="text-xl font-semibold">{soundingReviewCounts.unreviewed}</p>
+                </div>
+                <div className="rounded-lg border p-3">
+                  <p className="text-xs text-muted-foreground">Accepted</p>
+                  <p className="text-xl font-semibold">{soundingReviewCounts.accepted}</p>
+                </div>
+                <div className="rounded-lg border p-3">
+                  <p className="text-xs text-muted-foreground">Rejected</p>
+                  <p className="text-xl font-semibold">{soundingReviewCounts.rejected}</p>
+                </div>
+              </div>
+
+              {soundingReviewError && (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-200">
+                  {soundingReviewError}
+                </div>
+              )}
+
+              {reviewSoundings.length === 0 ? (
+                <div className="rounded-lg border border-dashed p-8 text-center">
+                  <Droplets className="mx-auto mb-3 h-10 w-10 text-muted-foreground/50" />
+                  <p className="text-sm text-muted-foreground">No sounding review queue loaded.</p>
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {reviewSoundings.slice(0, 8).map((sounding) => (
+                    <div key={sounding.id} className="flex flex-col gap-3 py-4 lg:flex-row lg:items-center lg:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-medium">{sounding.depthMeters.toFixed(1)} m</p>
+                          <Badge variant="outline" className={cn('text-xs', getConfidenceClass(sounding))}>
+                            {Math.round(sounding.quality.confidence * 100)}%
+                          </Badge>
+                          <Badge variant="outline" className="capitalize text-xs">{sounding.reviewStatus}</Badge>
+                          {sounding.quality.flags.map((flag) => (
+                            <Badge key={flag} variant="secondary" className="text-xs">{flag.replace(/_/g, ' ')}</Badge>
+                          ))}
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {sounding.region} · {new Date(sounding.timestamp).toLocaleString()} · {sounding.sourceProtocol}
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {sounding.latitude.toFixed(5)}, {sounding.longitude.toFixed(5)} · {sounding.depthReference.replace(/_/g, ' ')}
+                        </p>
+                        {sounding.reviewedAt && (
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Reviewed {new Date(sounding.reviewedAt).toLocaleString()} by {sounding.reviewedBy ?? 'operator'}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => void handleReviewSounding(sounding.id, 'accepted')}
+                          disabled={reviewingSoundingId !== null}
+                        >
+                          <CheckCircle2 className="mr-2 h-4 w-4" />
+                          Accept
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => void handleReviewSounding(sounding.id, 'rejected')}
+                          disabled={reviewingSoundingId !== null}
+                        >
+                          <XCircle className="mr-2 h-4 w-4" />
+                          Reject
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {soundingReviewHistory.length > 0 && (
+                <div className="rounded-lg border p-3">
+                  <p className="mb-2 text-sm font-medium">Recent Sounding Decisions</p>
+                  <div className="divide-y">
+                    {soundingReviewHistory.slice(0, 5).map((review) => (
+                      <div key={`${review.soundingId}:${review.reviewedAt}:${review.status}`} className="flex flex-col gap-1 py-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-medium">{review.soundingId}</span>
+                          <Badge variant="outline" className="capitalize text-xs">{review.status}</Badge>
+                          {review.reason && <Badge variant="secondary" className="text-xs">{review.reason.replace(/_/g, ' ')}</Badge>}
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(review.reviewedAt).toLocaleString()} · {review.reviewedBy}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
