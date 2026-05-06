@@ -1,6 +1,11 @@
 import cors from '@fastify/cors';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { ZodError } from 'zod';
+import { communityHazardBatchSchema } from './community-hazards.js';
+import {
+  createCommunityHazardRepository,
+  type CommunityHazardRepository,
+} from './community-hazard-repository.js';
 import { communitySoundingBatchSchema } from './community-soundings.js';
 import {
   createCommunitySoundingRepository,
@@ -15,6 +20,7 @@ import { deviceRegistrationSchema } from './devices.js';
 export type BuildAppOptions = {
   dataDir: string;
   repository?: CommunitySoundingRepository;
+  hazardRepository?: CommunityHazardRepository;
   deviceRepository?: DeviceRepository;
   logger?: boolean;
 };
@@ -22,6 +28,7 @@ export type BuildAppOptions = {
 export async function buildApp(options: BuildAppOptions): Promise<FastifyInstance> {
   const app = Fastify({ logger: options.logger ?? false });
   const repository = options.repository ?? createCommunitySoundingRepository(options.dataDir);
+  const hazardRepository = options.hazardRepository ?? createCommunityHazardRepository(options.dataDir);
   const deviceRepository = options.deviceRepository ?? createDeviceRepository(options.dataDir);
 
   await app.register(cors, {
@@ -56,6 +63,29 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   });
 
   app.get('/api/community/soundings/summary', async () => repository.getSummary());
+
+  app.post('/api/community/hazards', async (request, reply) => {
+    try {
+      const batch = communityHazardBatchSchema.parse(request.body);
+      const receipt = await hazardRepository.acceptBatch(batch);
+      return reply.code(202).send(receipt);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return reply.code(400).send({
+          ok: false,
+          error: 'invalid_community_hazard_batch',
+          issues: error.issues.map((issue) => ({
+            path: issue.path.join('.'),
+            message: issue.message,
+          })),
+        });
+      }
+
+      throw error;
+    }
+  });
+
+  app.get('/api/community/hazards/summary', async () => hazardRepository.getSummary());
 
   app.post('/api/devices/register', async (request, reply) => {
     try {

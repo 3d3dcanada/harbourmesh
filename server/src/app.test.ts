@@ -2,6 +2,7 @@ import { mkdir, mkdtemp } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { buildApp } from './app.js';
+import type { CommunityHazardBatch } from './community-hazards.js';
 import type { CommunitySoundingBatch } from './community-soundings.js';
 
 const sampleBatch: CommunitySoundingBatch = {
@@ -57,6 +58,41 @@ const sampleDeviceRegistration = {
     radar: false,
     sonar: true,
     weather: false,
+  },
+};
+
+const sampleHazardBatch: CommunityHazardBatch = {
+  id: 'hazard-batch-1',
+  schemaVersion: 'harbourmesh.community-hazards.v1',
+  createdAt: '2026-05-06T12:05:00.000Z',
+  region: 'NB_PILOT',
+  recordCount: 1,
+  hazards: [
+    {
+      id: 'hazard-1',
+      vesselId: 'vessel-1',
+      sourceDeviceId: 'boat-node-001',
+      type: 'debris',
+      severity: 'medium',
+      description: 'Floating debris near track',
+      position: {
+        latitude: 45.27,
+        longitude: -66.06,
+        accuracy: 1000,
+        source: 'gps',
+        timestamp: '2026-05-06T12:04:00.000Z',
+      },
+      reportedAt: '2026-05-06T12:04:00.000Z',
+      sharingState: 'shareable_blurred',
+      consentCapturedAt: '2026-05-06T11:59:00.000Z',
+    },
+  ],
+  policy: {
+    intendedUse: 'community_reference_overlay',
+    officialChartDataIncluded: false,
+    containsFullSharedPositions: false,
+    rawLocalPositionsIncluded: false,
+    uploadEndpoint: '/api/community/hazards',
   },
 };
 
@@ -128,6 +164,67 @@ describe('HarbourMesh API', () => {
         NB_PILOT: 1,
       },
       latestTimestamp: '2026-05-06T12:00:00.000Z',
+    });
+  });
+
+  it('accepts and summarizes community hazard batches', async () => {
+    const app = await createTestApp();
+    const receipt = await app.inject({
+      method: 'POST',
+      url: '/api/community/hazards',
+      payload: sampleHazardBatch,
+    });
+
+    expect(receipt.statusCode).toBe(202);
+    expect(receipt.json()).toMatchObject({
+      ok: true,
+      batchId: 'hazard-batch-1',
+      acceptedCount: 1,
+      duplicateCount: 0,
+    });
+
+    const summary = await app.inject({
+      method: 'GET',
+      url: '/api/community/hazards/summary',
+    });
+
+    expect(summary.statusCode).toBe(200);
+    expect(summary.json()).toMatchObject({
+      totalRecords: 1,
+      batchCount: 1,
+      regions: {
+        NB_PILOT: 1,
+      },
+      byType: {
+        debris: 1,
+      },
+      bySeverity: {
+        medium: 1,
+      },
+      latestReportedAt: '2026-05-06T12:04:00.000Z',
+    });
+  });
+
+  it('rejects hazard batches that leak local-only positions', async () => {
+    const app = await createTestApp();
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/community/hazards',
+      payload: {
+        ...sampleHazardBatch,
+        hazards: [
+          {
+            ...sampleHazardBatch.hazards[0],
+            sharingState: 'shareable_no_position',
+          },
+        ],
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toMatchObject({
+      ok: false,
+      error: 'invalid_community_hazard_batch',
     });
   });
 

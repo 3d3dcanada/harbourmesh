@@ -6,6 +6,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import {
+  SharePositionLevel,
   ThemeMode,
   type AppState,
   type User,
@@ -739,17 +740,25 @@ export const useSettingsStore = create<SettingsStore>()(
 interface CommunityDataStore {
   rawSoundings: RawDepthSounding[];
   uploadBatches: CommunitySyncBatch[];
+  hazardBatches: CommunityHazardSyncBatch[];
   hazards: CommunityHazard[];
   addRawSoundings: (soundings: RawDepthSounding[]) => void;
   reportHazard: (hazard: Omit<CommunityHazard, 'id' | 'reportedAt' | 'status'> & { id?: string; reportedAt?: string }) => CommunityHazard;
   getShareableSoundings: () => CommunitySoundingUpload[];
   queueShareableSoundingBatch: (options?: QueueCommunitySoundingBatchOptions) => CommunitySyncBatch | null;
+  queueShareableHazardBatch: (options?: QueueCommunityHazardBatchOptions) => CommunityHazardSyncBatch | null;
   markUploadBatchStatus: (
     batchId: string,
     status: CommunitySyncBatchStatus,
     details?: { updatedAt?: string; acknowledgedId?: string; error?: string }
   ) => void;
+  markHazardBatchStatus: (
+    batchId: string,
+    status: CommunitySyncBatchStatus,
+    details?: { updatedAt?: string; acknowledgedId?: string; error?: string }
+  ) => void;
   getQueuedUploadBatches: () => CommunitySyncBatch[];
+  getQueuedHazardBatches: () => CommunityHazardSyncBatch[];
 }
 
 export type CommunitySyncBatchStatus = 'queued' | 'sent' | 'acknowledged' | 'failed';
@@ -766,11 +775,68 @@ export type CommunitySyncBatch = {
   payload: CommunitySoundingUploadBatch;
 };
 
+export type CommunityHazardPositionUpload = {
+  latitude: number;
+  longitude: number;
+  accuracy?: number;
+  altitude?: number;
+  heading?: number;
+  speed?: number;
+  cog?: number;
+  sog?: number;
+  source: GeoPosition['source'];
+  timestamp: string;
+};
+
+export type CommunityHazardSharingState = 'shareable_no_position' | 'shareable_blurred' | 'shareable_full';
+
+export type CommunityHazardUpload = {
+  id: string;
+  vesselId: string;
+  sourceDeviceId?: string;
+  type: CommunityHazard['type'];
+  severity: CommunityHazard['severity'];
+  description: string;
+  position?: CommunityHazardPositionUpload;
+  reportedAt: string;
+  sharingState: CommunityHazardSharingState;
+  consentCapturedAt: string;
+};
+
+export type CommunityHazardUploadBatch = {
+  id: string;
+  schemaVersion: 'harbourmesh.community-hazards.v1';
+  createdAt: string;
+  region: string;
+  recordCount: number;
+  hazards: CommunityHazardUpload[];
+  policy: {
+    intendedUse: 'community_reference_overlay';
+    officialChartDataIncluded: false;
+    containsFullSharedPositions: boolean;
+    rawLocalPositionsIncluded: false;
+    uploadEndpoint?: string;
+  };
+};
+
+export type CommunityHazardSyncBatch = Omit<CommunitySyncBatch, 'payload'> & {
+  payload: CommunityHazardUploadBatch;
+};
+
 export type QueueCommunitySoundingBatchOptions = {
   now?: string;
   endpoint?: string;
   region?: string;
   maxRecords?: number;
+};
+
+export type QueueCommunityHazardBatchOptions = {
+  now?: string;
+  endpoint?: string;
+  region?: string;
+  maxRecords?: number;
+  sharePosition?: SharePositionLevel;
+  consentCapturedAt?: string;
 };
 
 export type CommunityHazard = {
@@ -782,16 +848,114 @@ export type CommunityHazard = {
   description: string;
   position?: GeoPosition;
   reportedAt: string;
-  status: 'local' | 'queued' | 'acknowledged';
+  status: 'local' | 'queued' | 'acknowledged' | 'failed';
 };
 
 const DEFAULT_COMMUNITY_SOUNDING_ENDPOINT = '/api/community/soundings';
+const DEFAULT_COMMUNITY_HAZARD_ENDPOINT = '/api/community/hazards';
+const DEFAULT_COMMUNITY_REGION = 'NB_PILOT';
+
+function toHazardUploadPosition(
+  position: GeoPosition | undefined,
+  sharePosition: SharePositionLevel
+): CommunityHazardPositionUpload | undefined {
+  if (!position || sharePosition === SharePositionLevel.NONE) return undefined;
+
+  const basePosition: CommunityHazardPositionUpload = {
+    latitude: position.latitude,
+    longitude: position.longitude,
+    accuracy: position.accuracy,
+    altitude: position.altitude,
+    heading: position.heading,
+    speed: position.speed,
+    cog: position.cog,
+    sog: position.sog,
+    source: position.source,
+    timestamp: position.timestamp,
+  };
+
+  if (sharePosition === SharePositionLevel.BLURRED) {
+    return {
+      ...basePosition,
+      latitude: Number(position.latitude.toFixed(2)),
+      longitude: Number(position.longitude.toFixed(2)),
+      accuracy: Math.max(position.accuracy ?? 1000, 1000),
+      altitude: undefined,
+      heading: undefined,
+      speed: undefined,
+      cog: undefined,
+      sog: undefined,
+    };
+  }
+
+  return basePosition;
+}
+
+function prepareHazardForCommunityUpload(
+  hazard: CommunityHazard,
+  options: Required<Pick<QueueCommunityHazardBatchOptions, 'sharePosition' | 'consentCapturedAt'>>
+): CommunityHazardUpload | null {
+  const description = hazard.description.trim();
+  if (description.length < 3) return null;
+
+  const position = toHazardUploadPosition(hazard.position, options.sharePosition);
+  const sharingState: CommunityHazardSharingState = position
+    ? options.sharePosition === SharePositionLevel.FULL
+      ? 'shareable_full'
+      : 'shareable_blurred'
+    : 'shareable_no_position';
+
+  return {
+    id: hazard.id,
+    vesselId: hazard.vesselId,
+    sourceDeviceId: hazard.sourceDeviceId,
+    type: hazard.type,
+    severity: hazard.severity,
+    description,
+    position,
+    reportedAt: hazard.reportedAt,
+    sharingState,
+    consentCapturedAt: options.consentCapturedAt,
+  };
+}
+
+function buildCommunityHazardUploadBatch(
+  hazards: CommunityHazard[],
+  options: Required<Pick<QueueCommunityHazardBatchOptions, 'now' | 'endpoint' | 'region' | 'sharePosition' | 'consentCapturedAt'>> &
+    Pick<QueueCommunityHazardBatchOptions, 'maxRecords'>
+): CommunityHazardUploadBatch | null {
+  const records = hazards
+    .flatMap((hazard) => {
+      const upload = prepareHazardForCommunityUpload(hazard, options);
+      return upload ? [upload] : [];
+    })
+    .slice(0, options.maxRecords ?? 100);
+
+  if (records.length === 0) return null;
+
+  return {
+    id: crypto.randomUUID(),
+    schemaVersion: 'harbourmesh.community-hazards.v1',
+    createdAt: options.now,
+    region: options.region,
+    recordCount: records.length,
+    hazards: records,
+    policy: {
+      intendedUse: 'community_reference_overlay',
+      officialChartDataIncluded: false,
+      containsFullSharedPositions: records.some((hazard) => hazard.sharingState === 'shareable_full'),
+      rawLocalPositionsIncluded: false,
+      uploadEndpoint: options.endpoint,
+    },
+  };
+}
 
 export const useCommunityDataStore = create<CommunityDataStore>()(
   persist(
     (set, get) => ({
       rawSoundings: [],
       uploadBatches: [],
+      hazardBatches: [],
       hazards: [],
       addRawSoundings: (soundings) =>
         set((state) => {
@@ -862,6 +1026,49 @@ export const useCommunityDataStore = create<CommunityDataStore>()(
 
         return batch;
       },
+      queueShareableHazardBatch: (options) => {
+        const state = get();
+        const now = options?.now ?? new Date().toISOString();
+        const endpoint = options?.endpoint ?? DEFAULT_COMMUNITY_HAZARD_ENDPOINT;
+        const queuedHazardIds = new Set(
+          state.hazardBatches
+            .filter((batch) => batch.status !== 'failed')
+            .flatMap((batch) => batch.payload.hazards.map((hazard) => hazard.id))
+        );
+        const candidateHazards = state.hazards.filter(
+          (hazard) => hazard.status !== 'acknowledged' && !queuedHazardIds.has(hazard.id)
+        );
+        const payload = buildCommunityHazardUploadBatch(candidateHazards, {
+          now,
+          endpoint,
+          region: options?.region ?? DEFAULT_COMMUNITY_REGION,
+          maxRecords: options?.maxRecords,
+          sharePosition: options?.sharePosition ?? SharePositionLevel.BLURRED,
+          consentCapturedAt: options?.consentCapturedAt ?? now,
+        });
+
+        if (!payload) return null;
+
+        const batch: CommunityHazardSyncBatch = {
+          id: payload.id,
+          status: 'queued',
+          queuedAt: now,
+          updatedAt: now,
+          endpoint,
+          attemptCount: 0,
+          payload,
+        };
+        const hazardIds = new Set(payload.hazards.map((hazard) => hazard.id));
+
+        set((current) => ({
+          hazardBatches: [batch, ...current.hazardBatches].slice(0, 100),
+          hazards: current.hazards.map((hazard) =>
+            hazardIds.has(hazard.id) ? { ...hazard, status: 'queued' } : hazard
+          ),
+        }));
+
+        return batch;
+      },
       markUploadBatchStatus: (batchId, status, details) =>
         set((state) => ({
           uploadBatches: state.uploadBatches.map((batch) =>
@@ -877,13 +1084,46 @@ export const useCommunityDataStore = create<CommunityDataStore>()(
               : batch
           ),
         })),
+      markHazardBatchStatus: (batchId, status, details) =>
+        set((state) => {
+          const targetBatch = state.hazardBatches.find((batch) => batch.id === batchId);
+          const hazardIds = new Set(targetBatch?.payload.hazards.map((hazard) => hazard.id) ?? []);
+          const nextHazardStatus =
+            status === 'acknowledged'
+              ? 'acknowledged'
+              : status === 'failed'
+                ? 'failed'
+                : undefined;
+
+          return {
+            hazardBatches: state.hazardBatches.map((batch) =>
+              batch.id === batchId
+                ? {
+                    ...batch,
+                    status,
+                    updatedAt: details?.updatedAt ?? new Date().toISOString(),
+                    attemptCount: status === 'sent' ? batch.attemptCount + 1 : batch.attemptCount,
+                    acknowledgedId: details?.acknowledgedId ?? batch.acknowledgedId,
+                    lastError: status === 'failed' ? details?.error ?? 'Upload failed' : undefined,
+                  }
+                : batch
+            ),
+            hazards: nextHazardStatus
+              ? state.hazards.map((hazard) =>
+                  hazardIds.has(hazard.id) ? { ...hazard, status: nextHazardStatus } : hazard
+                )
+              : state.hazards,
+          };
+        }),
       getQueuedUploadBatches: () => get().uploadBatches.filter((batch) => batch.status === 'queued'),
+      getQueuedHazardBatches: () => get().hazardBatches.filter((batch) => batch.status === 'queued'),
     }),
     {
       name: 'harbormesh-community-data',
       partialize: (state) => ({
         rawSoundings: state.rawSoundings,
         uploadBatches: state.uploadBatches,
+        hazardBatches: state.hazardBatches,
         hazards: state.hazards,
       }),
     }

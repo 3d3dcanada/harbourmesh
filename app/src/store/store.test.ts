@@ -539,6 +539,7 @@ describe('Community Data Store', () => {
     useCommunityDataStore.setState({
       rawSoundings: [],
       uploadBatches: [],
+      hazardBatches: [],
       hazards: [],
     });
   });
@@ -755,5 +756,94 @@ describe('Community Data Store', () => {
         longitude: -66.06,
       },
     });
+  });
+
+  it('queues hazard reports with blurred positions for community sync', () => {
+    const { result } = renderHook(() => useCommunityDataStore());
+    let batch = null;
+
+    act(() => {
+      result.current.reportHazard({
+        vesselId: 'vessel-1',
+        sourceDeviceId: 'boat-node-001',
+        type: 'shoal',
+        severity: 'high',
+        description: 'Unexpected shoal near route',
+        reportedAt: '2026-05-06T12:04:00.000Z',
+        position: {
+          latitude: 45.2749,
+          longitude: -66.0649,
+          accuracy: 8,
+          source: 'gps',
+          timestamp: '2026-05-06T12:04:00.000Z',
+        },
+      });
+      batch = result.current.queueShareableHazardBatch({
+        now: '2026-05-06T12:05:00.000Z',
+        endpoint: '/api/community/hazards',
+        sharePosition: SharePositionLevel.BLURRED,
+        consentCapturedAt: '2026-05-06T11:59:00.000Z',
+      });
+    });
+
+    expect(batch).toMatchObject({
+      status: 'queued',
+      endpoint: '/api/community/hazards',
+      payload: {
+        schemaVersion: 'harbourmesh.community-hazards.v1',
+        recordCount: 1,
+        hazards: [
+          {
+            type: 'shoal',
+            sharingState: 'shareable_blurred',
+            consentCapturedAt: '2026-05-06T11:59:00.000Z',
+            position: {
+              latitude: 45.27,
+              longitude: -66.06,
+              accuracy: 1000,
+            },
+          },
+        ],
+        policy: {
+          officialChartDataIncluded: false,
+          rawLocalPositionsIncluded: false,
+          containsFullSharedPositions: false,
+        },
+      },
+    });
+    expect(result.current.hazards[0].status).toBe('queued');
+    expect(result.current.getQueuedHazardBatches()).toHaveLength(1);
+  });
+
+  it('acknowledges synced hazard reports', () => {
+    const { result } = renderHook(() => useCommunityDataStore());
+    let batchId = '';
+
+    act(() => {
+      result.current.reportHazard({
+        vesselId: 'vessel-1',
+        type: 'weather',
+        severity: 'low',
+        description: 'Fog bank forming',
+        reportedAt: '2026-05-06T12:04:00.000Z',
+      });
+      const batch = result.current.queueShareableHazardBatch({
+        now: '2026-05-06T12:05:00.000Z',
+        sharePosition: SharePositionLevel.NONE,
+      });
+      batchId = batch?.id ?? '';
+      result.current.markHazardBatchStatus(batchId, 'acknowledged', {
+        acknowledgedId: 'receipt-1',
+        updatedAt: '2026-05-06T12:06:00.000Z',
+      });
+    });
+
+    expect(result.current.hazardBatches[0]).toMatchObject({
+      id: batchId,
+      status: 'acknowledged',
+      acknowledgedId: 'receipt-1',
+      updatedAt: '2026-05-06T12:06:00.000Z',
+    });
+    expect(result.current.hazards[0].status).toBe('acknowledged');
   });
 });

@@ -33,8 +33,8 @@ Observed state:
 - Frontend: React/Vite app exists, with the community section now wired to local telemetry, AIS targets, soundings, hazards, upload batches, and NB reference mapping instead of hard-coded demo community data.
 - Charts: NB pilot reference chart work has started with React Leaflet, OSM base tiles, and legal GeoNB WMS overlays; it is not a certified navigation chart system.
 - Telemetry: recorded Signal K replay and live Signal K WebSocket wiring now exist; live hardware ingest remains unverified.
-- Backend: a Fastify API now exists for community sounding upload and summary endpoints with JSONL local persistence; it is a pilot backend, not the final PostGIS/cloud mesh.
-- Community mesh: local raw sounding capture, local hazard reporting, a consent-safe offline upload queue, and a backend upload endpoint now exist; moderation and public data products are still not implemented.
+- Backend: a Fastify API now exists for community sounding upload, community hazard upload, device registration, and summary endpoints with JSONL local persistence; it is a pilot backend, not the final PostGIS/cloud mesh.
+- Community mesh: local raw sounding capture, local hazard reporting, consent-safe offline upload queues, and backend upload endpoints now exist; moderation and public data products are still not implemented.
 - Security: docs overclaim; source contains weak or mislabeled crypto helpers.
 - CI/release: workflows have been adjusted to stop calling missing package scripts.
 - Testing: current tests now cover chart source metadata, Signal K mapping, community sounding extraction, local hazard reporting, device registration, and store queue behavior; they still do not prove navigation safety, hardware ingest, browser layout, or security readiness.
@@ -43,8 +43,8 @@ Observed state:
 
 Last light checks:
 
-- `npm run test:run`: passing, 77 web tests.
-- `npm test` in `server`: passing, 5 API tests.
+- `npm run test:run`: passing, 80 web tests.
+- `npm test` in `server`: passing, 7 API tests.
 - `npm run type-check`: passing.
 - `npm run type-check` in `server`: passing.
 - `npm run lint`: passing with 60 warnings.
@@ -54,6 +54,7 @@ Last light checks:
 - `npm audit --json` in `server`: 0 vulnerabilities.
 - Local API smoke on port 3101: `/health`, `POST /api/community/soundings`, and `/api/community/soundings/summary` returned expected responses.
 - Local API smoke on port 3102: `POST /api/devices/register` and `GET /api/devices` returned expected responses.
+- Local API smoke on port 3103: `/health`, `POST /api/community/hazards`, and `/api/community/hazards/summary` returned expected responses.
 - No browser test, live Signal K hardware test, or real-vessel API load test was run for this snapshot.
 
 ## Implementation Progress On 2026-05-06
@@ -70,13 +71,14 @@ Completed in the active checkout:
 - Added a Fastify community sounding API at `/api/community/soundings`, strict Zod validation, JSONL storage, summary endpoint, and frontend sync adapter.
 - Added Boat Node device identity settings and `/api/devices/register` so contributed data can carry registered source provenance.
 - Replaced the remaining demo community map, conditions, hazards, bathymetry stats, and contribution statistics with values derived from local telemetry, AIS targets, stored soundings, local hazards, and sync batches.
+- Added a Fastify community hazard API at `/api/community/hazards`, strict Zod validation, JSONL storage, summary endpoint, frontend hazard queueing, receipt validation, and hazard status tracking.
 
 Still not done:
 
 - No production auth, PostGIS schema, moderation workflow, or public aggregate tile product exists.
 - No browser/mobile visual verification has been run in this session.
 - No real Signal K server, sonar, radar, AIS receiver, or Boat Node hardware has been tested.
-- Community hazards are still local-only until the backend hazard API and moderation path are implemented.
+- Community hazards can now be queued and uploaded to the pilot backend, but moderation, review, public display, and aggregate map products are still not implemented.
 
 ## NB Data Strategy
 

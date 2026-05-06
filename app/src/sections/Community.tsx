@@ -28,13 +28,14 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { prepareSoundingForCommunityUpload, type RawDepthSounding } from '@/lib/community-soundings';
-import { uploadCommunitySoundingBatch } from '@/lib/community-sync';
+import { uploadCommunityHazardBatch, uploadCommunitySoundingBatch } from '@/lib/community-sync';
 import { cn } from '@/lib/utils';
 import {
   useCommunityDataStore,
   useSettingsStore,
   useTelemetryStore,
   type CommunityHazard,
+  type CommunityHazardSyncBatch,
   type CommunitySyncBatch,
 } from '@/store';
 import { SharePositionLevel } from '@/types';
@@ -59,6 +60,13 @@ function getHazardClass(hazard: CommunityHazard): string {
   return 'border-l-blue-500 text-blue-500';
 }
 
+function getHazardBatchStatusClass(batch: CommunityHazardSyncBatch): string {
+  if (batch.status === 'acknowledged') return 'text-emerald-500 border-emerald-200';
+  if (batch.status === 'sent') return 'text-blue-500 border-blue-200';
+  if (batch.status === 'failed') return 'text-red-500 border-red-200';
+  return 'text-amber-500 border-amber-200';
+}
+
 function formatOptionalNumber(value: number | undefined, suffix: string): string {
   return typeof value === 'number' ? `${value.toFixed(1)} ${suffix}` : '--';
 }
@@ -68,21 +76,30 @@ export function Community() {
   const { aisTargets, latestPosition, latestMotion } = useTelemetryStore();
   const {
     hazards,
+    hazardBatches,
     rawSoundings,
     uploadBatches,
     getShareableSoundings,
+    markHazardBatchStatus,
     markUploadBatchStatus,
+    queueShareableHazardBatch,
     queueShareableSoundingBatch,
     reportHazard,
   } = useCommunityDataStore();
   const [activeTab, setActiveTab] = useState('map');
   const [syncingBatchId, setSyncingBatchId] = useState<string | null>(null);
+  const [syncingHazardBatchId, setSyncingHazardBatchId] = useState<string | null>(null);
   const isOptedIn = consent?.shareTelemetryForCommunity || false;
   const shareableSoundings = getShareableSoundings();
   const queuedBatches = useMemo(() => uploadBatches.filter((batch) => batch.status === 'queued'), [uploadBatches]);
+  const queuedHazardBatches = useMemo(() => hazardBatches.filter((batch) => batch.status === 'queued'), [hazardBatches]);
   const acknowledgedBatches = useMemo(
     () => uploadBatches.filter((batch) => batch.status === 'acknowledged'),
     [uploadBatches]
+  );
+  const acknowledgedHazardBatches = useMemo(
+    () => hazardBatches.filter((batch) => batch.status === 'acknowledged'),
+    [hazardBatches]
   );
   const queuedRecordIds = useMemo(
     () =>
@@ -93,9 +110,22 @@ export function Community() {
       ),
     [uploadBatches]
   );
+  const queuedHazardIds = useMemo(
+    () =>
+      new Set(
+        hazardBatches
+          .filter((batch) => batch.status !== 'failed')
+          .flatMap((batch) => batch.payload.hazards.map((hazard) => hazard.id))
+      ),
+    [hazardBatches]
+  );
   const pendingShareableCount = useMemo(
     () => shareableSoundings.filter((record) => !queuedRecordIds.has(record.id)).length,
     [queuedRecordIds, shareableSoundings]
+  );
+  const pendingHazardCount = useMemo(
+    () => hazards.filter((hazard) => hazard.status !== 'acknowledged' && !queuedHazardIds.has(hazard.id)).length,
+    [hazards, queuedHazardIds]
   );
   const queuedRecordCount = useMemo(
     () => queuedBatches.reduce((total, batch) => total + batch.payload.recordCount, 0),
@@ -104,6 +134,10 @@ export function Community() {
   const acknowledgedRecordCount = useMemo(
     () => acknowledgedBatches.reduce((total, batch) => total + batch.payload.recordCount, 0),
     [acknowledgedBatches]
+  );
+  const acknowledgedHazardCount = useMemo(
+    () => acknowledgedHazardBatches.reduce((total, batch) => total + batch.payload.recordCount, 0),
+    [acknowledgedHazardBatches]
   );
   const rejectedSoundings = useMemo(() => rawSoundings.filter((sounding) => sounding.quality.rejected), [rawSoundings]);
   const averageConfidence = useMemo(() => {
@@ -133,6 +167,13 @@ export function Community() {
 
   const handleQueueSoundings = () => {
     queueShareableSoundingBatch();
+  };
+
+  const handleQueueHazards = () => {
+    queueShareableHazardBatch({
+      sharePosition: consent?.shareLivePosition ?? SharePositionLevel.NONE,
+      consentCapturedAt: consent?.lastUpdated ?? new Date().toISOString(),
+    });
   };
 
   const handleSyncNextBatch = async () => {
@@ -166,6 +207,28 @@ export function Community() {
       description: 'Local hazard report',
       position: latestPosition ?? undefined,
     });
+  };
+
+  const handleSyncNextHazardBatch = async () => {
+    const batch = queuedHazardBatches[0];
+    if (!batch) return;
+
+    setSyncingHazardBatchId(batch.id);
+    markHazardBatchStatus(batch.id, 'sent');
+
+    try {
+      const receipt = await uploadCommunityHazardBatch(batch);
+      markHazardBatchStatus(batch.id, 'acknowledged', {
+        acknowledgedId: receipt.receiptId,
+        updatedAt: receipt.storedAt,
+      });
+    } catch (error) {
+      markHazardBatchStatus(batch.id, 'failed', {
+        error: error instanceof Error ? error.message : 'Community hazard sync failed',
+      });
+    } finally {
+      setSyncingHazardBatchId(null);
+    }
   };
 
   return (
@@ -377,10 +440,67 @@ export function Community() {
             )}
           </div>
 
-          <Button className="mt-4 w-full" onClick={handleReportHazard} disabled={!latestPosition}>
-            <AlertTriangle className="mr-2 h-4 w-4" />
-            Report Current Position Hazard
-          </Button>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <Button onClick={handleReportHazard} disabled={!latestPosition}>
+              <AlertTriangle className="mr-2 h-4 w-4" />
+              Report Current Position Hazard
+            </Button>
+            <Button variant="outline" onClick={handleQueueHazards} disabled={pendingHazardCount === 0}>
+              <Database className="mr-2 h-4 w-4" />
+              Queue Hazard Reports
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleSyncNextHazardBatch}
+              disabled={queuedHazardBatches.length === 0 || syncingHazardBatchId !== null}
+            >
+              <Database className="mr-2 h-4 w-4" />
+              {syncingHazardBatchId ? 'Syncing' : 'Sync Hazard Batch'}
+            </Button>
+          </div>
+
+          <Card className="mt-4">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Database className="h-5 w-5" />
+                Hazard Sync Queue
+              </CardTitle>
+              <CardDescription>
+                Hazard batches use the same consent and source-provenance path as community soundings.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {hazardBatches.length === 0 ? (
+                <div className="rounded-lg border border-dashed p-6 text-center">
+                  <p className="text-sm text-muted-foreground">No hazard batches queued.</p>
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {hazardBatches.slice(0, 5).map((batch) => (
+                    <div key={batch.id} className="flex flex-col gap-2 py-3 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-medium">{batch.payload.recordCount} reports</p>
+                          <Badge variant="outline" className={cn('text-xs capitalize', getHazardBatchStatusClass(batch))}>
+                            {batch.status}
+                          </Badge>
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {new Date(batch.queuedAt).toLocaleString()} · {batch.payload.region} · {batch.endpoint}
+                        </p>
+                      </div>
+                      <div className="text-sm md:text-right">
+                        <p className="font-medium">Attempt {batch.attemptCount}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {batch.lastError ?? batch.acknowledgedId ?? batch.payload.schemaVersion}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="bathymetry" className="mt-4">
@@ -528,7 +648,7 @@ export function Community() {
         </TabsContent>
 
         <TabsContent value="stats" className="mt-4">
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             <Card>
               <CardContent className="py-4">
                 <div className="flex items-center gap-3">
@@ -562,7 +682,20 @@ export function Community() {
                     <AlertTriangle className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Hazards</p>
+                    <p className="text-sm text-muted-foreground">Synced Hazards</p>
+                    <p className="text-2xl font-bold">{acknowledgedHazardCount}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="py-4">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-lg bg-amber-50 p-2 text-amber-500 dark:bg-amber-950/30">
+                    <AlertTriangle className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Local Hazards</p>
                     <p className="text-2xl font-bold">{hazards.length}</p>
                   </div>
                 </div>
