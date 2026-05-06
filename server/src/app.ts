@@ -36,6 +36,11 @@ import {
 } from './community-release-manifests.js';
 import { communityHazardBatchSchema, communityHazardReviewSchema } from './community-hazards.js';
 import {
+  buildCommunityHazardArtifacts,
+  getCommunityHazardArtifactManifest,
+  type CommunityHazardArtifactFormat,
+} from './community-hazard-artifacts.js';
+import {
   createCommunityHazardRepository,
   type CommunityHazardRepository,
 } from './community-hazard-repository.js';
@@ -476,6 +481,41 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   });
 
   app.get('/api/community/hazards/summary', async () => hazardRepository.getSummary());
+
+  app.get('/api/community/hazards/artifacts', async () => {
+    const generatedAt = new Date().toISOString();
+    const hazards = await hazardRepository.listRecords();
+
+    return getCommunityHazardArtifactManifest(hazards, generatedAt);
+  });
+
+  app.get('/api/community/hazards/artifacts/:format', async (request, reply) => {
+    const { format } = request.params as { format: string };
+    if (format !== 'geojson' && format !== 'mbtiles' && format !== 'pmtiles') {
+      return reply.code(404).send({ ok: false, error: 'community_hazard_artifact_not_found' });
+    }
+
+    const query = request.query as { generatedAt?: string };
+    const hazards = await hazardRepository.listRecords();
+    const artifacts = await buildCommunityHazardArtifacts(hazards, query.generatedAt ?? new Date().toISOString());
+    const artifact = artifacts.find((candidate) => candidate.format === (format as CommunityHazardArtifactFormat));
+    if (!artifact) {
+      return reply.code(404).send({ ok: false, error: 'community_hazard_artifact_not_available' });
+    }
+
+    const response = reply
+      .type(artifact.mediaType)
+      .header('Content-Disposition', `attachment; filename="${artifact.fileName}"`)
+      .header('X-HarbourMesh-Artifact-Id', artifact.id)
+      .header('X-HarbourMesh-SHA256', artifact.sha256)
+      .header('X-HarbourMesh-Reference-Only', 'true')
+      .header('X-HarbourMesh-Official-Chart-Data-Included', 'false')
+      .header('X-HarbourMesh-Raw-Record-Ids-Included', 'false')
+      .header('X-HarbourMesh-Vessel-Ids-Included', 'false')
+      .header('X-HarbourMesh-Source-Device-Ids-Included', 'false');
+
+    return addArtifactSignatureHeaders(response, artifact, artifactSigningConfig).send(artifact.bytes);
+  });
 
   app.get('/api/community/hazards/review', async (request, reply) => {
     if (!(await requireApiAccess(request, reply, apiAuth, 'review'))) return reply;

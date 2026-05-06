@@ -172,6 +172,57 @@ export type CommunityAggregateReleaseArtifactManifest = {
   };
 };
 
+export type CommunityHazardArtifact = {
+  id: string;
+  region: 'NB_PILOT';
+  format: 'geojson' | 'mbtiles' | 'pmtiles';
+  mediaType: 'application/geo+json' | 'application/x-sqlite3' | 'application/vnd.pmtiles';
+  fileName: string;
+  downloadPath: string;
+  byteLength: number;
+  sha256: string;
+  generatedAt: string;
+  hazardFeatures: number;
+  officialChartDataIncluded: false;
+  rawRecordIdsIncluded: false;
+  vesselIdsIncluded: false;
+  sourceDeviceIdsIncluded: false;
+  warnings: string[];
+  tileSummary?: {
+    layerName: 'harbourmesh_community_hazards';
+    minZoom: number;
+    maxZoom: number;
+    tileCount: number;
+    bounds: {
+      south: number;
+      west: number;
+      north: number;
+      east: number;
+    };
+  };
+};
+
+export type CommunityHazardArtifactManifest = {
+  id: string;
+  schemaVersion: 'harbourmesh.community-hazard-artifacts.v1';
+  generatedAt: string;
+  artifacts: CommunityHazardArtifact[];
+  rules: {
+    artifactsAreReferenceOnly: true;
+    officialChartDataExcluded: true;
+    rawRecordIdsExcluded: true;
+    vesselIdsExcluded: true;
+    sourceDeviceIdsExcluded: true;
+    vectorTileGenerationPending: boolean;
+  };
+  sourceRecordCounts: {
+    hazards: number;
+    publicHazards: number;
+    omittedPendingOrRejectedHazards: number;
+    omittedUnpositionedHazards: number;
+  };
+};
+
 export type FetchCommunityOverlayOptions = {
   apiBaseUrl?: string;
   fetchImpl?: typeof fetch;
@@ -293,6 +344,30 @@ function isCommunityAggregateReleaseArtifactManifest(value: unknown): value is C
       artifact.officialChartDataIncluded === false &&
       artifact.rawRecordIdsIncluded === false &&
       artifact.vesselIdsIncluded === false &&
+      /^[a-f0-9]{64}$/.test(artifact.sha256 ?? '')
+    ))
+  );
+}
+
+function isCommunityHazardArtifactManifest(value: unknown): value is CommunityHazardArtifactManifest {
+  const manifest = value as Partial<CommunityHazardArtifactManifest>;
+  return (
+    manifest.schemaVersion === 'harbourmesh.community-hazard-artifacts.v1' &&
+    manifest.rules?.artifactsAreReferenceOnly === true &&
+    manifest.rules.officialChartDataExcluded === true &&
+    manifest.rules.rawRecordIdsExcluded === true &&
+    manifest.rules.vesselIdsExcluded === true &&
+    manifest.rules.sourceDeviceIdsExcluded === true &&
+    Array.isArray(manifest.artifacts) &&
+    manifest.artifacts.every((artifact) => (
+      typeof artifact.id === 'string' &&
+      artifact.region === 'NB_PILOT' &&
+      typeof artifact.downloadPath === 'string' &&
+      ['geojson', 'mbtiles', 'pmtiles'].includes(artifact.format ?? '') &&
+      artifact.officialChartDataIncluded === false &&
+      artifact.rawRecordIdsIncluded === false &&
+      artifact.vesselIdsIncluded === false &&
+      artifact.sourceDeviceIdsIncluded === false &&
       /^[a-f0-9]{64}$/.test(artifact.sha256 ?? '')
     ))
   );
@@ -457,6 +532,31 @@ export async function fetchCommunityAggregateReleaseArtifacts(
 
   if (!isCommunityAggregateReleaseArtifactManifest(body)) {
     throw new Error('Community aggregate release artifacts response was not valid');
+  }
+
+  return body;
+}
+
+export async function fetchCommunityHazardArtifacts(
+  options: FetchCommunityOverlayOptions = {}
+): Promise<CommunityHazardArtifactManifest> {
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const endpoint = resolveEndpoint('/api/community/hazards/artifacts', options.apiBaseUrl ?? import.meta.env.VITE_API_BASE_URL);
+  const response = await fetchImpl(endpoint, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+    },
+  });
+  const body: unknown = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const error = body && typeof body === 'object' && 'error' in body ? String(body.error) : response.statusText;
+    throw new Error(error || `Community hazard artifacts request failed with HTTP ${response.status}`);
+  }
+
+  if (!isCommunityHazardArtifactManifest(body)) {
+    throw new Error('Community hazard artifacts response was not valid');
   }
 
   return body;

@@ -4,6 +4,7 @@ import {
   fetchCommunityAggregateReleaseManifest,
   fetchCommunityAggregateReleaseHistory,
   fetchCommunityAggregates,
+  fetchCommunityHazardArtifacts,
   fetchCommunityOverlay,
   fetchLatestCommunityAggregateReleaseCells,
   getCommunityOverlayFeaturesByKind,
@@ -12,6 +13,7 @@ import {
   type CommunityAggregateReleaseManifest,
   type CommunityAggregateGeoJson,
   type CommunityGeoJsonOverlay,
+  type CommunityHazardArtifactManifest,
 } from './community-overlay';
 
 const overlay: CommunityGeoJsonOverlay = {
@@ -208,6 +210,74 @@ const aggregateReleaseArtifacts: CommunityAggregateReleaseArtifactManifest = {
   },
 };
 
+const hazardArtifacts: CommunityHazardArtifactManifest = {
+  id: 'community-hazard-artifacts:2026-05-06T12:14:00.000Z',
+  schemaVersion: 'harbourmesh.community-hazard-artifacts.v1',
+  generatedAt: '2026-05-06T12:14:00.000Z',
+  artifacts: [
+    {
+      id: 'artifact:community-hazards:2026-05-06T12:14:00.000Z:geojson',
+      region: 'NB_PILOT',
+      format: 'geojson',
+      mediaType: 'application/geo+json',
+      fileName: 'community-hazards-2026-05-06.geojson',
+      downloadPath: '/api/community/hazards/artifacts/geojson?generatedAt=2026-05-06T12%3A14%3A00.000Z',
+      byteLength: 1200,
+      sha256: 'd'.repeat(64),
+      generatedAt: '2026-05-06T12:14:00.000Z',
+      hazardFeatures: 1,
+      officialChartDataIncluded: false,
+      rawRecordIdsIncluded: false,
+      vesselIdsIncluded: false,
+      sourceDeviceIdsIncluded: false,
+      warnings: [],
+    },
+    {
+      id: 'artifact:community-hazards:2026-05-06T12:14:00.000Z:pmtiles',
+      region: 'NB_PILOT',
+      format: 'pmtiles',
+      mediaType: 'application/vnd.pmtiles',
+      fileName: 'community-hazards-2026-05-06.pmtiles',
+      downloadPath: '/api/community/hazards/artifacts/pmtiles?generatedAt=2026-05-06T12%3A14%3A00.000Z',
+      byteLength: 4096,
+      sha256: 'e'.repeat(64),
+      generatedAt: '2026-05-06T12:14:00.000Z',
+      hazardFeatures: 1,
+      officialChartDataIncluded: false,
+      rawRecordIdsIncluded: false,
+      vesselIdsIncluded: false,
+      sourceDeviceIdsIncluded: false,
+      warnings: [],
+      tileSummary: {
+        layerName: 'harbourmesh_community_hazards',
+        minZoom: 8,
+        maxZoom: 12,
+        tileCount: 5,
+        bounds: {
+          south: 45.27,
+          west: -66.06,
+          north: 45.27,
+          east: -66.06,
+        },
+      },
+    },
+  ],
+  rules: {
+    artifactsAreReferenceOnly: true,
+    officialChartDataExcluded: true,
+    rawRecordIdsExcluded: true,
+    vesselIdsExcluded: true,
+    sourceDeviceIdsExcluded: true,
+    vectorTileGenerationPending: false,
+  },
+  sourceRecordCounts: {
+    hazards: 2,
+    publicHazards: 1,
+    omittedPendingOrRejectedHazards: 1,
+    omittedUnpositionedHazards: 0,
+  },
+};
+
 describe('community overlay client', () => {
   it('fetches and validates the community GeoJSON overlay', async () => {
     const fetchImpl = vi.fn(async () => new Response(JSON.stringify(overlay), { status: 200 }));
@@ -367,6 +437,48 @@ describe('community overlay client', () => {
     expect(fetchImpl).toHaveBeenCalledWith('http://localhost:3001/api/community/releases/aggregates/latest/artifacts', expect.objectContaining({
       method: 'GET',
     }));
+  });
+
+  it('fetches accepted hazard artifact manifests', async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify(hazardArtifacts), { status: 200 }));
+
+    await expect(fetchCommunityHazardArtifacts({
+      apiBaseUrl: 'http://localhost:3001',
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    })).resolves.toMatchObject({
+      rules: {
+        vectorTileGenerationPending: false,
+        sourceDeviceIdsExcluded: true,
+      },
+      artifacts: expect.arrayContaining([
+        expect.objectContaining({
+          format: 'pmtiles',
+          mediaType: 'application/vnd.pmtiles',
+          sourceDeviceIdsIncluded: false,
+          tileSummary: expect.objectContaining({
+            layerName: 'harbourmesh_community_hazards',
+          }),
+        }),
+      ]),
+    });
+
+    expect(fetchImpl).toHaveBeenCalledWith('http://localhost:3001/api/community/hazards/artifacts', expect.objectContaining({
+      method: 'GET',
+    }));
+  });
+
+  it('rejects hazard artifact manifests that expose vessel or source IDs', async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
+      ...hazardArtifacts,
+      artifacts: hazardArtifacts.artifacts.map((artifact) => ({
+        ...artifact,
+        vesselIdsIncluded: artifact.format === 'pmtiles' ? true : artifact.vesselIdsIncluded,
+      })),
+    }), { status: 200 }));
+
+    await expect(fetchCommunityHazardArtifacts({
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    })).rejects.toThrow('Community hazard artifacts response was not valid');
   });
 
   it('publishes aggregate releases with a pilot API key', async () => {

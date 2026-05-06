@@ -1227,6 +1227,99 @@ describe('HarbourMesh API', () => {
     expect(missingArtifact.statusCode).toBe(404);
   });
 
+  it('serves accepted community hazard artifact manifests and downloads without raw identifiers', async () => {
+    const app = await createTestApp({
+      artifactSigningKey: 'hazard-artifact-signing-test-secret',
+      artifactSigningKeyId: 'nb-hazard-test-key',
+    });
+
+    await app.inject({
+      method: 'POST',
+      url: '/api/community/hazards',
+      payload: sampleHazardBatch,
+    });
+
+    const pendingArtifacts = await app.inject({
+      method: 'GET',
+      url: '/api/community/hazards/artifacts',
+    });
+    expect(pendingArtifacts.statusCode).toBe(200);
+    expect(pendingArtifacts.json()).toMatchObject({
+      schemaVersion: 'harbourmesh.community-hazard-artifacts.v1',
+      rules: {
+        officialChartDataExcluded: true,
+        rawRecordIdsExcluded: true,
+        vesselIdsExcluded: true,
+        sourceDeviceIdsExcluded: true,
+        vectorTileGenerationPending: true,
+      },
+      sourceRecordCounts: {
+        hazards: 1,
+        publicHazards: 0,
+      },
+    });
+    expect(pendingArtifacts.json().artifacts.map((artifact: { format: string }) => artifact.format)).toEqual(['geojson']);
+
+    await app.inject({
+      method: 'POST',
+      url: '/api/community/hazards/hazard-1/review',
+      payload: {
+        status: 'accepted',
+        reviewedBy: 'nb-pilot-reviewer',
+        reviewedAt: '2026-05-06T12:10:00.000Z',
+      },
+    });
+
+    const artifacts = await app.inject({
+      method: 'GET',
+      url: '/api/community/hazards/artifacts',
+    });
+    expect(artifacts.statusCode).toBe(200);
+    expect(artifacts.json()).toMatchObject({
+      schemaVersion: 'harbourmesh.community-hazard-artifacts.v1',
+      rules: {
+        officialChartDataExcluded: true,
+        rawRecordIdsExcluded: true,
+        vesselIdsExcluded: true,
+        sourceDeviceIdsExcluded: true,
+        vectorTileGenerationPending: false,
+      },
+      sourceRecordCounts: {
+        hazards: 1,
+        publicHazards: 1,
+      },
+    });
+    expect(artifacts.json().artifacts.map((artifact: { format: string }) => artifact.format)).toEqual([
+      'geojson',
+      'mbtiles',
+      'pmtiles',
+    ]);
+    expect(JSON.stringify(artifacts.json())).not.toContain('hazard-1');
+    expect(JSON.stringify(artifacts.json())).not.toContain('vessel-1');
+    expect(JSON.stringify(artifacts.json())).not.toContain('boat-node-001');
+
+    const pmtilesArtifact = artifacts.json().artifacts.find((artifact: { format: string }) => artifact.format === 'pmtiles');
+    const pmtilesDownload = await app.inject({
+      method: 'GET',
+      url: pmtilesArtifact.downloadPath,
+    });
+    expect(pmtilesDownload.statusCode).toBe(200);
+    expect(pmtilesDownload.headers['content-type']).toContain('application/vnd.pmtiles');
+    expect(pmtilesDownload.headers['x-harbourmesh-sha256']).toBe(pmtilesArtifact.sha256);
+    expect(pmtilesDownload.headers['x-harbourmesh-reference-only']).toBe('true');
+    expect(pmtilesDownload.headers['x-harbourmesh-vessel-ids-included']).toBe('false');
+    expect(pmtilesDownload.headers['x-harbourmesh-source-device-ids-included']).toBe('false');
+    expect(pmtilesDownload.headers['x-harbourmesh-artifact-signature-algorithm']).toBe('HMAC-SHA256');
+    expect(pmtilesDownload.headers['x-harbourmesh-artifact-signature-key-id']).toBe('nb-hazard-test-key');
+    expect(pmtilesDownload.rawPayload.subarray(0, 7).toString('utf8')).toBe('PMTiles');
+
+    const missingArtifact = await app.inject({
+      method: 'GET',
+      url: '/api/community/hazards/artifacts/kml',
+    });
+    expect(missingArtifact.statusCode).toBe(404);
+  });
+
   it('publishes reviewed aggregate releases through the release endpoint', async () => {
     const app = await createTestApp({
       apiKeys: [TEST_API_KEY],

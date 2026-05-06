@@ -45,11 +45,13 @@ import {
   fetchCommunityAggregateReleaseHistory,
   fetchCommunityAggregateReleaseManifest,
   fetchCommunityAggregates,
+  fetchCommunityHazardArtifacts,
   fetchLatestCommunityAggregateReleaseCells,
   publishCommunityAggregateRelease,
   type CommunityAggregateReleaseArtifactManifest,
   type CommunityAggregateReleaseManifest,
   type CommunityAggregateFeature,
+  type CommunityHazardArtifactManifest,
 } from '@/lib/community-overlay';
 import { prepareSoundingForCommunityUpload, type RawDepthSounding } from '@/lib/community-soundings';
 import { uploadCommunityHazardBatch, uploadCommunityObservationBatch, uploadCommunitySoundingBatch } from '@/lib/community-sync';
@@ -144,6 +146,9 @@ export function Community() {
   const [aggregateReleaseHistory, setAggregateReleaseHistory] = useState<CommunityAggregateReleaseManifest[]>([]);
   const [aggregateReleaseArtifacts, setAggregateReleaseArtifacts] = useState<CommunityAggregateReleaseArtifactManifest | null>(null);
   const [aggregateReleaseApprovalChecked, setAggregateReleaseApprovalChecked] = useState(false);
+  const [hazardArtifacts, setHazardArtifacts] = useState<CommunityHazardArtifactManifest | null>(null);
+  const [hazardArtifactsLoading, setHazardArtifactsLoading] = useState(false);
+  const [hazardArtifactError, setHazardArtifactError] = useState<string | null>(null);
   const isOptedIn = consent?.shareTelemetryForCommunity || false;
   const shareableSoundings = getShareableSoundings();
   const queuedBatches = useMemo(() => uploadBatches.filter((batch) => batch.status === 'queued'), [uploadBatches]);
@@ -426,6 +431,20 @@ export function Community() {
       setAggregateError(error instanceof Error ? error.message : 'Community aggregate release publish failed');
     } finally {
       setAggregateReleasePublishing(false);
+    }
+  };
+
+  const handleLoadHazardArtifacts = async () => {
+    setHazardArtifactsLoading(true);
+    setHazardArtifactError(null);
+
+    try {
+      const artifacts = await fetchCommunityHazardArtifacts();
+      setHazardArtifacts(artifacts);
+    } catch (error) {
+      setHazardArtifactError(error instanceof Error ? error.message : 'Community hazard artifact load failed');
+    } finally {
+      setHazardArtifactsLoading(false);
     }
   };
 
@@ -981,6 +1000,88 @@ export function Community() {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="mt-4">
+            <CardHeader>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Download className="h-5 w-5" />
+                    Accepted Hazard Products
+                  </CardTitle>
+                  <CardDescription>
+                    Downloadable reference products for reviewed positioned hazards.
+                  </CardDescription>
+                </div>
+                <Button size="sm" variant="outline" onClick={handleLoadHazardArtifacts} disabled={hazardArtifactsLoading}>
+                  <RefreshCw className={cn('mr-2 h-4 w-4', hazardArtifactsLoading && 'animate-spin')} />
+                  {hazardArtifactsLoading ? 'Loading' : 'Load Products'}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {hazardArtifactError && (
+                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-200">
+                  {hazardArtifactError}
+                </div>
+              )}
+
+              {hazardArtifacts ? (
+                <div className="space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-4">
+                    <div className="rounded-lg bg-muted p-3">
+                      <p className="text-xs text-muted-foreground">Public Hazards</p>
+                      <p className="text-xl font-bold">{hazardArtifacts.sourceRecordCounts.publicHazards}</p>
+                    </div>
+                    <div className="rounded-lg bg-muted p-3">
+                      <p className="text-xs text-muted-foreground">Total Hazards</p>
+                      <p className="text-xl font-bold">{hazardArtifacts.sourceRecordCounts.hazards}</p>
+                    </div>
+                    <div className="rounded-lg bg-muted p-3">
+                      <p className="text-xs text-muted-foreground">Omitted</p>
+                      <p className="text-xl font-bold">
+                        {hazardArtifacts.sourceRecordCounts.omittedPendingOrRejectedHazards
+                          + hazardArtifacts.sourceRecordCounts.omittedUnpositionedHazards}
+                      </p>
+                    </div>
+                    <div className="rounded-lg bg-muted p-3">
+                      <p className="text-xs text-muted-foreground">Vector Tiles</p>
+                      <p className="text-sm font-medium">
+                        {hazardArtifacts.rules.vectorTileGenerationPending ? 'Pending' : 'Ready'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    {hazardArtifacts.artifacts.map((artifact) => (
+                      <div key={artifact.id} className="rounded-lg border p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm font-medium uppercase">{artifact.format}</span>
+                          <span className="text-xs text-muted-foreground">{artifact.byteLength} bytes</span>
+                        </div>
+                        <p className="mt-2 font-mono text-xs">{artifact.sha256.slice(0, 12)}</p>
+                        {artifact.tileSummary && (
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            z{artifact.tileSummary.minZoom}-z{artifact.tileSummary.maxZoom} / {artifact.tileSummary.tileCount} tiles
+                          </p>
+                        )}
+                        <Button asChild size="sm" variant="outline" className="mt-3 w-full">
+                          <a href={artifact.downloadPath} download={artifact.fileName}>
+                            <Download className="h-4 w-4" />
+                            Download
+                          </a>
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-lg border border-dashed p-6 text-center">
+                  <p className="text-sm text-muted-foreground">No hazard products loaded.</p>
                 </div>
               )}
             </CardContent>
