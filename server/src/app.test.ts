@@ -449,6 +449,96 @@ describe('HarbourMesh API', () => {
     );
   });
 
+  it('serves privacy-preserving aggregate community GeoJSON cells', async () => {
+    const app = await createTestApp();
+
+    await app.inject({
+      method: 'POST',
+      url: '/api/community/soundings',
+      payload: sampleBatch,
+    });
+    await app.inject({
+      method: 'POST',
+      url: '/api/community/hazards',
+      payload: sampleHazardBatch,
+    });
+
+    const pendingAggregates = await app.inject({
+      method: 'GET',
+      url: '/api/community/aggregates.geojson',
+    });
+
+    expect(pendingAggregates.statusCode).toBe(200);
+    expect(pendingAggregates.json()).toMatchObject({
+      type: 'FeatureCollection',
+      metadata: {
+        schemaVersion: 'harbourmesh.community-aggregates.v1',
+        intendedUse: 'community_reference_overlay',
+        officialChartDataIncluded: false,
+        rawRecordIdsIncluded: false,
+        vesselIdsIncluded: false,
+        sourceRecordCounts: {
+          soundings: 1,
+          acceptedSoundings: 1,
+          rejectedSoundings: 0,
+          hazards: 1,
+          publicHazards: 0,
+          aggregateCells: 1,
+        },
+      },
+    });
+    expect(pendingAggregates.json().features[0]).toMatchObject({
+      id: 'aggregate:45.2700:-66.0600',
+      geometry: {
+        type: 'Polygon',
+      },
+      properties: {
+        kind: 'aggregate_cell',
+        soundingCount: 1,
+        hazardCount: 0,
+        averageDepthMeters: 12.5,
+        averageConfidence: 0.9,
+        rawRecordIdsIncluded: false,
+        vesselIdsIncluded: false,
+        officialChartDataIncluded: false,
+      },
+    });
+
+    await app.inject({
+      method: 'POST',
+      url: '/api/community/hazards/hazard-1/review',
+      payload: {
+        status: 'accepted',
+        reviewedBy: 'nb-pilot-reviewer',
+      },
+    });
+
+    const acceptedAggregates = await app.inject({
+      method: 'GET',
+      url: '/api/community/aggregates.geojson',
+    });
+    const aggregateBody = acceptedAggregates.json();
+    const aggregateFeature = aggregateBody.features[0];
+
+    expect(acceptedAggregates.statusCode).toBe(200);
+    expect(aggregateBody).toMatchObject({
+      metadata: {
+        sourceRecordCounts: {
+          publicHazards: 1,
+          aggregateCells: 1,
+        },
+      },
+    });
+    expect(aggregateFeature.properties).toMatchObject({
+      soundingCount: 1,
+      hazardCount: 1,
+      mediumHazardCount: 1,
+    });
+    expect(aggregateFeature.properties).not.toHaveProperty('vesselId');
+    expect(aggregateFeature.properties).not.toHaveProperty('sourceDeviceId');
+    expect(JSON.stringify(aggregateBody)).not.toContain('vessel-1');
+  });
+
   it('returns not found for reviews of unknown hazards', async () => {
     const app = await createTestApp();
     const response = await app.inject({

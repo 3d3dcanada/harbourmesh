@@ -7,6 +7,7 @@ import {
   requireApiAccess,
 } from './api-auth.js';
 import { getNBPilotChartCatalog, getNBPilotChartPackageManifest } from './chart-catalog.js';
+import { buildCommunityAggregateGeoJson } from './community-aggregates.js';
 import { buildCommunityGeoJsonOverlay } from './community-geojson.js';
 import { communityHazardBatchSchema, communityHazardReviewSchema } from './community-hazards.js';
 import {
@@ -90,6 +91,15 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     ]);
 
     return buildCommunityGeoJsonOverlay(soundings, hazards);
+  });
+
+  app.get('/api/community/aggregates.geojson', async () => {
+    const [soundings, hazards] = await Promise.all([
+      repository.listRecords(),
+      hazardRepository.listRecords(),
+    ]);
+
+    return buildCommunityAggregateGeoJson(soundings, hazards);
   });
 
   app.get('/api/charts/nb/catalog', async () => getNBPilotChartCatalog());
