@@ -14,6 +14,7 @@ export type CommunityHazardSyncReceipt = CommunitySyncReceipt;
 
 export type UploadCommunitySoundingBatchOptions = {
   apiBaseUrl?: string;
+  apiKey?: string;
   fetchImpl?: typeof fetch;
 };
 
@@ -36,6 +37,17 @@ function isReceipt(value: unknown): value is CommunitySyncReceipt {
   );
 }
 
+function resolveApiKey(apiKey?: string): string | undefined {
+  return (apiKey ?? import.meta.env.VITE_HARBOURMESH_API_KEY)?.trim() || undefined;
+}
+
+function buildJsonHeaders(apiKey?: string): Record<string, string> {
+  return {
+    'Content-Type': 'application/json',
+    ...(apiKey ? { 'X-HarbourMesh-API-Key': apiKey } : {}),
+  };
+}
+
 export async function uploadCommunitySoundingBatch(
   batch: CommunitySyncBatch,
   options: UploadCommunitySoundingBatchOptions = {}
@@ -44,9 +56,7 @@ export async function uploadCommunitySoundingBatch(
   const endpoint = resolveEndpoint(batch.endpoint, options.apiBaseUrl ?? import.meta.env.VITE_API_BASE_URL);
   const response = await fetchImpl(endpoint, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: buildJsonHeaders(resolveApiKey(options.apiKey)),
     body: JSON.stringify(batch.payload),
   });
   const body: unknown = await response.json().catch(() => null);
@@ -75,9 +85,7 @@ export async function uploadCommunityHazardBatch(
   const endpoint = resolveEndpoint(batch.endpoint, options.apiBaseUrl ?? import.meta.env.VITE_API_BASE_URL);
   const response = await fetchImpl(endpoint, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: buildJsonHeaders(resolveApiKey(options.apiKey)),
     body: JSON.stringify(batch.payload),
   });
   const body: unknown = await response.json().catch(() => null);

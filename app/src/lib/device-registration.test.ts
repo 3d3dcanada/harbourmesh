@@ -53,6 +53,7 @@ describe('device registration', () => {
 
     await expect(registerBoatNode(payload, {
       apiBaseUrl: 'http://localhost:3001',
+      apiKey: 'hm_test_api_key_1234567890',
       fetchImpl: fetchImpl as unknown as typeof fetch,
     })).resolves.toMatchObject({
       deviceId: 'boat-node-001',
@@ -61,6 +62,9 @@ describe('device registration', () => {
 
     expect(fetchImpl).toHaveBeenCalledWith('http://localhost:3001/api/devices/register', expect.objectContaining({
       method: 'POST',
+      headers: expect.objectContaining({
+        'X-HarbourMesh-API-Key': 'hm_test_api_key_1234567890',
+      }),
     }));
   });
 });

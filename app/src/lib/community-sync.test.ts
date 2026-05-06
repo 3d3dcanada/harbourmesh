@@ -75,6 +75,7 @@ describe('community sync', () => {
 
     await expect(uploadCommunitySoundingBatch(batch, {
       apiBaseUrl: 'http://localhost:3001',
+      apiKey: 'hm_test_api_key_1234567890',
       fetchImpl: fetchImpl as unknown as typeof fetch,
     })).resolves.toMatchObject({
       receiptId: 'receipt-1',
@@ -83,6 +84,9 @@ describe('community sync', () => {
 
     expect(fetchImpl).toHaveBeenCalledWith('http://localhost:3001/api/community/soundings', expect.objectContaining({
       method: 'POST',
+      headers: expect.objectContaining({
+        'X-HarbourMesh-API-Key': 'hm_test_api_key_1234567890',
+      }),
     }));
   });
 
@@ -109,6 +113,7 @@ describe('community sync', () => {
 
     await expect(uploadCommunityHazardBatch(hazardBatch, {
       apiBaseUrl: 'http://localhost:3001',
+      apiKey: 'hm_test_api_key_1234567890',
       fetchImpl: fetchImpl as unknown as typeof fetch,
     })).resolves.toMatchObject({
       receiptId: 'hazard-receipt-1',
@@ -117,6 +122,9 @@ describe('community sync', () => {
 
     expect(fetchImpl).toHaveBeenCalledWith('http://localhost:3001/api/community/hazards', expect.objectContaining({
       method: 'POST',
+      headers: expect.objectContaining({
+        'X-HarbourMesh-API-Key': 'hm_test_api_key_1234567890',
+      }),
     }));
   });
 });

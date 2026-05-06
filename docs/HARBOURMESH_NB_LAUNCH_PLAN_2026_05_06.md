@@ -35,7 +35,7 @@ Observed state:
 - Telemetry: recorded Signal K replay and live Signal K WebSocket wiring now exist; live hardware ingest remains unverified.
 - Backend: a Fastify API now exists for NB chart source catalog, community sounding upload, community hazard upload, community reference GeoJSON overlay, device registration, and summary endpoints with JSONL local persistence; it is a pilot backend, not the final PostGIS/cloud mesh.
 - Community mesh: local raw sounding capture, local hazard reporting, consent-safe offline upload queues, backend upload endpoints, and a reference-only GeoJSON overlay now exist; moderation and public tile products are still not implemented.
-- Security: docs no longer claim production readiness; the weak SHA-256 placeholder key derivation, token signing, and password hashing helpers have been replaced with PBKDF2-HMAC-SHA256/HMAC-SHA256 regressions, but no production auth or secret-management system exists yet.
+- Security: docs no longer claim production readiness; the weak SHA-256 placeholder key derivation, token signing, and password hashing helpers have been replaced with PBKDF2-HMAC-SHA256/HMAC-SHA256 regressions, and the pilot API now has configurable API-key gates for write/device endpoints. Full user auth, role policy, and secret-management are still not implemented.
 - CI/release: workflows have been adjusted to stop calling missing package scripts.
 - Testing: current tests now cover chart source metadata, Signal K mapping, community sounding extraction, local hazard reporting, device registration, store queue behavior, and crypto helper regressions; they still do not prove navigation safety, hardware ingest, production auth, browser layout, or security readiness.
 
@@ -53,6 +53,7 @@ Last light checks:
 - `npm run build`: section-level code splitting is active; the initial app JS chunk is 278.93 kB / 88.63 kB gzip and the prior Vite oversized chunk warning is gone.
 - `npm run build` in `server`: passing.
 - `npm audit --json` in `server`: 0 vulnerabilities.
+- Server API auth tests cover missing keys, accepted header keys, accepted Bearer keys, protected device registry reads, and fail-closed production-style config.
 - Local API smoke on port 3101: `/health`, `POST /api/community/soundings`, and `/api/community/soundings/summary` returned expected responses.
 - Local API smoke on port 3102: `POST /api/devices/register` and `GET /api/devices` returned expected responses.
 - Local API smoke on port 3103: `/health`, `POST /api/community/hazards`, and `/api/community/hazards/summary` returned expected responses.
@@ -82,10 +83,11 @@ Completed in the active checkout:
 - Added local community overlay feature generation and rendered local sounding and hazard markers on the NB community map.
 - Replaced mislabeled SHA-256 security helpers with PBKDF2-HMAC-SHA256 key derivation/password hashing, HMAC-SHA256 token signatures, AES-GCM IV/tag validation, and regression tests.
 - Split the frontend into lazy-loaded section chunks so the initial production bundle is smaller and the main app shell no longer trips Vite's oversized chunk warning.
+- Added configurable pilot API-key enforcement for community uploads and device registry endpoints, with public chart catalog, summaries, and reference overlay endpoints left readable.
 
 Still not done:
 
-- No production auth, PostGIS schema, moderation workflow, offline tile packaging, vector tile generation, or reviewed public aggregate tile product exists.
+- No full production user auth, PostGIS schema, moderation workflow, offline tile packaging, vector tile generation, or reviewed public aggregate tile product exists.
 - No full route-by-route browser/mobile visual verification has been run in this session.
 - No real Signal K server, sonar, radar, AIS receiver, or Boat Node hardware has been tested.
 - Community hazards can now be queued and uploaded to the pilot backend, but moderation, review, public display, and aggregate map products are still not implemented.

@@ -1,6 +1,11 @@
 import cors from '@fastify/cors';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { ZodError } from 'zod';
+import {
+  createApiAuthConfig,
+  parseApiKeys,
+  requireApiAccess,
+} from './api-auth.js';
 import { getNBPilotChartCatalog } from './chart-catalog.js';
 import { buildCommunityGeoJsonOverlay } from './community-geojson.js';
 import { communityHazardBatchSchema } from './community-hazards.js';
@@ -24,6 +29,8 @@ export type BuildAppOptions = {
   repository?: CommunitySoundingRepository;
   hazardRepository?: CommunityHazardRepository;
   deviceRepository?: DeviceRepository;
+  apiKeys?: readonly string[];
+  requireApiAuth?: boolean;
   logger?: boolean;
 };
 
@@ -32,6 +39,14 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   const repository = options.repository ?? createCommunitySoundingRepository(options.dataDir);
   const hazardRepository = options.hazardRepository ?? createCommunityHazardRepository(options.dataDir);
   const deviceRepository = options.deviceRepository ?? createDeviceRepository(options.dataDir);
+  const apiAuth = createApiAuthConfig({
+    keys: options.apiKeys ?? parseApiKeys(
+      process.env.HARBOURMESH_API_KEYS,
+      process.env.HARBOURMESH_WRITE_API_KEYS,
+      process.env.HARBOURMESH_API_KEY
+    ),
+    required: options.requireApiAuth ?? process.env.NODE_ENV === 'production',
+  });
 
   await app.register(cors, {
     origin: true,
@@ -44,6 +59,8 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   }));
 
   app.post('/api/community/soundings', async (request, reply) => {
+    if (!(await requireApiAccess(request, reply, apiAuth))) return reply;
+
     try {
       const batch = communitySoundingBatchSchema.parse(request.body);
       const receipt = await repository.acceptBatch(batch);
@@ -78,6 +95,8 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   app.get('/api/charts/nb/catalog', async () => getNBPilotChartCatalog());
 
   app.post('/api/community/hazards', async (request, reply) => {
+    if (!(await requireApiAccess(request, reply, apiAuth))) return reply;
+
     try {
       const batch = communityHazardBatchSchema.parse(request.body);
       const receipt = await hazardRepository.acceptBatch(batch);
@@ -101,6 +120,8 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   app.get('/api/community/hazards/summary', async () => hazardRepository.getSummary());
 
   app.post('/api/devices/register', async (request, reply) => {
+    if (!(await requireApiAccess(request, reply, apiAuth))) return reply;
+
     try {
       const registration = deviceRegistrationSchema.parse(request.body);
       const receipt = await deviceRepository.registerDevice(registration);
@@ -121,11 +142,17 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     }
   });
 
-  app.get('/api/devices', async () => ({
-    devices: await deviceRepository.listDevices(),
-  }));
+  app.get('/api/devices', async (request, reply) => {
+    if (!(await requireApiAccess(request, reply, apiAuth))) return reply;
+
+    return {
+      devices: await deviceRepository.listDevices(),
+    };
+  });
 
   app.get('/api/devices/:deviceId', async (request, reply) => {
+    if (!(await requireApiAccess(request, reply, apiAuth))) return reply;
+
     const { deviceId } = request.params as { deviceId: string };
     const device = await deviceRepository.getDevice(deviceId);
     if (!device) {

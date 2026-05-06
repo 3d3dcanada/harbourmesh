@@ -1,9 +1,11 @@
 import { mkdir, mkdtemp } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { buildApp } from './app.js';
+import { buildApp, type BuildAppOptions } from './app.js';
 import type { CommunityHazardBatch } from './community-hazards.js';
 import type { CommunitySoundingBatch } from './community-soundings.js';
+
+const TEST_API_KEY = 'hm_test_api_key_1234567890';
 
 const sampleBatch: CommunitySoundingBatch = {
   id: 'batch-1',
@@ -96,11 +98,11 @@ const sampleHazardBatch: CommunityHazardBatch = {
   },
 };
 
-async function createTestApp() {
+async function createTestApp(options: Partial<Omit<BuildAppOptions, 'dataDir'>> = {}) {
   const testRoot = join(process.cwd(), 'tmp');
   await mkdir(testRoot, { recursive: true });
   const dataDir = await mkdtemp(join(testRoot, 'harbourmesh-server-test-'));
-  return buildApp({ dataDir });
+  return buildApp({ dataDir, ...options });
 }
 
 describe('HarbourMesh API', () => {
@@ -118,6 +120,59 @@ describe('HarbourMesh API', () => {
       batchId: 'batch-1',
       acceptedCount: 1,
       duplicateCount: 0,
+    });
+  });
+
+  it('requires a pilot API key for protected intake when auth is configured', async () => {
+    const app = await createTestApp({
+      apiKeys: [TEST_API_KEY],
+      requireApiAuth: true,
+    });
+
+    const missingKey = await app.inject({
+      method: 'POST',
+      url: '/api/community/soundings',
+      payload: sampleBatch,
+    });
+    expect(missingKey.statusCode).toBe(401);
+    expect(missingKey.json()).toMatchObject({
+      ok: false,
+      error: 'api_key_required',
+    });
+
+    const accepted = await app.inject({
+      method: 'POST',
+      url: '/api/community/soundings',
+      headers: {
+        'x-harbourmesh-api-key': TEST_API_KEY,
+      },
+      payload: sampleBatch,
+    });
+    expect(accepted.statusCode).toBe(202);
+
+    const publicSummary = await app.inject({
+      method: 'GET',
+      url: '/api/community/soundings/summary',
+    });
+    expect(publicSummary.statusCode).toBe(200);
+  });
+
+  it('fails closed when pilot API auth is required without configured keys', async () => {
+    const app = await createTestApp({
+      apiKeys: [],
+      requireApiAuth: true,
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/community/hazards',
+      payload: sampleHazardBatch,
+    });
+
+    expect(response.statusCode).toBe(503);
+    expect(response.json()).toMatchObject({
+      ok: false,
+      error: 'api_auth_not_configured',
     });
   });
 
@@ -354,6 +409,44 @@ describe('HarbourMesh API', () => {
             depth: true,
             sonar: true,
           },
+        },
+      ],
+    });
+  });
+
+  it('protects device registry reads when API auth is configured', async () => {
+    const app = await createTestApp({
+      apiKeys: [TEST_API_KEY],
+      requireApiAuth: true,
+    });
+
+    await app.inject({
+      method: 'POST',
+      url: '/api/devices/register',
+      headers: {
+        'x-harbourmesh-api-key': TEST_API_KEY,
+      },
+      payload: sampleDeviceRegistration,
+    });
+
+    const missingKey = await app.inject({
+      method: 'GET',
+      url: '/api/devices',
+    });
+    expect(missingKey.statusCode).toBe(401);
+
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/devices',
+      headers: {
+        authorization: `Bearer ${TEST_API_KEY}`,
+      },
+    });
+    expect(list.statusCode).toBe(200);
+    expect(list.json()).toMatchObject({
+      devices: [
+        {
+          deviceId: 'boat-node-001',
         },
       ],
     });
