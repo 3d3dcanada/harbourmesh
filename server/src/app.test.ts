@@ -459,6 +459,129 @@ describe('HarbourMesh API', () => {
     });
   });
 
+  it('mints short-lived review operator sessions from scoped pilot keys', async () => {
+    const app = await createTestApp({
+      writeApiKeys: [TEST_WRITE_API_KEY],
+      reviewOperatorKeys: [{ key: TEST_REVIEW_API_KEY, operatorId: 'nb-session-reviewer' }],
+      sessionSigningKey: 'operator-session-signing-secret',
+      sessionSigningKeyId: 'nb-session-test-key',
+      sessionTtlSeconds: 600,
+      requireApiAuth: true,
+    });
+
+    await app.inject({
+      method: 'POST',
+      url: '/api/community/hazards',
+      headers: {
+        'x-harbourmesh-api-key': TEST_WRITE_API_KEY,
+      },
+      payload: sampleHazardBatch,
+    });
+
+    const sessionResponse = await app.inject({
+      method: 'POST',
+      url: '/api/auth/operator-session',
+      headers: {
+        'x-harbourmesh-api-key': TEST_REVIEW_API_KEY,
+      },
+      payload: {
+        operatorId: 'client-supplied-operator',
+        ttlSeconds: 120,
+      },
+    });
+    expect(sessionResponse.statusCode).toBe(201);
+    expect(sessionResponse.json()).toMatchObject({
+      ok: true,
+      session: {
+        tokenType: 'Bearer',
+        operatorId: 'nb-session-reviewer',
+        scopes: ['review'],
+        keyId: 'nb-session-test-key',
+      },
+    });
+    expect(sessionResponse.json().session.accessToken).toMatch(/^hm_session_v1\./);
+    expect(Date.parse(sessionResponse.json().session.expiresAt)).toBeGreaterThan(Date.parse(sessionResponse.json().session.issuedAt));
+
+    const accessToken = sessionResponse.json().session.accessToken;
+    const reviewQueue = await app.inject({
+      method: 'GET',
+      url: '/api/community/hazards/review',
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+      },
+    });
+    expect(reviewQueue.statusCode).toBe(200);
+    expect(reviewQueue.json().hazards).toHaveLength(1);
+
+    const writeAttempt = await app.inject({
+      method: 'POST',
+      url: '/api/community/soundings',
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+      },
+      payload: sampleBatch,
+    });
+    expect(writeAttempt.statusCode).toBe(403);
+    expect(writeAttempt.json()).toMatchObject({
+      ok: false,
+      error: 'api_key_scope_required',
+      requiredScope: 'write',
+    });
+
+    const reviewDecision = await app.inject({
+      method: 'POST',
+      url: '/api/community/hazards/hazard-1/review',
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+      },
+      payload: {
+        status: 'accepted',
+        reviewedBy: 'client-supplied-reviewer',
+      },
+    });
+    expect(reviewDecision.statusCode).toBe(202);
+
+    const reviewHistory = await app.inject({
+      method: 'GET',
+      url: '/api/community/hazards/reviews',
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+      },
+    });
+    expect(reviewHistory.json()).toMatchObject({
+      reviews: [
+        {
+          status: 'accepted',
+          reviewedBy: 'nb-session-reviewer',
+        },
+      ],
+    });
+  });
+
+  it('fails operator session minting when session signing is not configured', async () => {
+    const app = await createTestApp({
+      reviewApiKeys: [TEST_REVIEW_API_KEY],
+      requireApiAuth: true,
+    });
+
+    const sessionResponse = await app.inject({
+      method: 'POST',
+      url: '/api/auth/operator-session',
+      headers: {
+        'x-harbourmesh-api-key': TEST_REVIEW_API_KEY,
+      },
+      payload: {
+        operatorId: 'nb-reviewer',
+      },
+    });
+
+    expect(sessionResponse.statusCode).toBe(503);
+    expect(sessionResponse.json()).toMatchObject({
+      ok: false,
+      error: 'operator_session_signing_not_configured',
+    });
+  });
+
   it('fails closed when pilot API auth is required without configured keys', async () => {
     const app = await createTestApp({
       apiKeys: [],

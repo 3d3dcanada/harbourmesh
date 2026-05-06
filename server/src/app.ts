@@ -4,6 +4,7 @@ import Fastify, { type FastifyInstance, type FastifyReply } from 'fastify';
 import { z, ZodError } from 'zod';
 import {
   createApiAuthConfig,
+  createOperatorSessionToken,
   getRequestApiKeyIdentity,
   parseOperatorApiKeys,
   parseOperatorApiKeySha256Hashes,
@@ -82,6 +83,9 @@ export type BuildAppOptions = {
   chartPackageArtifactOptions?: BuildNBPilotChartPackageArtifactsOptions;
   artifactSigningKey?: string;
   artifactSigningKeyId?: string;
+  sessionSigningKey?: string;
+  sessionSigningKeyId?: string;
+  sessionTtlSeconds?: number;
   requireAggregateReleaseApproval?: boolean;
   logger?: boolean;
 };
@@ -121,6 +125,11 @@ function artifactSigningConfigFromOptions(options: BuildAppOptions): ArtifactSig
     key,
     keyId: options.artifactSigningKeyId ?? process.env.HARBOURMESH_ARTIFACT_SIGNING_KEY_ID ?? 'harbourmesh-artifact-signing-key',
   };
+}
+
+function sessionTtlFromOptions(options: BuildAppOptions): number | undefined {
+  const rawTtl = options.sessionTtlSeconds ?? Number(process.env.HARBOURMESH_SESSION_TTL_SECONDS);
+  return Number.isFinite(rawTtl) && rawTtl > 0 ? rawTtl : undefined;
 }
 
 function artifactSigningPayload(artifact: DownloadableArtifact): string {
@@ -185,6 +194,9 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     reviewKeySha256Hashes: options.reviewApiKeySha256Hashes ?? parseApiKeySha256Hashes(process.env.HARBOURMESH_REVIEW_API_KEY_SHA256S),
     reviewOperatorKeys: options.reviewOperatorKeys ?? parseOperatorApiKeys(process.env.HARBOURMESH_REVIEW_OPERATOR_KEYS),
     reviewOperatorKeySha256Hashes: options.reviewOperatorKeySha256Hashes ?? parseOperatorApiKeySha256Hashes(process.env.HARBOURMESH_REVIEW_OPERATOR_KEY_SHA256S),
+    sessionSigningKey: options.sessionSigningKey ?? process.env.HARBOURMESH_SESSION_SIGNING_KEY,
+    sessionSigningKeyId: options.sessionSigningKeyId ?? process.env.HARBOURMESH_SESSION_SIGNING_KEY_ID,
+    sessionTtlSeconds: sessionTtlFromOptions(options),
     required: options.requireApiAuth ?? process.env.NODE_ENV === 'production',
   });
 
@@ -206,6 +218,11 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
       notes: z.string().trim().max(1000).optional(),
     }).strict().optional(),
   });
+
+  const operatorSessionRequestSchema = z.object({
+    operatorId: z.string().trim().min(2).max(120).optional(),
+    ttlSeconds: z.number().int().positive().max(apiAuth.sessionTtlSeconds).optional(),
+  }).strict();
 
   function normalizeAggregateReleaseApproval(
     approval: AggregateReleaseApprovalRequest,
@@ -246,6 +263,51 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     service: 'harbourmesh-server',
     time: new Date().toISOString(),
   }));
+
+  app.post('/api/auth/operator-session', async (request, reply) => {
+    if (!(await requireApiAccess(request, reply, apiAuth, 'review'))) return reply;
+
+    if (!apiAuth.sessionSigningKey) {
+      return reply.code(503).send({
+        ok: false,
+        error: 'operator_session_signing_not_configured',
+      });
+    }
+
+    try {
+      const reviewIdentity = getRequestApiKeyIdentity(apiAuth, request, 'review');
+      const requestBody = operatorSessionRequestSchema.parse(request.body ?? {});
+      const session = createOperatorSessionToken(apiAuth, {
+        operatorId: reviewIdentity?.operatorId ?? requestBody.operatorId ?? 'review-operator',
+        scopes: ['review'],
+        ttlSeconds: requestBody.ttlSeconds,
+      });
+      if (!session) {
+        return reply.code(503).send({
+          ok: false,
+          error: 'operator_session_unavailable',
+        });
+      }
+
+      return reply.code(201).send({
+        ok: true,
+        session,
+      });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return reply.code(400).send({
+          ok: false,
+          error: 'invalid_operator_session_request',
+          issues: error.issues.map((issue) => ({
+            path: issue.path.join('.'),
+            message: issue.message,
+          })),
+        });
+      }
+
+      throw error;
+    }
+  });
 
   app.post('/api/community/soundings', async (request, reply) => {
     if (!(await requireApiAccess(request, reply, apiAuth))) return reply;
