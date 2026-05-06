@@ -85,6 +85,7 @@ export type NBPilotChartPackageArtifact = {
   format: 'geojson' | 'mbtiles' | 'pmtiles';
   mediaType: 'application/geo+json' | 'application/x-sqlite3' | 'application/vnd.pmtiles';
   fileName: string;
+  downloadPath: string;
   byteLength: number;
   sha256: string;
   generatedAt: string;
@@ -191,6 +192,7 @@ function isChartPackageArtifactManifest(value: unknown): value is NBPilotChartPa
     manifest.artifacts.every((artifact) => (
       typeof artifact.id === 'string' &&
       artifact.region === 'NB_PILOT' &&
+      typeof artifact.downloadPath === 'string' &&
       (artifact.format === 'geojson' || artifact.format === 'mbtiles' || artifact.format === 'pmtiles') &&
       (
         (artifact.format === 'geojson' && artifact.mediaType === 'application/geo+json') ||

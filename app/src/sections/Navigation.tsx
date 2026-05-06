@@ -17,6 +17,7 @@ import {
   Activity,
   Ship,
   AlertTriangle,
+  Download,
   Info,
   Clock,
   Zap,
@@ -307,6 +308,12 @@ export function Navigation() {
                   <p className="mt-1 text-xs text-muted-foreground">
                     Excludes {artifact.excludedSourceIds.join(', ')}
                   </p>
+                  <Button asChild size="sm" variant="outline" className="mt-3 w-full">
+                    <a href={artifact.downloadPath} download={artifact.fileName}>
+                      <Download className="h-4 w-4" />
+                      Download
+                    </a>
+                  </Button>
                 </div>
               ))}
             </div>

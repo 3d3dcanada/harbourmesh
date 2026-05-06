@@ -40,7 +40,7 @@ type ChartPackageArtifactContent = FeatureCollection<Geometry, GeoJsonProperties
   };
 };
 
-type ChartPackageArtifactFormat = 'geojson' | 'mbtiles' | 'pmtiles';
+export type ChartPackageArtifactFormat = 'geojson' | 'mbtiles' | 'pmtiles';
 type ChartPackageArtifactMediaType = 'application/geo+json' | 'application/x-sqlite3' | 'application/vnd.pmtiles';
 
 export type NBPilotChartPackageArtifact = {
@@ -50,6 +50,7 @@ export type NBPilotChartPackageArtifact = {
   format: ChartPackageArtifactFormat;
   mediaType: ChartPackageArtifactMediaType;
   fileName: string;
+  downloadPath: string;
   byteLength: number;
   sha256: string;
   generatedAt: string;
@@ -236,6 +237,14 @@ function hashBytes(bytes: Buffer | string): { byteLength: number; sha256: string
   };
 }
 
+function artifactDownloadPath(
+  chartPackage: NBPilotChartPackage,
+  format: ChartPackageArtifactFormat,
+  generatedAt: string
+): string {
+  return `/api/charts/nb/package-artifacts/${chartPackage.id}/${format}?generatedAt=${encodeURIComponent(generatedAt)}`;
+}
+
 function buildGeoJsonArtifact(
   chartPackage: NBPilotChartPackage,
   generatedAt: string,
@@ -252,6 +261,7 @@ function buildGeoJsonArtifact(
     format: 'geojson',
     mediaType: 'application/geo+json',
     fileName: `${chartPackage.id}.geojson`,
+    downloadPath: artifactDownloadPath(chartPackage, 'geojson', generatedAt),
     byteLength,
     sha256,
     generatedAt,
@@ -450,6 +460,7 @@ async function buildMbTilesArtifact(
       format: 'mbtiles',
       mediaType: 'application/x-sqlite3',
       fileName: `${chartPackage.id}.mbtiles`,
+      downloadPath: artifactDownloadPath(chartPackage, 'mbtiles', generatedAt),
       byteLength,
       sha256,
       generatedAt,
@@ -499,6 +510,7 @@ function buildPmTilesArtifact(
     format: 'pmtiles',
     mediaType: 'application/vnd.pmtiles',
     fileName: `${chartPackage.id}.pmtiles`,
+    downloadPath: artifactDownloadPath(chartPackage, 'pmtiles', generatedAt),
     byteLength,
     sha256,
     generatedAt,
@@ -601,6 +613,16 @@ export async function getNBPilotChartPackageArtifactManifest(
   };
 }
 
+export async function getNBPilotChartPackageArtifactDownload(
+  packageId: string,
+  format: ChartPackageArtifactFormat,
+  generatedAt = new Date().toISOString(),
+  options: BuildNBPilotChartPackageArtifactsOptions = {}
+): Promise<BuiltNBPilotChartPackageArtifact | undefined> {
+  const artifacts = await buildArtifacts(generatedAt, options);
+  return artifacts.find((artifact) => artifact.packageId === packageId && artifact.format === format);
+}
+
 export async function writeNBPilotChartPackageArtifacts(
   options: WriteNBPilotChartPackageArtifactsOptions
 ): Promise<NBPilotChartPackageArtifactReleaseManifest> {
@@ -625,6 +647,7 @@ export async function writeNBPilotChartPackageArtifacts(
       format: artifact.format,
       mediaType: artifact.mediaType,
       fileName: artifact.fileName,
+      downloadPath: artifact.downloadPath,
       byteLength: artifact.byteLength,
       sha256: artifact.sha256,
       generatedAt: artifact.generatedAt,

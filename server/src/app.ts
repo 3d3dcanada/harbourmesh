@@ -11,7 +11,11 @@ import {
   requireApiAccess,
   type OperatorApiKey,
 } from './api-auth.js';
-import { getNBPilotChartPackageArtifactManifest } from './chart-package-artifacts.js';
+import {
+  getNBPilotChartPackageArtifactDownload,
+  getNBPilotChartPackageArtifactManifest,
+  type ChartPackageArtifactFormat,
+} from './chart-package-artifacts.js';
 import { getNBPilotChartCatalog, getNBPilotChartPackageManifest } from './chart-catalog.js';
 import { buildCommunityAggregateGeoJson } from './community-aggregates.js';
 import {
@@ -255,6 +259,31 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   app.get('/api/charts/nb/catalog', async () => getNBPilotChartCatalog());
   app.get('/api/charts/nb/packages', async () => getNBPilotChartPackageManifest());
   app.get('/api/charts/nb/package-artifacts', async () => getNBPilotChartPackageArtifactManifest());
+  app.get('/api/charts/nb/package-artifacts/:packageId/:format', async (request, reply) => {
+    const { packageId, format } = request.params as { packageId: string; format: string };
+    if (format !== 'geojson' && format !== 'mbtiles' && format !== 'pmtiles') {
+      return reply.code(404).send({ ok: false, error: 'chart_package_artifact_not_found' });
+    }
+
+    const query = request.query as { generatedAt?: string };
+    const artifact = await getNBPilotChartPackageArtifactDownload(
+      packageId,
+      format as ChartPackageArtifactFormat,
+      query.generatedAt
+    );
+    if (!artifact) {
+      return reply.code(404).send({ ok: false, error: 'chart_package_artifact_not_found' });
+    }
+
+    return reply
+      .type(artifact.mediaType)
+      .header('Content-Disposition', `attachment; filename="${artifact.fileName}"`)
+      .header('X-HarbourMesh-Artifact-Id', artifact.id)
+      .header('X-HarbourMesh-SHA256', artifact.sha256)
+      .header('X-HarbourMesh-Reference-Only', 'true')
+      .header('X-HarbourMesh-Official-Chart-Data-Included', 'false')
+      .send(artifact.bytes);
+  });
 
   app.post('/api/community/observations', async (request, reply) => {
     if (!(await requireApiAccess(request, reply, apiAuth))) return reply;

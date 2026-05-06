@@ -711,6 +711,7 @@ describe('HarbourMesh API', () => {
           packageId: 'nb-coast-reference',
           format: 'geojson',
           mediaType: 'application/geo+json',
+          downloadPath: expect.stringContaining('/api/charts/nb/package-artifacts/nb-coast-reference/geojson?generatedAt='),
           officialChartDataIncluded: false,
           excludedSourceIds: expect.arrayContaining(['chs-official-digital-products']),
           byteLength: expect.any(Number),
@@ -726,6 +727,7 @@ describe('HarbourMesh API', () => {
           packageId: 'nb-coast-reference',
           format: 'mbtiles',
           mediaType: 'application/x-sqlite3',
+          downloadPath: expect.stringContaining('/api/charts/nb/package-artifacts/nb-coast-reference/mbtiles?generatedAt='),
           officialChartDataIncluded: false,
           excludedSourceIds: expect.arrayContaining(['chs-official-digital-products']),
           byteLength: expect.any(Number),
@@ -739,6 +741,7 @@ describe('HarbourMesh API', () => {
           packageId: 'nb-coast-reference',
           format: 'pmtiles',
           mediaType: 'application/vnd.pmtiles',
+          downloadPath: expect.stringContaining('/api/charts/nb/package-artifacts/nb-coast-reference/pmtiles?generatedAt='),
           officialChartDataIncluded: false,
           excludedSourceIds: expect.arrayContaining(['chs-official-digital-products']),
           byteLength: expect.any(Number),
@@ -753,6 +756,26 @@ describe('HarbourMesh API', () => {
     const artifactBody = JSON.stringify(response.json());
     expect(artifactBody).not.toContain('"officialChartDataIncluded":true');
     expect(response.json().artifacts[0].sourceIds).not.toContain('chs-official-digital-products');
+
+    const pmtilesArtifact = response.json().artifacts.find((artifact: { packageId: string; format: string }) => (
+      artifact.packageId === 'nb-coast-reference' && artifact.format === 'pmtiles'
+    ));
+    const pmtilesDownload = await app.inject({
+      method: 'GET',
+      url: pmtilesArtifact.downloadPath,
+    });
+    expect(pmtilesDownload.statusCode).toBe(200);
+    expect(pmtilesDownload.headers['content-type']).toContain('application/vnd.pmtiles');
+    expect(pmtilesDownload.headers['x-harbourmesh-sha256']).toBe(pmtilesArtifact.sha256);
+    expect(pmtilesDownload.headers['x-harbourmesh-reference-only']).toBe('true');
+    expect(pmtilesDownload.headers['x-harbourmesh-official-chart-data-included']).toBe('false');
+    expect(pmtilesDownload.rawPayload.subarray(0, 7).toString('utf8')).toBe('PMTiles');
+
+    const missingArtifact = await app.inject({
+      method: 'GET',
+      url: '/api/charts/nb/package-artifacts/nb-coast-reference/kml',
+    });
+    expect(missingArtifact.statusCode).toBe(404);
   });
 
   it('accepts and summarizes community hazard batches', async () => {

@@ -36,6 +36,7 @@ Default API:
 - `GET /api/charts/nb/catalog`
 - `GET /api/charts/nb/packages`
 - `GET /api/charts/nb/package-artifacts`
+- `GET /api/charts/nb/package-artifacts/:packageId/:format`
 - `POST /api/devices/register`
 - `GET /api/devices`
 - `GET /api/devices/:deviceId`
@@ -56,7 +57,7 @@ The container runs `node dist/index.js` as the non-root `node` user, stores pilo
 
 For PostGIS-backed runtime storage, run the container with `HARBOURMESH_DATABASE_URL=postgres://...` and set `HARBOURMESH_RUN_MIGRATIONS=true` only for a controlled migration pass.
 
-NB reference chart package artifacts can be written to disk with `npm run charts:nb:artifacts -- <output-dir>`. The writer creates compact GeoJSON files, starter MBTiles vector-tile archives, PMTiles v3 MVT archives, and `manifest.json`; generated files are reference-only and exclude official CHS chart data.
+NB reference chart package artifacts can be written to disk with `npm run charts:nb:artifacts -- <output-dir>`. The writer creates compact GeoJSON files, starter MBTiles vector-tile archives, PMTiles v3 MVT archives, and `manifest.json`; generated files are reference-only and exclude official CHS chart data. The API manifest at `GET /api/charts/nb/package-artifacts` includes deterministic download paths, and `GET /api/charts/nb/package-artifacts/:packageId/:format` serves `geojson`, `mbtiles`, or `pmtiles` artifact bytes with checksum and reference-only headers.
 
 Set `HARBOURMESH_FETCH_GEONB_FEATURES=true` during artifact generation to query eligible GeoNB ArcGIS MapServer layers into the generated GeoJSON, MBTiles, and PMTiles files. Use `HARBOURMESH_GEONB_MAX_FEATURES_PER_SOURCE=<number>` to cap each source during pilot runs.
 
