@@ -13,6 +13,11 @@ import {
   type UserAccountRepository,
 } from './account-auth.js';
 import {
+  resolveOptionalAccountOwnershipContext,
+  sendAccountOwnershipError,
+  type AccountOwnershipContext,
+} from './account-ownership.js';
+import {
   createApiAuthConfig,
   createOperatorSessionToken,
   getRequestApiKeyIdentity,
@@ -265,6 +270,22 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     ttlSeconds: z.number().int().positive().max(apiAuth.sessionTtlSeconds).optional(),
   }).strict();
 
+  async function getAccountOwnershipContextIfPresent(
+    request: FastifyRequest,
+    reply: FastifyReply
+  ): Promise<{ ok: true; context: AccountOwnershipContext | null } | { ok: false }> {
+    const resolution = await resolveOptionalAccountOwnershipContext(request, accountAuth, userAccountRepository);
+    if (!resolution.ok) {
+      await sendAccountOwnershipError(reply, resolution);
+      return { ok: false };
+    }
+
+    return {
+      ok: true,
+      context: resolution.context,
+    };
+  }
+
   function normalizeAggregateReleaseApproval(
     approval: AggregateReleaseApprovalRequest,
     approvedByOverride?: string
@@ -278,7 +299,11 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     };
   }
 
-  async function publishAggregateRelease(generatedBy = 'system:auto', approval?: AggregateReleaseApproval) {
+  async function publishAggregateRelease(
+    generatedBy = 'system:auto',
+    approval?: AggregateReleaseApproval,
+    publisher?: AccountOwnershipContext | null
+  ) {
     const [soundings, hazards, observations] = await Promise.all([
       repository.listRecords(),
       hazardRepository.listRecords(),
@@ -289,7 +314,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     const baseManifest = buildCommunityAggregateReleaseManifest(aggregate);
     const manifest = approval ? { ...baseManifest, approval } : baseManifest;
 
-    return aggregateReleaseRepository.publishAggregateRelease({ aggregate, manifest, generatedBy });
+    return aggregateReleaseRepository.publishAggregateRelease({ aggregate, manifest, generatedBy, publisher });
   }
 
   async function getOrPublishLatestAggregateRelease() {
@@ -505,11 +530,13 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   });
 
   app.post('/api/community/soundings', async (request, reply) => {
+    const accountOwnership = await getAccountOwnershipContextIfPresent(request, reply);
+    if (!accountOwnership.ok) return reply;
     if (!(await requireApiAccess(request, reply, apiAuth))) return reply;
 
     try {
       const batch = communitySoundingBatchSchema.parse(request.body);
-      const receipt = await repository.acceptBatch(batch);
+      const receipt = await repository.acceptBatch(batch, accountOwnership.context);
       return reply.code(202).send(receipt);
     } catch (error) {
       if (error instanceof ZodError) {
@@ -530,6 +557,8 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   app.get('/api/community/soundings/summary', async () => repository.getSummary());
 
   app.get('/api/community/soundings/review', async (request, reply) => {
+    const accountOwnership = await getAccountOwnershipContextIfPresent(request, reply);
+    if (!accountOwnership.ok) return reply;
     if (!(await requireApiAccess(request, reply, apiAuth, 'review'))) return reply;
 
     return {
@@ -538,6 +567,8 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   });
 
   app.get('/api/community/soundings/reviews', async (request, reply) => {
+    const accountOwnership = await getAccountOwnershipContextIfPresent(request, reply);
+    if (!accountOwnership.ok) return reply;
     if (!(await requireApiAccess(request, reply, apiAuth, 'review'))) return reply;
 
     return {
@@ -546,6 +577,8 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   });
 
   app.post('/api/community/soundings/:soundingId/review', async (request, reply) => {
+    const accountOwnership = await getAccountOwnershipContextIfPresent(request, reply);
+    if (!accountOwnership.ok) return reply;
     if (!(await requireApiAccess(request, reply, apiAuth, 'review'))) return reply;
 
     try {
@@ -556,7 +589,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
         ...requestedReview,
         reviewedBy: reviewIdentity?.operatorId ?? requestedReview.reviewedBy,
       };
-      const receipt = await repository.reviewSounding(soundingId, review);
+      const receipt = await repository.reviewSounding(soundingId, review, accountOwnership.context);
       if (!receipt) {
         return reply.code(404).send({ ok: false, error: 'sounding_not_found' });
       }
@@ -665,6 +698,8 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   }));
 
   app.post('/api/community/releases/aggregates', async (request, reply) => {
+    const accountOwnership = await getAccountOwnershipContextIfPresent(request, reply);
+    if (!accountOwnership.ok) return reply;
     if (!(await requireApiAccess(request, reply, apiAuth, 'review'))) return reply;
 
     try {
@@ -682,7 +717,8 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
         : undefined;
       const release = await publishAggregateRelease(
         reviewIdentity?.operatorId ?? requestBody.generatedBy ?? 'review-operator',
-        approval
+        approval,
+        accountOwnership.context
       );
 
       return reply.code(201).send({
@@ -739,11 +775,13 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   });
 
   app.post('/api/community/observations', async (request, reply) => {
+    const accountOwnership = await getAccountOwnershipContextIfPresent(request, reply);
+    if (!accountOwnership.ok) return reply;
     if (!(await requireApiAccess(request, reply, apiAuth))) return reply;
 
     try {
       const batch = communityObservationBatchSchema.parse(request.body);
-      const receipt = await observationRepository.acceptBatch(batch);
+      const receipt = await observationRepository.acceptBatch(batch, accountOwnership.context);
       return reply.code(202).send(receipt);
     } catch (error) {
       if (error instanceof ZodError) {
@@ -764,11 +802,13 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   app.get('/api/community/observations/summary', async () => observationRepository.getSummary());
 
   app.post('/api/community/hazards', async (request, reply) => {
+    const accountOwnership = await getAccountOwnershipContextIfPresent(request, reply);
+    if (!accountOwnership.ok) return reply;
     if (!(await requireApiAccess(request, reply, apiAuth))) return reply;
 
     try {
       const batch = communityHazardBatchSchema.parse(request.body);
-      const receipt = await hazardRepository.acceptBatch(batch);
+      const receipt = await hazardRepository.acceptBatch(batch, accountOwnership.context);
       return reply.code(202).send(receipt);
     } catch (error) {
       if (error instanceof ZodError) {
@@ -824,6 +864,8 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   });
 
   app.get('/api/community/hazards/review', async (request, reply) => {
+    const accountOwnership = await getAccountOwnershipContextIfPresent(request, reply);
+    if (!accountOwnership.ok) return reply;
     if (!(await requireApiAccess(request, reply, apiAuth, 'review'))) return reply;
 
     return {
@@ -832,6 +874,8 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   });
 
   app.get('/api/community/hazards/reviews', async (request, reply) => {
+    const accountOwnership = await getAccountOwnershipContextIfPresent(request, reply);
+    if (!accountOwnership.ok) return reply;
     if (!(await requireApiAccess(request, reply, apiAuth, 'review'))) return reply;
 
     return {
@@ -840,6 +884,8 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   });
 
   app.post('/api/community/hazards/:hazardId/review', async (request, reply) => {
+    const accountOwnership = await getAccountOwnershipContextIfPresent(request, reply);
+    if (!accountOwnership.ok) return reply;
     if (!(await requireApiAccess(request, reply, apiAuth, 'review'))) return reply;
 
     try {
@@ -850,7 +896,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
         ...requestedReview,
         reviewedBy: reviewIdentity?.operatorId ?? requestedReview.reviewedBy,
       };
-      const receipt = await hazardRepository.reviewHazard(hazardId, review);
+      const receipt = await hazardRepository.reviewHazard(hazardId, review, accountOwnership.context);
       if (!receipt) {
         return reply.code(404).send({ ok: false, error: 'hazard_not_found' });
       }

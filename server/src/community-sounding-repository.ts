@@ -7,9 +7,16 @@ import {
   type CommunitySoundingSummary,
   type CommunitySoundingUpload,
 } from './community-soundings.js';
+import {
+  toOwnerMetadata,
+  toReviewerMetadata,
+  type AccountOwnerMetadata,
+  type AccountOwnershipContext,
+  type AccountReviewerMetadata,
+} from './account-ownership.js';
 import { appendJsonLine, readJsonLines, resolveDataFile } from './jsonl-store.js';
 
-type StoredBatch = {
+type StoredBatch = AccountOwnerMetadata & {
   id: string;
   region: string;
   recordCount: number;
@@ -18,7 +25,7 @@ type StoredBatch = {
   storedAt: string;
 };
 
-export type StoredCommunitySounding = CommunitySoundingUpload & {
+export type StoredCommunitySounding = CommunitySoundingUpload & AccountOwnerMetadata & AccountReviewerMetadata & {
   batchId: string;
   storedAt: string;
   region: string;
@@ -29,14 +36,18 @@ export type StoredCommunitySounding = CommunitySoundingUpload & {
   reviewNote?: string;
 };
 
-export type StoredSoundingReview = CommunitySoundingReview & {
+export type StoredSoundingReview = CommunitySoundingReview & AccountReviewerMetadata & {
   soundingId: string;
   reviewedAt: string;
 };
 
 export type CommunitySoundingRepository = {
-  acceptBatch: (batch: CommunitySoundingBatch) => Promise<CommunitySoundingReceipt>;
-  reviewSounding: (soundingId: string, review: CommunitySoundingReview) => Promise<CommunitySoundingReviewReceipt | null>;
+  acceptBatch: (batch: CommunitySoundingBatch, owner?: AccountOwnershipContext | null) => Promise<CommunitySoundingReceipt>;
+  reviewSounding: (
+    soundingId: string,
+    review: CommunitySoundingReview,
+    reviewer?: AccountOwnershipContext | null
+  ) => Promise<CommunitySoundingReviewReceipt | null>;
   getSummary: () => Promise<CommunitySoundingSummary>;
   listRecords: () => Promise<StoredCommunitySounding[]>;
   listReviews: () => Promise<StoredSoundingReview[]>;
@@ -65,6 +76,8 @@ export function createCommunitySoundingRepository(dataDir: string): CommunitySou
         reviewStatus,
         reviewedAt: review?.reviewedAt ?? record.reviewedAt,
         reviewedBy: review?.reviewedBy ?? record.reviewedBy,
+        reviewedByAccountId: review?.reviewedByAccountId ?? record.reviewedByAccountId,
+        reviewedByAccountRoles: review?.reviewedByAccountRoles ?? record.reviewedByAccountRoles,
         reviewReason: review?.reason ?? record.reviewReason,
         reviewNote: review?.note ?? record.reviewNote,
       };
@@ -72,15 +85,17 @@ export function createCommunitySoundingRepository(dataDir: string): CommunitySou
   }
 
   return {
-    async acceptBatch(batch) {
+    async acceptBatch(batch, owner) {
       const existingRecords = await listRecords();
       const existingIds = new Set(existingRecords.map((record) => record.id));
       const acceptedRecords = batch.records.filter((record) => !existingIds.has(record.id));
       const storedAt = new Date().toISOString();
+      const ownerMetadata = toOwnerMetadata(owner);
 
       for (const record of acceptedRecords) {
         await appendJsonLine(recordsFile, {
           ...record,
+          ...ownerMetadata,
           batchId: batch.id,
           storedAt,
           region: batch.region,
@@ -96,6 +111,7 @@ export function createCommunitySoundingRepository(dataDir: string): CommunitySou
         acceptedCount: acceptedRecords.length,
         duplicateCount,
         storedAt,
+        ...ownerMetadata,
       };
       await appendJsonLine(batchesFile, storedBatch);
 
@@ -109,7 +125,7 @@ export function createCommunitySoundingRepository(dataDir: string): CommunitySou
       };
     },
 
-    async reviewSounding(soundingId, review) {
+    async reviewSounding(soundingId, review, reviewer) {
       const records = await listRecords();
       const sounding = records.find((record) => record.id === soundingId);
       if (!sounding) return null;
@@ -117,6 +133,7 @@ export function createCommunitySoundingRepository(dataDir: string): CommunitySou
       const reviewedAt = review.reviewedAt ?? new Date().toISOString();
       await appendJsonLine(reviewsFile, {
         ...review,
+        ...toReviewerMetadata(reviewer),
         soundingId,
         reviewedAt,
       });

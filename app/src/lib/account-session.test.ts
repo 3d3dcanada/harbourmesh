@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   ACCOUNT_SESSION_STORAGE_KEY,
+  buildAccountSessionHeaders,
   clearAccountSession,
   fetchCurrentAccount,
+  getAccountSessionAccessToken,
   getAccountSession,
   loginAccount,
   replaceAccountSessionAccount,
@@ -36,7 +38,7 @@ const sampleSession = {
     updatedAt: '2026-05-06T18:00:00.000Z',
   },
   issuedAt: '2026-05-06T18:00:00.000Z',
-  expiresAt: '2026-05-06T19:00:00.000Z',
+  expiresAt: '2099-05-06T19:00:00.000Z',
   keyId: 'account-session-key',
 };
 
@@ -89,7 +91,7 @@ describe('account session client', () => {
     });
 
     expect(getAccountSession(storage, new Date('2026-05-06T18:30:00.000Z'))?.session.account.id).toBe('acct_1');
-    expect(getAccountSession(storage, new Date('2026-05-06T19:30:00.000Z'))).toBeNull();
+    expect(getAccountSession(storage, new Date('2100-05-06T19:30:00.000Z'))).toBeNull();
 
     const malformed = createStorage({
       [ACCOUNT_SESSION_STORAGE_KEY]: '{bad-json',
@@ -164,5 +166,23 @@ describe('account session client', () => {
     expect(envelope?.session.account.displayName).toBe('Captain Updated');
     expect(envelope?.savedAt).toBe('2026-05-06T18:21:00.000Z');
     expect(storage.store[ACCOUNT_SESSION_STORAGE_KEY]).toContain('Captain Updated');
+  });
+
+  it('builds account-session ownership headers from explicit or stored sessions', () => {
+    const storage = createStorage({
+      [ACCOUNT_SESSION_STORAGE_KEY]: JSON.stringify({
+        savedAt: '2026-05-06T18:00:00.000Z',
+        session: sampleSession,
+      }),
+    });
+
+    expect(getAccountSessionAccessToken(storage, new Date('2026-05-06T18:30:00.000Z')))
+      .toBe(sampleSession.accessToken);
+    expect(buildAccountSessionHeaders(undefined, storage)).toEqual({
+      'X-HarbourMesh-Account-Session': sampleSession.accessToken,
+    });
+    expect(buildAccountSessionHeaders(' hm_user_session_v1.explicit.signature ', storage)).toEqual({
+      'X-HarbourMesh-Account-Session': 'hm_user_session_v1.explicit.signature',
+    });
   });
 });

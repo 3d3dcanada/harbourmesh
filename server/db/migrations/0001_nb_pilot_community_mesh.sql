@@ -55,12 +55,18 @@ CREATE TABLE IF NOT EXISTS community_sounding_batches (
   official_chart_data_included boolean NOT NULL DEFAULT false CHECK (official_chart_data_included = false),
   contains_full_shared_positions boolean NOT NULL DEFAULT false,
   raw_local_positions_included boolean NOT NULL DEFAULT false CHECK (raw_local_positions_included = false),
+  owner_account_id text,
+  owner_account_roles jsonb NOT NULL DEFAULT '[]'::jsonb,
   created_at timestamptz NOT NULL,
   stored_at timestamptz NOT NULL DEFAULT now()
 );
 
+ALTER TABLE community_sounding_batches ADD COLUMN IF NOT EXISTS owner_account_id text;
+ALTER TABLE community_sounding_batches ADD COLUMN IF NOT EXISTS owner_account_roles jsonb NOT NULL DEFAULT '[]'::jsonb;
+
 CREATE INDEX IF NOT EXISTS idx_sounding_batches_region ON community_sounding_batches(region);
 CREATE INDEX IF NOT EXISTS idx_sounding_batches_created_at ON community_sounding_batches(created_at);
+CREATE INDEX IF NOT EXISTS idx_sounding_batches_owner_account ON community_sounding_batches(owner_account_id);
 
 CREATE TABLE IF NOT EXISTS community_soundings (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -88,9 +94,13 @@ CREATE TABLE IF NOT EXISTS community_soundings (
   review_status text NOT NULL DEFAULT 'unreviewed' CHECK (review_status IN ('unreviewed', 'accepted', 'rejected')),
   reviewed_at timestamptz,
   reviewed_by text,
+  reviewed_by_account_id text,
+  reviewed_by_account_roles jsonb NOT NULL DEFAULT '[]'::jsonb,
   review_reason text CHECK (review_reason IS NULL OR review_reason IN ('outlier', 'duplicate', 'bad_position', 'bad_offset', 'sensor_fault', 'other')),
   review_note text CHECK (review_note IS NULL OR char_length(review_note) <= 500),
   official_chart_data_included boolean NOT NULL DEFAULT false CHECK (official_chart_data_included = false),
+  owner_account_id text,
+  owner_account_roles jsonb NOT NULL DEFAULT '[]'::jsonb,
   stored_at timestamptz NOT NULL DEFAULT now()
 );
 
@@ -99,12 +109,17 @@ CREATE INDEX IF NOT EXISTS idx_community_soundings_observed_at ON community_soun
 CREATE INDEX IF NOT EXISTS idx_community_soundings_source_device ON community_soundings(source_device_id);
 CREATE INDEX IF NOT EXISTS idx_community_soundings_shareable ON community_soundings(quality_rejected, sharing_state);
 CREATE INDEX IF NOT EXISTS idx_community_soundings_review_status ON community_soundings(review_status);
+CREATE INDEX IF NOT EXISTS idx_community_soundings_owner_account ON community_soundings(owner_account_id);
 
 ALTER TABLE community_soundings ADD COLUMN IF NOT EXISTS review_status text NOT NULL DEFAULT 'unreviewed';
 ALTER TABLE community_soundings ADD COLUMN IF NOT EXISTS reviewed_at timestamptz;
 ALTER TABLE community_soundings ADD COLUMN IF NOT EXISTS reviewed_by text;
+ALTER TABLE community_soundings ADD COLUMN IF NOT EXISTS reviewed_by_account_id text;
+ALTER TABLE community_soundings ADD COLUMN IF NOT EXISTS reviewed_by_account_roles jsonb NOT NULL DEFAULT '[]'::jsonb;
 ALTER TABLE community_soundings ADD COLUMN IF NOT EXISTS review_reason text;
 ALTER TABLE community_soundings ADD COLUMN IF NOT EXISTS review_note text;
+ALTER TABLE community_soundings ADD COLUMN IF NOT EXISTS owner_account_id text;
+ALTER TABLE community_soundings ADD COLUMN IF NOT EXISTS owner_account_roles jsonb NOT NULL DEFAULT '[]'::jsonb;
 ALTER TABLE community_soundings DROP CONSTRAINT IF EXISTS community_soundings_review_status_check;
 ALTER TABLE community_soundings ADD CONSTRAINT community_soundings_review_status_check
   CHECK (review_status IN ('unreviewed', 'accepted', 'rejected'));
@@ -123,13 +138,19 @@ CREATE TABLE IF NOT EXISTS community_sounding_reviews (
   sounding_id uuid NOT NULL REFERENCES community_soundings(id) ON DELETE CASCADE,
   status text NOT NULL CHECK (status IN ('accepted', 'rejected')),
   reviewed_by text NOT NULL,
+  reviewed_by_account_id text,
+  reviewed_by_account_roles jsonb NOT NULL DEFAULT '[]'::jsonb,
   reviewed_at timestamptz NOT NULL DEFAULT now(),
   reason text CHECK (reason IS NULL OR reason IN ('outlier', 'duplicate', 'bad_position', 'bad_offset', 'sensor_fault', 'other')),
   note text CHECK (note IS NULL OR char_length(note) <= 500)
 );
 
+ALTER TABLE community_sounding_reviews ADD COLUMN IF NOT EXISTS reviewed_by_account_id text;
+ALTER TABLE community_sounding_reviews ADD COLUMN IF NOT EXISTS reviewed_by_account_roles jsonb NOT NULL DEFAULT '[]'::jsonb;
+
 CREATE INDEX IF NOT EXISTS idx_sounding_reviews_sounding_id ON community_sounding_reviews(sounding_id);
 CREATE INDEX IF NOT EXISTS idx_sounding_reviews_reviewed_at ON community_sounding_reviews(reviewed_at);
+CREATE INDEX IF NOT EXISTS idx_sounding_reviews_reviewer_account ON community_sounding_reviews(reviewed_by_account_id);
 
 CREATE TABLE IF NOT EXISTS community_observation_batches (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -144,12 +165,18 @@ CREATE TABLE IF NOT EXISTS community_observation_batches (
   contains_full_shared_positions boolean NOT NULL DEFAULT false,
   raw_local_positions_included boolean NOT NULL DEFAULT false CHECK (raw_local_positions_included = false),
   raw_sensor_payloads_included boolean NOT NULL DEFAULT false CHECK (raw_sensor_payloads_included = false),
+  owner_account_id text,
+  owner_account_roles jsonb NOT NULL DEFAULT '[]'::jsonb,
   created_at timestamptz NOT NULL,
   stored_at timestamptz NOT NULL DEFAULT now()
 );
 
+ALTER TABLE community_observation_batches ADD COLUMN IF NOT EXISTS owner_account_id text;
+ALTER TABLE community_observation_batches ADD COLUMN IF NOT EXISTS owner_account_roles jsonb NOT NULL DEFAULT '[]'::jsonb;
+
 CREATE INDEX IF NOT EXISTS idx_observation_batches_region ON community_observation_batches(region);
 CREATE INDEX IF NOT EXISTS idx_observation_batches_created_at ON community_observation_batches(created_at);
+CREATE INDEX IF NOT EXISTS idx_observation_batches_owner_account ON community_observation_batches(owner_account_id);
 
 CREATE TABLE IF NOT EXISTS community_observations (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -174,6 +201,8 @@ CREATE TABLE IF NOT EXISTS community_observations (
   quality_rejected boolean NOT NULL DEFAULT false CHECK (quality_rejected = false),
   raw_payload_included boolean NOT NULL DEFAULT false CHECK (raw_payload_included = false),
   official_chart_data_included boolean NOT NULL DEFAULT false CHECK (official_chart_data_included = false),
+  owner_account_id text,
+  owner_account_roles jsonb NOT NULL DEFAULT '[]'::jsonb,
   stored_at timestamptz NOT NULL DEFAULT now(),
   CHECK ((sharing_state = 'shareable_no_position' AND geom IS NULL) OR (sharing_state <> 'shareable_no_position' AND geom IS NOT NULL))
 );
@@ -182,8 +211,11 @@ CREATE INDEX IF NOT EXISTS idx_community_observations_geom ON community_observat
 CREATE INDEX IF NOT EXISTS idx_community_observations_observed_at ON community_observations(observed_at);
 CREATE INDEX IF NOT EXISTS idx_community_observations_type ON community_observations(observation_type);
 CREATE INDEX IF NOT EXISTS idx_community_observations_source_device ON community_observations(source_device_id);
+CREATE INDEX IF NOT EXISTS idx_community_observations_owner_account ON community_observations(owner_account_id);
 
 ALTER TABLE community_observations ADD COLUMN IF NOT EXISTS position jsonb;
+ALTER TABLE community_observations ADD COLUMN IF NOT EXISTS owner_account_id text;
+ALTER TABLE community_observations ADD COLUMN IF NOT EXISTS owner_account_roles jsonb NOT NULL DEFAULT '[]'::jsonb;
 
 CREATE TABLE IF NOT EXISTS community_hazard_batches (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -197,12 +229,18 @@ CREATE TABLE IF NOT EXISTS community_hazard_batches (
   official_chart_data_included boolean NOT NULL DEFAULT false CHECK (official_chart_data_included = false),
   contains_full_shared_positions boolean NOT NULL DEFAULT false,
   raw_local_positions_included boolean NOT NULL DEFAULT false CHECK (raw_local_positions_included = false),
+  owner_account_id text,
+  owner_account_roles jsonb NOT NULL DEFAULT '[]'::jsonb,
   created_at timestamptz NOT NULL,
   stored_at timestamptz NOT NULL DEFAULT now()
 );
 
+ALTER TABLE community_hazard_batches ADD COLUMN IF NOT EXISTS owner_account_id text;
+ALTER TABLE community_hazard_batches ADD COLUMN IF NOT EXISTS owner_account_roles jsonb NOT NULL DEFAULT '[]'::jsonb;
+
 CREATE INDEX IF NOT EXISTS idx_hazard_batches_region ON community_hazard_batches(region);
 CREATE INDEX IF NOT EXISTS idx_hazard_batches_created_at ON community_hazard_batches(created_at);
+CREATE INDEX IF NOT EXISTS idx_hazard_batches_owner_account ON community_hazard_batches(owner_account_id);
 
 CREATE TABLE IF NOT EXISTS community_hazards (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -225,9 +263,13 @@ CREATE TABLE IF NOT EXISTS community_hazards (
   public_overlay_eligible boolean NOT NULL DEFAULT false,
   position jsonb,
   official_chart_data_included boolean NOT NULL DEFAULT false CHECK (official_chart_data_included = false),
+  owner_account_id text,
+  owner_account_roles jsonb NOT NULL DEFAULT '[]'::jsonb,
   stored_at timestamptz NOT NULL DEFAULT now(),
   reviewed_at timestamptz,
   reviewed_by text,
+  reviewed_by_account_id text,
+  reviewed_by_account_roles jsonb NOT NULL DEFAULT '[]'::jsonb,
   review_note text CHECK (review_note IS NULL OR char_length(review_note) <= 500),
   CHECK ((sharing_state = 'shareable_no_position' AND geom IS NULL) OR (sharing_state <> 'shareable_no_position' AND geom IS NOT NULL)),
   CHECK (public_overlay_eligible = false OR (review_status = 'accepted' AND geom IS NOT NULL))
@@ -237,20 +279,31 @@ CREATE INDEX IF NOT EXISTS idx_community_hazards_geom ON community_hazards USING
 CREATE INDEX IF NOT EXISTS idx_community_hazards_review_status ON community_hazards(review_status);
 CREATE INDEX IF NOT EXISTS idx_community_hazards_public_overlay ON community_hazards(public_overlay_eligible);
 CREATE INDEX IF NOT EXISTS idx_community_hazards_reported_at ON community_hazards(reported_at);
+CREATE INDEX IF NOT EXISTS idx_community_hazards_owner_account ON community_hazards(owner_account_id);
 
 ALTER TABLE community_hazards ADD COLUMN IF NOT EXISTS position jsonb;
+ALTER TABLE community_hazards ADD COLUMN IF NOT EXISTS owner_account_id text;
+ALTER TABLE community_hazards ADD COLUMN IF NOT EXISTS owner_account_roles jsonb NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE community_hazards ADD COLUMN IF NOT EXISTS reviewed_by_account_id text;
+ALTER TABLE community_hazards ADD COLUMN IF NOT EXISTS reviewed_by_account_roles jsonb NOT NULL DEFAULT '[]'::jsonb;
 
 CREATE TABLE IF NOT EXISTS community_hazard_reviews (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   hazard_id uuid NOT NULL REFERENCES community_hazards(id) ON DELETE CASCADE,
   status text NOT NULL CHECK (status IN ('accepted', 'rejected')),
   reviewed_by text NOT NULL,
+  reviewed_by_account_id text,
+  reviewed_by_account_roles jsonb NOT NULL DEFAULT '[]'::jsonb,
   reviewed_at timestamptz NOT NULL DEFAULT now(),
   note text CHECK (note IS NULL OR char_length(note) <= 500)
 );
 
+ALTER TABLE community_hazard_reviews ADD COLUMN IF NOT EXISTS reviewed_by_account_id text;
+ALTER TABLE community_hazard_reviews ADD COLUMN IF NOT EXISTS reviewed_by_account_roles jsonb NOT NULL DEFAULT '[]'::jsonb;
+
 CREATE INDEX IF NOT EXISTS idx_hazard_reviews_hazard_id ON community_hazard_reviews(hazard_id);
 CREATE INDEX IF NOT EXISTS idx_hazard_reviews_reviewed_at ON community_hazard_reviews(reviewed_at);
+CREATE INDEX IF NOT EXISTS idx_hazard_reviews_reviewer_account ON community_hazard_reviews(reviewed_by_account_id);
 
 CREATE TABLE IF NOT EXISTS community_aggregate_cells (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -298,12 +351,18 @@ CREATE TABLE IF NOT EXISTS dataset_release_manifests (
   raw_record_ids_included boolean NOT NULL DEFAULT false CHECK (raw_record_ids_included = false),
   vessel_ids_included boolean NOT NULL DEFAULT false CHECK (vessel_ids_included = false),
   generated_by text NOT NULL,
+  published_by_account_id text,
+  published_by_account_roles jsonb NOT NULL DEFAULT '[]'::jsonb,
   generated_at timestamptz NOT NULL DEFAULT now(),
   manifest jsonb NOT NULL DEFAULT '{}'::jsonb
 );
 
+ALTER TABLE dataset_release_manifests ADD COLUMN IF NOT EXISTS published_by_account_id text;
+ALTER TABLE dataset_release_manifests ADD COLUMN IF NOT EXISTS published_by_account_roles jsonb NOT NULL DEFAULT '[]'::jsonb;
+
 CREATE INDEX IF NOT EXISTS idx_release_manifests_region_kind ON dataset_release_manifests(region, product_kind);
 CREATE INDEX IF NOT EXISTS idx_release_manifests_generated_at ON dataset_release_manifests(generated_at);
+CREATE INDEX IF NOT EXISTS idx_release_manifests_publisher_account ON dataset_release_manifests(published_by_account_id);
 
 INSERT INTO schema_migrations(version)
 VALUES ('0001_nb_pilot_community_mesh')

@@ -1,3 +1,4 @@
+import { buildAccountSessionHeaders, type StorageLike } from './account-session';
 import { resolvePilotReviewCredential } from './pilot-api-credentials';
 
 export type CommunityHazardReviewStatus = 'pending' | 'accepted' | 'rejected';
@@ -61,6 +62,8 @@ export type CommunityHazardReviewReceipt = {
 export type CommunityHazardReviewOptions = {
   apiBaseUrl?: string;
   apiKey?: string;
+  accountAccessToken?: string;
+  accountSessionStorage?: StorageLike | null;
   fetchImpl?: typeof fetch;
 };
 
@@ -82,7 +85,11 @@ function resolveApiKey(apiKey?: string): string | undefined {
   return resolvePilotReviewCredential(apiKey);
 }
 
-function buildJsonHeaders(credential?: string): Record<string, string> {
+function buildJsonHeaders(
+  credential?: string,
+  accountAccessToken?: string,
+  accountSessionStorage?: StorageLike | null
+): Record<string, string> {
   return {
     'Content-Type': 'application/json',
     ...(credential?.startsWith('hm_session_v1.')
@@ -90,6 +97,7 @@ function buildJsonHeaders(credential?: string): Record<string, string> {
       : credential
         ? { 'X-HarbourMesh-API-Key': credential }
         : {}),
+    ...buildAccountSessionHeaders(accountAccessToken, accountSessionStorage),
   };
 }
 
@@ -144,7 +152,7 @@ export async function listCommunityHazardsForReview(
   );
   const response = await fetchImpl(endpoint, {
     method: 'GET',
-    headers: buildJsonHeaders(resolveApiKey(options.apiKey)),
+    headers: buildJsonHeaders(resolveApiKey(options.apiKey), options.accountAccessToken, options.accountSessionStorage),
   });
   const body = await parseJsonResponse(response);
 
@@ -169,7 +177,7 @@ export async function listCommunityHazardReviews(
   );
   const response = await fetchImpl(endpoint, {
     method: 'GET',
-    headers: buildJsonHeaders(resolveApiKey(options.apiKey)),
+    headers: buildJsonHeaders(resolveApiKey(options.apiKey), options.accountAccessToken, options.accountSessionStorage),
   });
   const body = await parseJsonResponse(response);
 
@@ -195,7 +203,7 @@ export async function reviewCommunityHazard(
   );
   const response = await fetchImpl(endpoint, {
     method: 'POST',
-    headers: buildJsonHeaders(resolveApiKey(options.apiKey)),
+    headers: buildJsonHeaders(resolveApiKey(options.apiKey), options.accountAccessToken, options.accountSessionStorage),
     body: JSON.stringify({
       status: input.status,
       reviewedBy: input.reviewedBy,

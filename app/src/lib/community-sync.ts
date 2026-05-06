@@ -1,4 +1,6 @@
 import type { CommunityHazardSyncBatch, CommunityObservationSyncBatch, CommunitySyncBatch } from '@/store';
+import { buildAccountSessionHeaders, type StorageLike } from './account-session';
+import { resolvePilotApiKey } from './pilot-api-credentials';
 
 export type CommunitySyncReceipt = {
   ok: true;
@@ -16,6 +18,8 @@ export type CommunityObservationSyncReceipt = CommunitySyncReceipt;
 export type UploadCommunitySoundingBatchOptions = {
   apiBaseUrl?: string;
   apiKey?: string;
+  accountAccessToken?: string;
+  accountSessionStorage?: StorageLike | null;
   fetchImpl?: typeof fetch;
 };
 
@@ -42,10 +46,15 @@ function resolveApiKey(apiKey?: string): string | undefined {
   return resolvePilotApiKey(apiKey);
 }
 
-function buildJsonHeaders(apiKey?: string): Record<string, string> {
+function buildJsonHeaders(
+  apiKey?: string,
+  accountAccessToken?: string,
+  accountSessionStorage?: StorageLike | null
+): Record<string, string> {
   return {
     'Content-Type': 'application/json',
     ...(apiKey ? { 'X-HarbourMesh-API-Key': apiKey } : {}),
+    ...buildAccountSessionHeaders(accountAccessToken, accountSessionStorage),
   };
 }
 
@@ -57,7 +66,7 @@ export async function uploadCommunitySoundingBatch(
   const endpoint = resolveEndpoint(batch.endpoint, options.apiBaseUrl ?? import.meta.env.VITE_API_BASE_URL);
   const response = await fetchImpl(endpoint, {
     method: 'POST',
-    headers: buildJsonHeaders(resolveApiKey(options.apiKey)),
+    headers: buildJsonHeaders(resolveApiKey(options.apiKey), options.accountAccessToken, options.accountSessionStorage),
     body: JSON.stringify(batch.payload),
   });
   const body: unknown = await response.json().catch(() => null);
@@ -86,7 +95,7 @@ export async function uploadCommunityHazardBatch(
   const endpoint = resolveEndpoint(batch.endpoint, options.apiBaseUrl ?? import.meta.env.VITE_API_BASE_URL);
   const response = await fetchImpl(endpoint, {
     method: 'POST',
-    headers: buildJsonHeaders(resolveApiKey(options.apiKey)),
+    headers: buildJsonHeaders(resolveApiKey(options.apiKey), options.accountAccessToken, options.accountSessionStorage),
     body: JSON.stringify(batch.payload),
   });
   const body: unknown = await response.json().catch(() => null);
@@ -115,7 +124,7 @@ export async function uploadCommunityObservationBatch(
   const endpoint = resolveEndpoint(batch.endpoint, options.apiBaseUrl ?? import.meta.env.VITE_API_BASE_URL);
   const response = await fetchImpl(endpoint, {
     method: 'POST',
-    headers: buildJsonHeaders(resolveApiKey(options.apiKey)),
+    headers: buildJsonHeaders(resolveApiKey(options.apiKey), options.accountAccessToken, options.accountSessionStorage),
     body: JSON.stringify(batch.payload),
   });
   const body: unknown = await response.json().catch(() => null);
@@ -135,4 +144,3 @@ export async function uploadCommunityObservationBatch(
 
   return body;
 }
-import { resolvePilotApiKey } from './pilot-api-credentials';

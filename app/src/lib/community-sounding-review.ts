@@ -1,3 +1,4 @@
+import { buildAccountSessionHeaders, type StorageLike } from './account-session';
 import { resolvePilotReviewCredential } from './pilot-api-credentials';
 import type { DepthReference, SoundingOffsets, SoundingQuality, SoundingSourceProtocol } from './community-soundings';
 
@@ -68,6 +69,8 @@ export type CommunitySoundingReviewReceipt = {
 export type CommunitySoundingReviewOptions = {
   apiBaseUrl?: string;
   apiKey?: string;
+  accountAccessToken?: string;
+  accountSessionStorage?: StorageLike | null;
   fetchImpl?: typeof fetch;
 };
 
@@ -86,7 +89,11 @@ function resolveEndpoint(endpoint: string, apiBaseUrl?: string): string {
   return `${apiBaseUrl.replace(/\/$/, '')}/${endpoint.replace(/^\//, '')}`;
 }
 
-function buildJsonHeaders(credential?: string): Record<string, string> {
+function buildJsonHeaders(
+  credential?: string,
+  accountAccessToken?: string,
+  accountSessionStorage?: StorageLike | null
+): Record<string, string> {
   return {
     'Content-Type': 'application/json',
     ...(credential?.startsWith('hm_session_v1.')
@@ -94,6 +101,7 @@ function buildJsonHeaders(credential?: string): Record<string, string> {
       : credential
         ? { 'X-HarbourMesh-API-Key': credential }
         : {}),
+    ...buildAccountSessionHeaders(accountAccessToken, accountSessionStorage),
   };
 }
 
@@ -161,7 +169,7 @@ export async function listCommunitySoundingsForReview(
   );
   const response = await fetchImpl(endpoint, {
     method: 'GET',
-    headers: buildJsonHeaders(resolvePilotReviewCredential(options.apiKey)),
+    headers: buildJsonHeaders(resolvePilotReviewCredential(options.apiKey), options.accountAccessToken, options.accountSessionStorage),
   });
   const body = await parseJsonResponse(response);
 
@@ -186,7 +194,7 @@ export async function listCommunitySoundingReviews(
   );
   const response = await fetchImpl(endpoint, {
     method: 'GET',
-    headers: buildJsonHeaders(resolvePilotReviewCredential(options.apiKey)),
+    headers: buildJsonHeaders(resolvePilotReviewCredential(options.apiKey), options.accountAccessToken, options.accountSessionStorage),
   });
   const body = await parseJsonResponse(response);
 
@@ -212,7 +220,7 @@ export async function reviewCommunitySounding(
   );
   const response = await fetchImpl(endpoint, {
     method: 'POST',
-    headers: buildJsonHeaders(resolvePilotReviewCredential(options.apiKey)),
+    headers: buildJsonHeaders(resolvePilotReviewCredential(options.apiKey), options.accountAccessToken, options.accountSessionStorage),
     body: JSON.stringify({
       status: input.status,
       reviewedBy: input.reviewedBy,

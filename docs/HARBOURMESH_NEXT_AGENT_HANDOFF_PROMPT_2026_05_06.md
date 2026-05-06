@@ -19,13 +19,13 @@ Treat docs/ARCHITECTURE_AUDIT.md, docs/SECURITY_AUDIT.md, docs/DEPLOYMENT_GUIDE.
 Current snapshot from the documentation handoff:
 
 - HarbourMesh is a strong NB pilot foundation, not a public launch.
-- Current app verification after the account-session slice recorded app lint, app type-check, full app tests, app build, and a Settings account browser smoke as passing; rerun checks after your changes before claiming current success.
-- App-side account/session/export/settings work exists in app/src/lib/account-session.ts, app/src/lib/account-session.test.ts, app/src/lib/local-data-portability.ts, app/src/lib/local-data-portability.test.ts, and app/src/sections/Settings.tsx. Preserve and build on it.
-- Remaining launch blockers include fleet/team authorization, account-aware data ownership, full browser/mobile route sweep, real Signal K/hardware proof, full hydrography/offline chart products, production deployment/monitoring/backups, official-chart legal handling, and security/privacy launch review.
+- Current verification after the account-session and ownership slices recorded app lint, app type-check, full app tests, app build, app audit, server tests, server type-check, server build, server audit, Settings account browser smoke, and local API ownership smoke as passing; rerun checks after your changes before claiming current success.
+- Account/session/export/settings and ownership work exists across `app/src/lib/account-session.ts`, `app/src/lib/community-*`, `server/src/account-ownership.ts`, server community repositories, and the PostGIS migration. Preserve and build on it.
+- Remaining launch blockers include fleet/team authorization, per-account/fleet access policies, full browser/mobile route sweep, real Signal K/hardware proof, full hydrography/offline chart products, production deployment/monitoring/backups, official-chart legal handling, and security/privacy launch review.
 
 Recommended first implementation target:
 
-Add account-aware data ownership checks while keeping the existing pilot API key path compatible. Start with the safest boundary: attach optional authenticated account context to community contributions/review/release operations, persist ownership metadata server-side where appropriate, and prove exports/shared products still omit raw account IDs unless intentionally scoped.
+Add per-account/fleet access policy controls on top of the new ownership metadata while keeping the existing pilot API key path compatible. Start with the safest boundary: owner-scoped private reads or account-scoped contribution history, with tests proving public/shared products still omit raw account IDs unless intentionally scoped.
 
 Verification expectations:
 

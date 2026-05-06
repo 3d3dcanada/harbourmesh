@@ -1,3 +1,4 @@
+import { buildAccountSessionHeaders, type StorageLike } from './account-session';
 import { resolvePilotReviewCredential } from './pilot-api-credentials';
 
 export type CommunityOverlayFeature = {
@@ -253,6 +254,8 @@ export type PublishCommunityAggregateReleaseInput = {
 
 export type CommunityAggregateReleaseMutationOptions = FetchCommunityOverlayOptions & {
   apiKey?: string;
+  accountAccessToken?: string;
+  accountSessionStorage?: StorageLike | null;
 };
 
 function resolveEndpoint(endpoint: string, apiBaseUrl?: string): string {
@@ -388,7 +391,11 @@ function isCommunityHazardArtifactManifest(value: unknown): value is CommunityHa
   );
 }
 
-function buildJsonHeaders(credential?: string): Record<string, string> {
+function buildJsonHeaders(
+  credential?: string,
+  accountAccessToken?: string,
+  accountSessionStorage?: StorageLike | null
+): Record<string, string> {
   return {
     'Content-Type': 'application/json',
     ...(credential?.startsWith('hm_session_v1.')
@@ -396,6 +403,7 @@ function buildJsonHeaders(credential?: string): Record<string, string> {
       : credential
         ? { 'X-HarbourMesh-API-Key': credential }
         : {}),
+    ...buildAccountSessionHeaders(accountAccessToken, accountSessionStorage),
   };
 }
 
@@ -589,7 +597,11 @@ export async function publishCommunityAggregateRelease(
   const endpoint = resolveEndpoint('/api/community/releases/aggregates', options.apiBaseUrl ?? import.meta.env.VITE_API_BASE_URL);
   const response = await fetchImpl(endpoint, {
     method: 'POST',
-    headers: buildJsonHeaders(resolvePilotReviewCredential(options.apiKey)),
+    headers: buildJsonHeaders(
+      resolvePilotReviewCredential(options.apiKey),
+      options.accountAccessToken,
+      options.accountSessionStorage
+    ),
     body: JSON.stringify({
       ...(input.generatedBy?.trim() ? { generatedBy: input.generatedBy.trim() } : {}),
       ...(input.approval ? { approval: input.approval } : {}),

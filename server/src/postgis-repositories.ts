@@ -2,6 +2,8 @@ import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Pool, type PoolClient, type QueryResultRow } from 'pg';
+import type { AccountRole } from './account-auth.js';
+import type { AccountOwnershipContext } from './account-ownership.js';
 import type { CommunityHazardBatch, CommunityHazardReview, CommunityHazardSummary } from './community-hazards.js';
 import type {
   CommunityAggregateReleaseRepository,
@@ -62,6 +64,24 @@ function toJsonObject<T>(value: unknown, fallback: T): T {
   }
 
   return fallback;
+}
+
+function isAccountRole(value: unknown): value is AccountRole {
+  return value === 'user' || value === 'operator' || value === 'admin';
+}
+
+function toOptionalAccountRoles(value: unknown): AccountRole[] | undefined {
+  const roles = toJsonObject<unknown[]>(value, []);
+  const accountRoles = roles.filter(isAccountRole);
+  return accountRoles.length > 0 ? accountRoles : undefined;
+}
+
+function accountIdValue(context: AccountOwnershipContext | null | undefined): string | null {
+  return context?.accountId ?? null;
+}
+
+function accountRolesValue(context: AccountOwnershipContext | null | undefined): string {
+  return JSON.stringify(context?.roles ?? []);
 }
 
 function mapPosition(row: PositionRow): StoredCommunityObservation['position'] {
@@ -153,7 +173,7 @@ export function createPostgisRepositories(databaseUrl: string): PostgisRepositor
 
 function createPostgisSoundingRepository(pool: Pool): CommunitySoundingRepository {
   return {
-    async acceptBatch(batch) {
+    async acceptBatch(batch, owner) {
       return withTransaction(pool, async (client) => {
         const storedAt = new Date().toISOString();
         const existing = await client.query<{ external_record_id: string }>(
@@ -167,11 +187,13 @@ function createPostgisSoundingRepository(pool: Pool): CommunitySoundingRepositor
           `INSERT INTO community_sounding_batches (
             external_batch_id, schema_version, region, record_count, accepted_count, duplicate_count,
             intended_use, official_chart_data_included, contains_full_shared_positions,
-            raw_local_positions_included, created_at, stored_at
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            raw_local_positions_included, owner_account_id, owner_account_roles, created_at, stored_at
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb, $13, $14)
           ON CONFLICT (external_batch_id) DO UPDATE SET
             accepted_count = EXCLUDED.accepted_count,
             duplicate_count = EXCLUDED.duplicate_count,
+            owner_account_id = EXCLUDED.owner_account_id,
+            owner_account_roles = EXCLUDED.owner_account_roles,
             stored_at = EXCLUDED.stored_at
           RETURNING id`,
           [
@@ -185,6 +207,8 @@ function createPostgisSoundingRepository(pool: Pool): CommunitySoundingRepositor
             batch.policy.officialChartDataIncluded,
             batch.policy.containsFullSharedPositions,
             batch.policy.rawLocalPositionsIncluded,
+            accountIdValue(owner),
+            accountRolesValue(owner),
             batch.createdAt,
             storedAt,
           ]
@@ -198,11 +222,12 @@ function createPostgisSoundingRepository(pool: Pool): CommunitySoundingRepositor
               raw_message_id, observed_at, received_at, consent_captured_at, sharing_state, geom,
               raw_depth_meters, depth_meters, depth_reference, tide_correction_applied,
               water_level_correction_applied, offsets, quality, quality_confidence,
-              quality_rejected, review_status, official_chart_data_included, stored_at
+              quality_rejected, review_status, official_chart_data_included, owner_account_id,
+              owner_account_roles, stored_at
             ) VALUES (
               $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
               ST_SetSRID(ST_MakePoint($11, $12), 4326),
-              $13, $14, $15, $16, $17, $18::jsonb, $19::jsonb, $20, $21, $22, false, $23
+              $13, $14, $15, $16, $17, $18::jsonb, $19::jsonb, $20, $21, $22, false, $23, $24::jsonb, $25
             )
             ON CONFLICT (external_record_id) DO NOTHING`,
             [
@@ -228,6 +253,8 @@ function createPostgisSoundingRepository(pool: Pool): CommunitySoundingRepositor
               record.quality.confidence,
               record.quality.rejected,
               record.quality.rejected ? 'rejected' : 'unreviewed',
+              accountIdValue(owner),
+              accountRolesValue(owner),
               storedAt,
             ]
           );
@@ -244,7 +271,7 @@ function createPostgisSoundingRepository(pool: Pool): CommunitySoundingRepositor
       });
     },
 
-    async reviewSounding(soundingId: string, review: CommunitySoundingReview) {
+    async reviewSounding(soundingId: string, review: CommunitySoundingReview, reviewer?: AccountOwnershipContext | null) {
       const sounding = await pool.query<{ id: string; quality_rejected: boolean }>(
         'SELECT id, quality_rejected FROM community_soundings WHERE external_record_id = $1',
         [soundingId]
@@ -259,14 +286,37 @@ function createPostgisSoundingRepository(pool: Pool): CommunitySoundingRepositor
             reviewed_at = $2,
             reviewed_by = $3,
             review_reason = $4,
-            review_note = $5
-          WHERE id = $6`,
-          [review.status, reviewedAt, review.reviewedBy, review.reason ?? null, review.note ?? null, sounding.rows[0].id]
+            review_note = $5,
+            reviewed_by_account_id = $6,
+            reviewed_by_account_roles = $7::jsonb
+          WHERE id = $8`,
+          [
+            review.status,
+            reviewedAt,
+            review.reviewedBy,
+            review.reason ?? null,
+            review.note ?? null,
+            accountIdValue(reviewer),
+            accountRolesValue(reviewer),
+            sounding.rows[0].id,
+          ]
         );
         await client.query(
-          `INSERT INTO community_sounding_reviews (sounding_id, status, reviewed_by, reviewed_at, reason, note)
-          VALUES ($1, $2, $3, $4, $5, $6)`,
-          [sounding.rows[0].id, review.status, review.reviewedBy, reviewedAt, review.reason ?? null, review.note ?? null]
+          `INSERT INTO community_sounding_reviews (
+            sounding_id, status, reviewed_by, reviewed_at, reason, note, reviewed_by_account_id,
+            reviewed_by_account_roles
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb)`,
+          [
+            sounding.rows[0].id,
+            review.status,
+            review.reviewedBy,
+            reviewedAt,
+            review.reason ?? null,
+            review.note ?? null,
+            accountIdValue(reviewer),
+            accountRolesValue(reviewer),
+          ]
         );
       });
 
@@ -347,6 +397,10 @@ function createPostgisSoundingRepository(pool: Pool): CommunitySoundingRepositor
         reviewed_by: string | null;
         review_reason: CommunitySoundingReview['reason'] | null;
         review_note: string | null;
+        owner_account_id: string | null;
+        owner_account_roles: unknown;
+        reviewed_by_account_id: string | null;
+        reviewed_by_account_roles: unknown;
         stored_at: unknown;
       }>(
         `SELECT
@@ -375,6 +429,10 @@ function createPostgisSoundingRepository(pool: Pool): CommunitySoundingRepositor
           s.reviewed_by,
           s.review_reason,
           s.review_note,
+          s.owner_account_id,
+          s.owner_account_roles,
+          s.reviewed_by_account_id,
+          s.reviewed_by_account_roles,
           s.stored_at
         FROM community_soundings s
         JOIN community_sounding_batches b ON b.id = s.batch_id
@@ -405,6 +463,10 @@ function createPostgisSoundingRepository(pool: Pool): CommunitySoundingRepositor
         reviewStatus: row.review_status,
         reviewedAt: toOptionalIsoString(row.reviewed_at),
         reviewedBy: row.reviewed_by ?? undefined,
+        ownerAccountId: row.owner_account_id ?? undefined,
+        ownerAccountRoles: toOptionalAccountRoles(row.owner_account_roles),
+        reviewedByAccountId: row.reviewed_by_account_id ?? undefined,
+        reviewedByAccountRoles: toOptionalAccountRoles(row.reviewed_by_account_roles),
         reviewReason: row.review_reason ?? undefined,
         reviewNote: row.review_note ?? undefined,
         storedAt: toIsoString(row.stored_at),
@@ -419,6 +481,8 @@ function createPostgisSoundingRepository(pool: Pool): CommunitySoundingRepositor
         reviewed_at: unknown;
         reason: CommunitySoundingReview['reason'] | null;
         note: string | null;
+        reviewed_by_account_id: string | null;
+        reviewed_by_account_roles: unknown;
       }>(
         `SELECT
           s.external_record_id AS sounding_id,
@@ -426,7 +490,9 @@ function createPostgisSoundingRepository(pool: Pool): CommunitySoundingRepositor
           r.reviewed_by,
           r.reviewed_at,
           r.reason,
-          r.note
+          r.note,
+          r.reviewed_by_account_id,
+          r.reviewed_by_account_roles
         FROM community_sounding_reviews r
         JOIN community_soundings s ON s.id = r.sounding_id
         ORDER BY r.reviewed_at ASC, s.external_record_id ASC`
@@ -439,6 +505,8 @@ function createPostgisSoundingRepository(pool: Pool): CommunitySoundingRepositor
         reviewedAt: toIsoString(row.reviewed_at),
         reason: row.reason ?? undefined,
         note: row.note ?? undefined,
+        reviewedByAccountId: row.reviewed_by_account_id ?? undefined,
+        reviewedByAccountRoles: toOptionalAccountRoles(row.reviewed_by_account_roles),
       }));
     },
   };
@@ -446,7 +514,7 @@ function createPostgisSoundingRepository(pool: Pool): CommunitySoundingRepositor
 
 function createPostgisObservationRepository(pool: Pool): CommunityObservationRepository {
   return {
-    async acceptBatch(batch: CommunityObservationBatch) {
+    async acceptBatch(batch: CommunityObservationBatch, owner?: AccountOwnershipContext | null) {
       return withTransaction(pool, async (client) => {
         const storedAt = new Date().toISOString();
         const existing = await client.query<{ external_record_id: string }>(
@@ -460,11 +528,14 @@ function createPostgisObservationRepository(pool: Pool): CommunityObservationRep
           `INSERT INTO community_observation_batches (
             external_batch_id, schema_version, region, record_count, accepted_count, duplicate_count,
             intended_use, official_chart_data_included, contains_full_shared_positions,
-            raw_local_positions_included, raw_sensor_payloads_included, created_at, stored_at
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+            raw_local_positions_included, raw_sensor_payloads_included, owner_account_id,
+            owner_account_roles, created_at, stored_at
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13::jsonb, $14, $15)
           ON CONFLICT (external_batch_id) DO UPDATE SET
             accepted_count = EXCLUDED.accepted_count,
             duplicate_count = EXCLUDED.duplicate_count,
+            owner_account_id = EXCLUDED.owner_account_id,
+            owner_account_roles = EXCLUDED.owner_account_roles,
             stored_at = EXCLUDED.stored_at
           RETURNING id`,
           [
@@ -479,6 +550,8 @@ function createPostgisObservationRepository(pool: Pool): CommunityObservationRep
             batch.policy.containsFullSharedPositions,
             batch.policy.rawLocalPositionsIncluded,
             batch.policy.rawSensorPayloadsIncluded,
+            accountIdValue(owner),
+            accountRolesValue(owner),
             batch.createdAt,
             storedAt,
           ]
@@ -491,13 +564,14 @@ function createPostgisObservationRepository(pool: Pool): CommunityObservationRep
               external_record_id, batch_id, external_vessel_id, source_device_id, source_protocol,
               observation_type, observed_at, received_at, consent_captured_at, sharing_state,
               geom, position, position_source, position_accuracy_meters, metrics, quality,
-              quality_confidence, quality_rejected, raw_payload_included, official_chart_data_included, stored_at
+              quality_confidence, quality_rejected, raw_payload_included, official_chart_data_included,
+              owner_account_id, owner_account_roles, stored_at
             ) VALUES (
               $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
               CASE WHEN $11::double precision IS NULL OR $12::double precision IS NULL THEN NULL
                 ELSE ST_SetSRID(ST_MakePoint($12, $11), 4326)
               END,
-              $13::jsonb, $14, $15, $16::jsonb, $17::jsonb, $18, $19, $20, $21, $22
+              $13::jsonb, $14, $15, $16::jsonb, $17::jsonb, $18, $19, $20, $21, $22, $23::jsonb, $24
             )
             ON CONFLICT (external_record_id) DO NOTHING`,
             [
@@ -522,6 +596,8 @@ function createPostgisObservationRepository(pool: Pool): CommunityObservationRep
               observation.quality.rejected,
               observation.rawPayloadIncluded,
               observation.officialChartDataIncluded,
+              accountIdValue(owner),
+              accountRolesValue(owner),
               storedAt,
             ]
           );
@@ -589,6 +665,8 @@ function createPostgisObservationRepository(pool: Pool): CommunityObservationRep
         quality: unknown;
         raw_payload_included: boolean;
         official_chart_data_included: boolean;
+        owner_account_id: string | null;
+        owner_account_roles: unknown;
         stored_at: unknown;
       }>(
         `SELECT
@@ -610,6 +688,8 @@ function createPostgisObservationRepository(pool: Pool): CommunityObservationRep
           o.quality,
           o.raw_payload_included,
           o.official_chart_data_included,
+          o.owner_account_id,
+          o.owner_account_roles,
           o.stored_at
         FROM community_observations o
         JOIN community_observation_batches b ON b.id = o.batch_id
@@ -633,6 +713,8 @@ function createPostgisObservationRepository(pool: Pool): CommunityObservationRep
         quality: toJsonObject(row.quality, { confidence: 0, rejected: false, flags: ['missing_quality'] }),
         rawPayloadIncluded: false,
         officialChartDataIncluded: false,
+        ownerAccountId: row.owner_account_id ?? undefined,
+        ownerAccountRoles: toOptionalAccountRoles(row.owner_account_roles),
         storedAt: toIsoString(row.stored_at),
       }));
     },
@@ -659,10 +741,14 @@ function createPostgisHazardRepository(pool: Pool): CommunityHazardRepository {
       stored_at: unknown;
       review_status: StoredCommunityHazard['reviewStatus'];
       public_overlay_eligible: boolean;
-      reviewed_at: unknown;
-      reviewed_by: string | null;
-      review_note: string | null;
-    }>(
+        reviewed_at: unknown;
+        reviewed_by: string | null;
+        review_note: string | null;
+        owner_account_id: string | null;
+        owner_account_roles: unknown;
+        reviewed_by_account_id: string | null;
+        reviewed_by_account_roles: unknown;
+      }>(
       `SELECT
         h.external_hazard_id AS id,
         b.external_batch_id AS batch_id,
@@ -683,7 +769,11 @@ function createPostgisHazardRepository(pool: Pool): CommunityHazardRepository {
         h.public_overlay_eligible,
         h.reviewed_at,
         h.reviewed_by,
-        h.review_note
+        h.review_note,
+        h.owner_account_id,
+        h.owner_account_roles,
+        h.reviewed_by_account_id,
+        h.reviewed_by_account_roles
       FROM community_hazards h
       JOIN community_hazard_batches b ON b.id = h.batch_id
       ORDER BY h.reported_at ASC, h.external_hazard_id ASC`
@@ -707,12 +797,16 @@ function createPostgisHazardRepository(pool: Pool): CommunityHazardRepository {
       publicOverlayEligible: row.public_overlay_eligible,
       reviewedAt: toOptionalIsoString(row.reviewed_at),
       reviewedBy: row.reviewed_by ?? undefined,
+      ownerAccountId: row.owner_account_id ?? undefined,
+      ownerAccountRoles: toOptionalAccountRoles(row.owner_account_roles),
+      reviewedByAccountId: row.reviewed_by_account_id ?? undefined,
+      reviewedByAccountRoles: toOptionalAccountRoles(row.reviewed_by_account_roles),
       reviewNote: row.review_note ?? undefined,
     }));
   }
 
   return {
-    async acceptBatch(batch: CommunityHazardBatch) {
+    async acceptBatch(batch: CommunityHazardBatch, owner?: AccountOwnershipContext | null) {
       return withTransaction(pool, async (client) => {
         const storedAt = new Date().toISOString();
         const existing = await client.query<{ external_hazard_id: string }>(
@@ -726,11 +820,13 @@ function createPostgisHazardRepository(pool: Pool): CommunityHazardRepository {
           `INSERT INTO community_hazard_batches (
             external_batch_id, schema_version, region, record_count, accepted_count, duplicate_count,
             intended_use, official_chart_data_included, contains_full_shared_positions,
-            raw_local_positions_included, created_at, stored_at
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            raw_local_positions_included, owner_account_id, owner_account_roles, created_at, stored_at
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb, $13, $14)
           ON CONFLICT (external_batch_id) DO UPDATE SET
             accepted_count = EXCLUDED.accepted_count,
             duplicate_count = EXCLUDED.duplicate_count,
+            owner_account_id = EXCLUDED.owner_account_id,
+            owner_account_roles = EXCLUDED.owner_account_roles,
             stored_at = EXCLUDED.stored_at
           RETURNING id`,
           [
@@ -744,6 +840,8 @@ function createPostgisHazardRepository(pool: Pool): CommunityHazardRepository {
             batch.policy.officialChartDataIncluded,
             batch.policy.containsFullSharedPositions,
             batch.policy.rawLocalPositionsIncluded,
+            accountIdValue(owner),
+            accountRolesValue(owner),
             batch.createdAt,
             storedAt,
           ]
@@ -756,13 +854,13 @@ function createPostgisHazardRepository(pool: Pool): CommunityHazardRepository {
               external_hazard_id, batch_id, external_vessel_id, source_device_id, region,
               hazard_type, severity, description, geom, position, position_source, position_accuracy_meters,
               reported_at, consent_captured_at, sharing_state, review_status, public_overlay_eligible,
-              official_chart_data_included, stored_at
+              official_chart_data_included, owner_account_id, owner_account_roles, stored_at
             ) VALUES (
               $1, $2, $3, $4, $5, $6, $7, $8,
               CASE WHEN $9::double precision IS NULL OR $10::double precision IS NULL THEN NULL
                 ELSE ST_SetSRID(ST_MakePoint($10, $9), 4326)
               END,
-              $11::jsonb, $12, $13, $14, $15, $16, 'pending', false, false, $17
+              $11::jsonb, $12, $13, $14, $15, $16, 'pending', false, false, $17, $18::jsonb, $19
             )
             ON CONFLICT (external_hazard_id) DO NOTHING`,
             [
@@ -782,6 +880,8 @@ function createPostgisHazardRepository(pool: Pool): CommunityHazardRepository {
               hazard.reportedAt,
               hazard.consentCapturedAt,
               hazard.sharingState,
+              accountIdValue(owner),
+              accountRolesValue(owner),
               storedAt,
             ]
           );
@@ -798,7 +898,7 @@ function createPostgisHazardRepository(pool: Pool): CommunityHazardRepository {
       });
     },
 
-    async reviewHazard(hazardId: string, review: CommunityHazardReview) {
+    async reviewHazard(hazardId: string, review: CommunityHazardReview, reviewer?: AccountOwnershipContext | null) {
       return withTransaction(pool, async (client) => {
         const hazard = await client.query<{ id: string; has_position: boolean }>(
           'SELECT id, geom IS NOT NULL AS has_position FROM community_hazards WHERE external_hazard_id = $1',
@@ -814,14 +914,35 @@ function createPostgisHazardRepository(pool: Pool): CommunityHazardRepository {
             public_overlay_eligible = $2,
             reviewed_at = $3,
             reviewed_by = $4,
-            review_note = $5
-          WHERE id = $6`,
-          [review.status, publicOverlayEligible, reviewedAt, review.reviewedBy, review.note ?? null, hazard.rows[0].id]
+            review_note = $5,
+            reviewed_by_account_id = $6,
+            reviewed_by_account_roles = $7::jsonb
+          WHERE id = $8`,
+          [
+            review.status,
+            publicOverlayEligible,
+            reviewedAt,
+            review.reviewedBy,
+            review.note ?? null,
+            accountIdValue(reviewer),
+            accountRolesValue(reviewer),
+            hazard.rows[0].id,
+          ]
         );
         await client.query(
-          `INSERT INTO community_hazard_reviews (hazard_id, status, reviewed_by, reviewed_at, note)
-          VALUES ($1, $2, $3, $4, $5)`,
-          [hazard.rows[0].id, review.status, review.reviewedBy, reviewedAt, review.note ?? null]
+          `INSERT INTO community_hazard_reviews (
+            hazard_id, status, reviewed_by, reviewed_at, note, reviewed_by_account_id, reviewed_by_account_roles
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb)`,
+          [
+            hazard.rows[0].id,
+            review.status,
+            review.reviewedBy,
+            reviewedAt,
+            review.note ?? null,
+            accountIdValue(reviewer),
+            accountRolesValue(reviewer),
+          ]
         );
 
         return {
@@ -879,13 +1000,17 @@ function createPostgisHazardRepository(pool: Pool): CommunityHazardRepository {
         reviewed_by: string;
         reviewed_at: unknown;
         note: string | null;
+        reviewed_by_account_id: string | null;
+        reviewed_by_account_roles: unknown;
       }>(
         `SELECT
           h.external_hazard_id AS hazard_id,
           r.status,
           r.reviewed_by,
           r.reviewed_at,
-          r.note
+          r.note,
+          r.reviewed_by_account_id,
+          r.reviewed_by_account_roles
         FROM community_hazard_reviews r
         JOIN community_hazards h ON h.id = r.hazard_id
         ORDER BY r.reviewed_at ASC, h.external_hazard_id ASC`
@@ -897,6 +1022,8 @@ function createPostgisHazardRepository(pool: Pool): CommunityHazardRepository {
         reviewedBy: row.reviewed_by,
         reviewedAt: toIsoString(row.reviewed_at),
         note: row.note ?? undefined,
+        reviewedByAccountId: row.reviewed_by_account_id ?? undefined,
+        reviewedByAccountRoles: toOptionalAccountRoles(row.reviewed_by_account_roles),
       }));
     },
   };
@@ -921,8 +1048,9 @@ function createPostgisAggregateReleaseRepository(pool: Pool): CommunityAggregate
         await client.query(
           `INSERT INTO dataset_release_manifests (
             release_id, region, product_kind, official_chart_data_included,
-            raw_record_ids_included, vessel_ids_included, generated_by, generated_at, manifest
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb)
+            raw_record_ids_included, vessel_ids_included, generated_by, generated_at, manifest,
+            published_by_account_id, published_by_account_roles
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10, $11::jsonb)
           ON CONFLICT (release_id) DO UPDATE SET
             region = EXCLUDED.region,
             product_kind = EXCLUDED.product_kind,
@@ -931,7 +1059,9 @@ function createPostgisAggregateReleaseRepository(pool: Pool): CommunityAggregate
             vessel_ids_included = EXCLUDED.vessel_ids_included,
             generated_by = EXCLUDED.generated_by,
             generated_at = EXCLUDED.generated_at,
-            manifest = EXCLUDED.manifest`,
+            manifest = EXCLUDED.manifest,
+            published_by_account_id = EXCLUDED.published_by_account_id,
+            published_by_account_roles = EXCLUDED.published_by_account_roles`,
           [
             input.manifest.id,
             input.manifest.region,
@@ -942,6 +1072,8 @@ function createPostgisAggregateReleaseRepository(pool: Pool): CommunityAggregate
             generatedBy,
             input.manifest.generatedAt,
             JSON.stringify(input.manifest),
+            accountIdValue(input.publisher),
+            accountRolesValue(input.publisher),
           ]
         );
 

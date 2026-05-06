@@ -6,17 +6,19 @@ Scope: current readiness snapshot plus handoff notes for the HarbourMesh finish 
 
 ## Read This First
 
-This document summarizes the current NB pilot state after the account-session web slice. The original parallel docs pass was documentation-only; the implementation thread then reran focused/current app checks and a targeted account browser smoke.
+This document summarizes the current NB pilot state after the account-session web slice and additive account-ownership metadata slice. The original parallel docs pass was documentation-only; the implementation thread then reran current app/server checks plus targeted account and ownership smokes.
 
-Account-session implementation now completed in this slice:
+Account/session implementation now completed in these slices:
 
 - `app/src/lib/local-data-portability.ts`
 - `app/src/lib/local-data-portability.test.ts`
 - `app/src/lib/account-session.ts`
 - `app/src/lib/account-session.test.ts`
 - `app/src/sections/Settings.tsx`
+- `server/src/account-ownership.ts`
+- community intake/review/release repositories and PostGIS migration ownership columns
 
-Do not revert those files; they are the current account-session and export-secret handling work.
+Do not revert those files; they are the current account-session, ownership, and export-secret handling work.
 
 ## Current Truth Source
 
@@ -37,10 +39,10 @@ HarbourMesh is no longer just a frontend shell. It is now a substantial NB pilot
 - Fastify API with health, account auth, operator sessions, device registration, NB chart catalog/package artifact endpoints, community sounding/observation/hazard intake, hazard and sounding review, privacy-scrubbed overlays, aggregate release publishing, aggregate cells, and artifact downloads.
 - JSONL fallback persistence plus PostGIS runtime repositories behind `HARBOURMESH_DATABASE_URL`.
 - Reference-only NB GeoJSON/MBTiles/PMTiles chart artifacts and community aggregate/hazard artifacts with checksums, optional HMAC download signatures, and explicit official-chart exclusion.
-- API-key and review-key gates, hash-backed key configuration, invite-gated account registration/login on the server and web Settings tab, short-lived review sessions, and local secret-store exclusions from export bundles.
+- API-key and review-key gates, hash-backed key configuration, invite-gated account registration/login on the server and web Settings tab, short-lived review sessions, optional account ownership context for community records, and local secret-store exclusions from export bundles.
 - CI workflows for app lint/type/test/build, server test/type/build, Docker image build, dependency audit, release readiness, and manual Cloudflare Pages deployment.
 
-Fresh app-side verification recorded in this slice: focused account/local-data tests passed 8 tests, full app tests passed 161 tests, app type-check passed, app lint passed, app build passed, and the Settings account browser smoke passed against a temporary API with register/refresh/sign-out/login at 1280px and 360px.
+Fresh verification recorded in these slices: full app tests passed 166 tests, app type-check passed, app lint passed, app build passed, app audit found 0 vulnerabilities, full server tests passed 49 tests, server type-check/build passed, server audit found 0 vulnerabilities, Settings account browser smoke passed, and local API ownership smoke proved private owner metadata plus public no-leak behavior.
 
 ## Launch Readiness
 
@@ -48,11 +50,11 @@ Current readiness: **NB pilot foundation nearing beta-readiness, not public-laun
 
 | Area | Status | Notes |
 |---|---|---|
-| Source buildability | Strong pilot baseline | The current account slice reran app lint/type-check/tests/build; server checks were already recorded in the launch plan before this docs update and should be rerun after server edits. |
+| Source buildability | Strong pilot baseline | Current app/server lint, tests, type-checks, builds, and high-severity audits passed for the account and ownership slices. |
 | NB reference chart artifacts | Pilot-ready for reference use | GeoJSON, starter MBTiles, and starter PMTiles artifacts exist and are documented as official-chart-free. Full uncapped hydrography products remain unfinished. |
 | Community mesh backend | Strong pilot foundation | Soundings, observations, hazards, reviews, aggregate releases, PostGIS, privacy-scrubbed artifacts, and approval gates exist. Multi-user beta flow still needs proof. |
-| Account/auth | Pilot UI and backend exist | Server auth and Settings account session UI exist; account-aware data ownership and fleet/team authorization are still launch blockers. |
-| Fleet/team authorization | Not ready | Fleet/team identity, authorization, sharing rules, and account-aware ownership checks are still missing. |
+| Account/auth | Pilot UI, backend, and ownership metadata exist | Server auth, Settings account session UI, and private account ownership metadata exist; fleet/team authorization and per-account/fleet access policies remain launch blockers. |
+| Fleet/team authorization | Not ready | Fleet/team identity, authorization, sharing rules, and access policies are still missing. |
 | Hardware ingest | Not launch-ready | Recorded Signal K path exists; no real Signal K server, sonar, radar, AIS receiver, or Boat Node hardware test is recorded. |
 | Official charts | Not launch-ready | Local-only official chart metadata boundaries exist, but no official-chart rendering/parser path or licensed redistribution path is complete. |
 | Weather routing | Not implemented | Weather overlays, route weather summaries, departure scoring, and routing engine remain future phases. |
@@ -64,7 +66,7 @@ Current readiness: **NB pilot foundation nearing beta-readiness, not public-laun
 | Phase | Current status | Next exit gate |
 |---|---|---|
 | Phase 0: Stabilize Source And Truth | Mostly complete, with doc cleanup still needed | Fresh app/server lint, tests, type checks, audits, builds, and docs aligned with source. |
-| Phase 1: NB Pilot App Foundation | Mostly complete | Verify local persistence/export/import in broader browser flows and complete account-aware ownership checks. |
+| Phase 1: NB Pilot App Foundation | Mostly complete | Verify local persistence/export/import in broader browser flows and complete per-account/fleet access policy work. |
 | Phase 2: Chart Foundation | Partial | Prove the chosen map stack can support offline packages beyond starter artifacts; keep official CHS data isolated. |
 | Phase 3: Boat Node And Hardware Ingest | Partial | Run controlled live Signal K and real sensor tests for position, depth, AIS, and freshness indicators. |
 | Phase 4: Community Mesh Backend | Strong partial | Prove two beta users/devices can share and receive aggregate data without exposing raw vessel tracks or official chart data. |
@@ -76,7 +78,7 @@ Current readiness: **NB pilot foundation nearing beta-readiness, not public-laun
 ## Next Work Order
 
 1. Preserve the account-session work in `app/src/lib/*account-session*`, `app/src/lib/*local-data-portability*`, and `app/src/sections/Settings.tsx`.
-2. Add account-aware data ownership checks for community contributions and release/review operations without breaking the existing pilot API key path.
+2. Add per-account/fleet access policies on top of the new ownership metadata without breaking the existing pilot API key path.
 3. Rerun app/server verification after each implementation slice: app lint, app type-check, app tests, app build, app audit, server tests, server type-check, server build, server audit.
 4. Run targeted browser checks for Settings export/import, Community moderation/release flow, Navigation chart package downloads, and 360px mobile containment.
 5. Do not call NB beta ready until at least one live Signal K path and a two-user/device community sharing flow are exercised.
@@ -87,7 +89,7 @@ Current readiness: **NB pilot foundation nearing beta-readiness, not public-laun
 HarbourMesh can be called NB beta ready only when the final implementation thread has fresh proof for:
 
 - App and server checks passing from the current source tree.
-- No active unreviewed implementation edits left in account/session/export/security/community flows.
+- No active unreviewed implementation edits left in account/session/ownership/export/security/community flows.
 - Browser smoke at desktop and 360px mobile for Navigation, Community, Settings, account flow, and moderation/release approval.
 - Live Signal K or real vessel telemetry ingestion with GPS/depth/AIS freshness indicators.
 - Two distinct users or devices contributing and receiving privacy-scrubbed aggregate community data.

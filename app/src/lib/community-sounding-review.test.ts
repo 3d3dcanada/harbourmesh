@@ -119,6 +119,26 @@ describe('community sounding review API client', () => {
     }));
   });
 
+  it('adds account-session context beside review credentials', async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
+      soundings: [],
+    }), { status: 200 }));
+
+    await listCommunitySoundingsForReview({
+      apiBaseUrl: 'http://localhost:3001',
+      apiKey: 'hm_test_review_key_1234567890',
+      accountAccessToken: 'hm_user_session_v1.account.payload',
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+
+    expect(fetchImpl).toHaveBeenCalledWith('http://localhost:3001/api/community/soundings/review', expect.objectContaining({
+      headers: expect.objectContaining({
+        'X-HarbourMesh-API-Key': 'hm_test_review_key_1234567890',
+        'X-HarbourMesh-Account-Session': 'hm_user_session_v1.account.payload',
+      }),
+    }));
+  });
+
   it('fails on malformed responses and API errors', async () => {
     const malformedFetch = vi.fn(async () => new Response(JSON.stringify({
       soundings: [{ id: 'sounding-1', reviewStatus: 'pending' }],

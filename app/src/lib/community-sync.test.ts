@@ -137,6 +137,31 @@ describe('community sync', () => {
     }));
   });
 
+  it('adds account-session ownership context without replacing pilot API keys', async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
+      ok: true,
+      receiptId: 'receipt-1',
+      batchId: 'batch-1',
+      acceptedCount: 1,
+      duplicateCount: 0,
+      storedAt: '2026-05-06T12:01:00.000Z',
+    }), { status: 202 }));
+
+    await uploadCommunitySoundingBatch(batch, {
+      apiBaseUrl: 'http://localhost:3001',
+      apiKey: 'hm_test_api_key_1234567890',
+      accountAccessToken: 'hm_user_session_v1.payload.signature',
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+
+    expect(fetchImpl).toHaveBeenCalledWith('http://localhost:3001/api/community/soundings', expect.objectContaining({
+      headers: expect.objectContaining({
+        'X-HarbourMesh-API-Key': 'hm_test_api_key_1234567890',
+        'X-HarbourMesh-Account-Session': 'hm_user_session_v1.payload.signature',
+      }),
+    }));
+  });
+
   it('fails when the API rejects the batch', async () => {
     const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
       ok: false,

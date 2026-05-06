@@ -1,5 +1,10 @@
 import type { CommunityAggregateGeoJson } from './community-aggregates.js';
 import type { CommunityAggregateReleaseManifest } from './community-release-manifests.js';
+import {
+  toPublisherMetadata,
+  type AccountOwnershipContext,
+  type AccountPublisherMetadata,
+} from './account-ownership.js';
 import { appendJsonLine, readJsonLines, resolveDataFile } from './jsonl-store.js';
 
 export type StoredCommunityAggregateCell = {
@@ -34,6 +39,7 @@ export type CommunityAggregateReleasePublishInput = {
   aggregate: CommunityAggregateGeoJson;
   manifest: CommunityAggregateReleaseManifest;
   generatedBy?: string;
+  publisher?: AccountOwnershipContext | null;
 };
 
 export type CommunityAggregateReleaseRepository = {
@@ -45,7 +51,7 @@ export type CommunityAggregateReleaseRepository = {
   listAggregateCells: (releaseId: string) => Promise<StoredCommunityAggregateCell[]>;
 };
 
-type StoredCommunityAggregateRelease = {
+type StoredCommunityAggregateRelease = AccountPublisherMetadata & {
   releaseId: string;
   region: CommunityAggregateReleaseManifest['region'];
   productKind: CommunityAggregateReleaseManifest['productKind'];
@@ -168,6 +174,7 @@ export function createCommunityAggregateReleaseRepository(dataDir: string): Comm
         generatedAt: input.manifest.generatedAt,
         storedAt,
         manifest: input.manifest,
+        ...toPublisherMetadata(input.publisher),
       };
 
       await appendJsonLine(releasesFile, release);

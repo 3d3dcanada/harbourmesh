@@ -1,4 +1,5 @@
 export const ACCOUNT_SESSION_STORAGE_KEY = 'harbormesh-account-session';
+export const ACCOUNT_SESSION_HEADER = 'X-HarbourMesh-Account-Session';
 
 export type AccountRole = 'user' | 'operator' | 'admin';
 
@@ -137,6 +138,21 @@ export function getAccountSession(
 
 export function clearAccountSession(storage: StorageLike | null = getDefaultStorage()): void {
   storage?.removeItem(ACCOUNT_SESSION_STORAGE_KEY);
+}
+
+export function getAccountSessionAccessToken(
+  storage: StorageLike | null = getDefaultStorage(),
+  now = new Date()
+): string | undefined {
+  return getAccountSession(storage, now)?.session.accessToken;
+}
+
+export function buildAccountSessionHeaders(
+  accountAccessToken?: string,
+  storage: StorageLike | null = getDefaultStorage()
+): Record<string, string> {
+  const token = accountAccessToken?.trim() || getAccountSessionAccessToken(storage);
+  return token ? { [ACCOUNT_SESSION_HEADER]: token } : {};
 }
 
 export function replaceAccountSessionAccount(

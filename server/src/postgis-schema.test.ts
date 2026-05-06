@@ -67,6 +67,25 @@ describe('NB pilot PostGIS schema migration', () => {
     expect(sql).toContain("CHECK (public_overlay_eligible = false OR (review_status = 'accepted' AND geom IS NOT NULL))");
   });
 
+  it('keeps account ownership metadata on private community tables only', async () => {
+    const sql = await readMigration();
+
+    for (const column of [
+      'owner_account_id text',
+      "owner_account_roles jsonb NOT NULL DEFAULT '[]'::jsonb",
+      'reviewed_by_account_id text',
+      "reviewed_by_account_roles jsonb NOT NULL DEFAULT '[]'::jsonb",
+      'published_by_account_id text',
+      "published_by_account_roles jsonb NOT NULL DEFAULT '[]'::jsonb",
+    ]) {
+      expect(sql).toContain(column);
+    }
+    expect(sql).toContain('idx_community_soundings_owner_account ON community_soundings(owner_account_id)');
+    expect(sql).toContain('idx_community_hazards_owner_account ON community_hazards(owner_account_id)');
+    expect(sql).toContain('idx_release_manifests_publisher_account ON dataset_release_manifests(published_by_account_id)');
+    expect(sql).not.toMatch(/community_aggregate_cells[\s\S]+owner_account_id/);
+  });
+
   it('matches runtime device kinds and documents the PostGIS env switch', async () => {
     const sql = await readMigration();
 

@@ -7,9 +7,16 @@ import {
   type CommunityHazardSummary,
   type CommunityHazardUpload,
 } from './community-hazards.js';
+import {
+  toOwnerMetadata,
+  toReviewerMetadata,
+  type AccountOwnerMetadata,
+  type AccountOwnershipContext,
+  type AccountReviewerMetadata,
+} from './account-ownership.js';
 import { appendJsonLine, readJsonLines, resolveDataFile } from './jsonl-store.js';
 
-type StoredHazardBatch = {
+type StoredHazardBatch = AccountOwnerMetadata & {
   id: string;
   region: string;
   recordCount: number;
@@ -18,7 +25,7 @@ type StoredHazardBatch = {
   storedAt: string;
 };
 
-export type StoredCommunityHazard = CommunityHazardUpload & {
+export type StoredCommunityHazard = CommunityHazardUpload & AccountOwnerMetadata & AccountReviewerMetadata & {
   batchId: string;
   storedAt: string;
   region: string;
@@ -29,14 +36,18 @@ export type StoredCommunityHazard = CommunityHazardUpload & {
   reviewNote?: string;
 };
 
-export type StoredHazardReview = CommunityHazardReview & {
+export type StoredHazardReview = CommunityHazardReview & AccountReviewerMetadata & {
   hazardId: string;
   reviewedAt: string;
 };
 
 export type CommunityHazardRepository = {
-  acceptBatch: (batch: CommunityHazardBatch) => Promise<CommunityHazardReceipt>;
-  reviewHazard: (hazardId: string, review: CommunityHazardReview) => Promise<CommunityHazardReviewReceipt | null>;
+  acceptBatch: (batch: CommunityHazardBatch, owner?: AccountOwnershipContext | null) => Promise<CommunityHazardReceipt>;
+  reviewHazard: (
+    hazardId: string,
+    review: CommunityHazardReview,
+    reviewer?: AccountOwnershipContext | null
+  ) => Promise<CommunityHazardReviewReceipt | null>;
   getSummary: () => Promise<CommunityHazardSummary>;
   listRecords: () => Promise<StoredCommunityHazard[]>;
   listReviews: () => Promise<StoredHazardReview[]>;
@@ -66,21 +77,25 @@ export function createCommunityHazardRepository(dataDir: string): CommunityHazar
         publicOverlayEligible: reviewStatus === 'accepted' && Boolean(record.position),
         reviewedAt: review?.reviewedAt ?? record.reviewedAt,
         reviewedBy: review?.reviewedBy ?? record.reviewedBy,
+        reviewedByAccountId: review?.reviewedByAccountId ?? record.reviewedByAccountId,
+        reviewedByAccountRoles: review?.reviewedByAccountRoles ?? record.reviewedByAccountRoles,
         reviewNote: review?.note ?? record.reviewNote,
       };
     });
   }
 
   return {
-    async acceptBatch(batch) {
+    async acceptBatch(batch, owner) {
       const existingRecords = await listRecords();
       const existingIds = new Set(existingRecords.map((record) => record.id));
       const acceptedHazards = batch.hazards.filter((hazard) => !existingIds.has(hazard.id));
       const storedAt = new Date().toISOString();
+      const ownerMetadata = toOwnerMetadata(owner);
 
       for (const hazard of acceptedHazards) {
         await appendJsonLine(recordsFile, {
           ...hazard,
+          ...ownerMetadata,
           batchId: batch.id,
           storedAt,
           region: batch.region,
@@ -97,6 +112,7 @@ export function createCommunityHazardRepository(dataDir: string): CommunityHazar
         acceptedCount: acceptedHazards.length,
         duplicateCount,
         storedAt,
+        ...ownerMetadata,
       };
       await appendJsonLine(batchesFile, storedBatch);
 
@@ -110,7 +126,7 @@ export function createCommunityHazardRepository(dataDir: string): CommunityHazar
       };
     },
 
-    async reviewHazard(hazardId, review) {
+    async reviewHazard(hazardId, review, reviewer) {
       const records = await listRecords();
       const hazard = records.find((record) => record.id === hazardId);
       if (!hazard) return null;
@@ -118,6 +134,7 @@ export function createCommunityHazardRepository(dataDir: string): CommunityHazar
       const reviewedAt = review.reviewedAt ?? new Date().toISOString();
       await appendJsonLine(reviewsFile, {
         ...review,
+        ...toReviewerMetadata(reviewer),
         hazardId,
         reviewedAt,
       });
