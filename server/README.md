@@ -31,6 +31,8 @@ Default API:
 
 Data is appended as JSONL under `./data` by default. Set `HARBOURMESH_DATA_DIR` to move it.
 
+The production persistence target starts in `db/migrations/0001_nb_pilot_community_mesh.sql`. The current server still uses JSONL, but the migration defines the PostGIS tables for devices, soundings, hazards, reviews, aggregate cells, and release manifests.
+
 Set `HARBOURMESH_API_KEYS` to a comma-separated list of legacy pilot API keys before exposing the server. Legacy keys can access every protected endpoint. For scoped keys, use `HARBOURMESH_WRITE_API_KEYS` for intake/device writes and `HARBOURMESH_REVIEW_API_KEYS` for hazard review operations. Protected endpoints accept either `X-HarbourMesh-API-Key: <key>` or `Authorization: Bearer <key>`.
 
 Protected endpoints:
