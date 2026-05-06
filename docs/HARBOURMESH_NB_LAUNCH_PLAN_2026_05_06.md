@@ -35,19 +35,19 @@ Observed state:
 - Telemetry: recorded Signal K replay and live Signal K WebSocket wiring now exist; live hardware ingest remains unverified.
 - Backend: a Fastify API now exists for NB chart source catalog, community sounding upload, community hazard upload, community reference GeoJSON overlay, device registration, and summary endpoints with JSONL local persistence; it is a pilot backend, not the final PostGIS/cloud mesh.
 - Community mesh: local raw sounding capture, local hazard reporting, consent-safe offline upload queues, backend upload endpoints, and a reference-only GeoJSON overlay now exist; moderation and public tile products are still not implemented.
-- Security: docs overclaim; source contains weak or mislabeled crypto helpers.
+- Security: docs no longer claim production readiness; the weak SHA-256 placeholder key derivation, token signing, and password hashing helpers have been replaced with PBKDF2-HMAC-SHA256/HMAC-SHA256 regressions, but no production auth or secret-management system exists yet.
 - CI/release: workflows have been adjusted to stop calling missing package scripts.
-- Testing: current tests now cover chart source metadata, Signal K mapping, community sounding extraction, local hazard reporting, device registration, and store queue behavior; they still do not prove navigation safety, hardware ingest, browser layout, or security readiness.
+- Testing: current tests now cover chart source metadata, Signal K mapping, community sounding extraction, local hazard reporting, device registration, store queue behavior, and crypto helper regressions; they still do not prove navigation safety, hardware ingest, production auth, browser layout, or security readiness.
 
 ## Current Verification Snapshot
 
 Last light checks:
 
-- `npm run test:run`: passing, 88 web tests.
+- `npm run test:run`: passing, 91 web tests.
 - `npm test` in `server`: passing, 9 API tests.
 - `npm run type-check`: passing.
 - `npm run type-check` in `server`: passing.
-- `npm run lint`: passing with 60 warnings.
+- `npm run lint`: passing with 59 warnings.
 - `npm audit --json`: 0 vulnerabilities.
 - `npm run build`: passing for the web app.
 - `npm run build` in `server`: passing.
@@ -78,6 +78,7 @@ Completed in the active checkout:
 - Added a Fastify community hazard API at `/api/community/hazards`, strict Zod validation, JSONL storage, summary endpoint, frontend hazard queueing, receipt validation, and hazard status tracking.
 - Added a reference-only community GeoJSON overlay at `/api/community/overlay.geojson` that emits accepted soundings and positioned hazards while marking official chart data as excluded.
 - Added local community overlay feature generation and rendered local sounding and hazard markers on the NB community map.
+- Replaced mislabeled SHA-256 security helpers with PBKDF2-HMAC-SHA256 key derivation/password hashing, HMAC-SHA256 token signatures, AES-GCM IV/tag validation, and regression tests.
 
 Still not done:
 
@@ -421,7 +422,7 @@ Tasks:
 3. Add missing package scripts referenced by CI or update workflows to stop calling imaginary scripts.
 4. Fix production dependency advisories.
 5. Add the first NMEA parser regression tests for longitude and date handling.
-6. Add security tests that expose weak PBKDF2/HMAC/password-hash behavior.
+6. Keep extending security tests around production auth, secret storage, session expiry, and API authorization.
 7. Mark docs that describe unimplemented production systems as aspirational.
 
 Do not begin real chart implementation until Phase 0 exits cleanly.

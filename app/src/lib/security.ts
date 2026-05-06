@@ -3,7 +3,7 @@
  * AES-256 Encryption, JWT Authentication, and RBAC
  */
 
-import { createHash, randomBytes, createCipheriv, createDecipheriv, timingSafeEqual } from 'crypto';
+import { createHmac, pbkdf2Sync, randomBytes, createCipheriv, createDecipheriv, timingSafeEqual } from 'crypto';
 
 // ============================================================================
 // AES-256-GCM ENCRYPTION
@@ -20,15 +20,13 @@ const ENCRYPTION_VERSION = 1;
 const IV_LENGTH = 12; // GCM standard IV length
 const TAG_LENGTH = 16; // GCM authentication tag length
 const KEY_LENGTH = 32; // 256 bits
+export const PBKDF2_SHA256_ITERATIONS = 600_000;
 
 /**
  * Derive encryption key from password using PBKDF2
  */
 export function deriveKey(password: string, salt: Buffer): Buffer {
-  return createHash('sha256')
-    .update(password)
-    .update(salt)
-    .digest();
+  return pbkdf2Sync(password, salt, PBKDF2_SHA256_ITERATIONS, KEY_LENGTH, 'sha256');
 }
 
 /**
@@ -86,6 +84,10 @@ export function decrypt(encrypted: EncryptedData, key: Buffer): string {
   const iv = Buffer.from(encrypted.iv, 'base64');
   const tag = Buffer.from(encrypted.tag, 'base64');
   const ciphertext = Buffer.from(encrypted.ciphertext, 'base64');
+
+  if (iv.length !== IV_LENGTH || tag.length !== TAG_LENGTH) {
+    throw new Error('Invalid encrypted payload metadata');
+  }
   
   const decipher = createDecipheriv('aes-256-gcm', key, iv);
   decipher.setAuthTag(tag);
@@ -531,9 +533,8 @@ function base64UrlDecode(str: string): string {
 }
 
 function createHmacSignature(data: string, secret: string): string {
-  return createHash('sha256')
+  return createHmac('sha256', secret)
     .update(data)
-    .update(secret)
     .digest('base64')
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
@@ -615,10 +616,7 @@ export function checkPasswordStrength(password: string): PasswordStrength {
  */
 export function hashPassword(password: string, salt?: Buffer): { hash: string; salt: string } {
   const actualSalt = salt || generateSalt();
-  const hash = createHash('sha256')
-    .update(password)
-    .update(actualSalt)
-    .digest('hex');
+  const hash = pbkdf2Sync(password, actualSalt, PBKDF2_SHA256_ITERATIONS, KEY_LENGTH, 'sha256').toString('hex');
   
   return {
     hash,
@@ -635,6 +633,8 @@ export function verifyPassword(
   salt: string
 ): boolean {
   const { hash: computedHash } = hashPassword(password, Buffer.from(salt, 'hex'));
+  if (hash.length !== computedHash.length) return false;
+
   return timingSafeEqual(
     Buffer.from(hash),
     Buffer.from(computedHash)
