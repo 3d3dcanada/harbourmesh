@@ -13,6 +13,7 @@ import { getNBPilotChartPackageArtifactManifest } from './chart-package-artifact
 import { getNBPilotChartCatalog, getNBPilotChartPackageManifest } from './chart-catalog.js';
 import { buildCommunityAggregateGeoJson } from './community-aggregates.js';
 import { buildCommunityGeoJsonOverlay } from './community-geojson.js';
+import { buildCommunityAggregateReleaseManifest } from './community-release-manifests.js';
 import { communityHazardBatchSchema, communityHazardReviewSchema } from './community-hazards.js';
 import {
   createCommunityHazardRepository,
@@ -114,6 +115,17 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     ]);
 
     return buildCommunityAggregateGeoJson(soundings, hazards, observations);
+  });
+
+  app.get('/api/community/releases/aggregates/latest', async () => {
+    const [soundings, hazards, observations] = await Promise.all([
+      repository.listRecords(),
+      hazardRepository.listRecords(),
+      observationRepository.listRecords(),
+    ]);
+    const aggregate = buildCommunityAggregateGeoJson(soundings, hazards, observations);
+
+    return buildCommunityAggregateReleaseManifest(aggregate);
   });
 
   app.get('/api/charts/nb/catalog', async () => getNBPilotChartCatalog());

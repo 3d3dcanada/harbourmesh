@@ -38,7 +38,9 @@ import {
   type CommunityHazardReviewRecord,
 } from '@/lib/community-hazard-review';
 import {
+  fetchCommunityAggregateReleaseManifest,
   fetchCommunityAggregates,
+  type CommunityAggregateReleaseManifest,
   type CommunityAggregateFeature,
 } from '@/lib/community-overlay';
 import { prepareSoundingForCommunityUpload, type RawDepthSounding } from '@/lib/community-soundings';
@@ -128,6 +130,8 @@ export function Community() {
   const [aggregateFeatures, setAggregateFeatures] = useState<CommunityAggregateFeature[]>([]);
   const [aggregateLoading, setAggregateLoading] = useState(false);
   const [aggregateError, setAggregateError] = useState<string | null>(null);
+  const [aggregateRelease, setAggregateRelease] = useState<CommunityAggregateReleaseManifest | null>(null);
+  const [aggregateReleaseLoading, setAggregateReleaseLoading] = useState(false);
   const isOptedIn = consent?.shareTelemetryForCommunity || false;
   const shareableSoundings = getShareableSoundings();
   const queuedBatches = useMemo(() => uploadBatches.filter((batch) => batch.status === 'queued'), [uploadBatches]);
@@ -355,6 +359,20 @@ export function Community() {
     }
   };
 
+  const handleLoadAggregateRelease = async () => {
+    setAggregateReleaseLoading(true);
+    setAggregateError(null);
+
+    try {
+      const release = await fetchCommunityAggregateReleaseManifest();
+      setAggregateRelease(release);
+    } catch (error) {
+      setAggregateError(error instanceof Error ? error.message : 'Community aggregate release load failed');
+    } finally {
+      setAggregateReleaseLoading(false);
+    }
+  };
+
   const handleLoadReviewQueue = async () => {
     setReviewLoading(true);
     setReviewError(null);
@@ -552,6 +570,10 @@ export function Community() {
                     <RefreshCw className={cn('mr-2 h-4 w-4', aggregateLoading && 'animate-spin')} />
                     {aggregateLoading ? 'Loading' : 'Load Aggregates'}
                   </Button>
+                  <Button size="sm" variant="outline" onClick={handleLoadAggregateRelease} disabled={aggregateReleaseLoading}>
+                    <Database className={cn('mr-2 h-4 w-4', aggregateReleaseLoading && 'animate-spin')} />
+                    {aggregateReleaseLoading ? 'Loading' : 'Load Release'}
+                  </Button>
                 </div>
               </div>
             </CardHeader>
@@ -568,6 +590,36 @@ export function Community() {
               />
             </CardContent>
           </Card>
+
+          {aggregateRelease && (
+            <Card className="mt-4">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Database className="h-5 w-5" />
+                  Aggregate Release
+                </CardTitle>
+                <CardDescription>
+                  {aggregateRelease.product.fileName}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-lg bg-muted p-3">
+                    <p className="text-xs text-muted-foreground">Cells</p>
+                    <p className="text-xl font-bold">{aggregateRelease.product.aggregateCells}</p>
+                  </div>
+                  <div className="rounded-lg bg-muted p-3">
+                    <p className="text-xs text-muted-foreground">Bytes</p>
+                    <p className="text-xl font-bold">{aggregateRelease.product.byteLength}</p>
+                  </div>
+                  <div className="rounded-lg bg-muted p-3">
+                    <p className="text-xs text-muted-foreground">SHA-256</p>
+                    <p className="font-mono text-sm">{aggregateRelease.product.sha256.slice(0, 12)}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="conditions" className="mt-4">

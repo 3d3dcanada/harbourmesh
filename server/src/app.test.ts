@@ -897,6 +897,53 @@ describe('HarbourMesh API', () => {
     expect(JSON.stringify(aggregateBody)).not.toContain('vessel-1');
   });
 
+  it('serves a checksum release manifest for the latest aggregate product', async () => {
+    const app = await createTestApp();
+
+    await app.inject({
+      method: 'POST',
+      url: '/api/community/soundings',
+      payload: sampleBatch,
+    });
+    await app.inject({
+      method: 'POST',
+      url: '/api/community/observations',
+      payload: sampleObservationBatch,
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/community/releases/aggregates/latest',
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      schemaVersion: 'harbourmesh.community-aggregate-release.v1',
+      region: 'NB_PILOT',
+      productKind: 'aggregate_geojson',
+      product: {
+        mediaType: 'application/geo+json',
+        byteLength: expect.any(Number),
+        sha256: expect.stringMatching(/^[a-f0-9]{64}$/),
+        sourceRecordCounts: {
+          soundings: 1,
+          observations: 2,
+          positionedObservations: 1,
+          aggregateCells: 1,
+        },
+      },
+      rules: {
+        communityProductsAreReferenceOnly: true,
+        officialChartDataIncluded: false,
+        rawRecordIdsIncluded: false,
+        vesselIdsIncluded: false,
+      },
+    });
+    expect(response.json().product.byteLength).toBeGreaterThan(0);
+    expect(JSON.stringify(response.json())).not.toContain('"features"');
+    expect(JSON.stringify(response.json())).not.toContain('vessel-1');
+  });
+
   it('returns not found for reviews of unknown hazards', async () => {
     const app = await createTestApp();
     const response = await app.inject({

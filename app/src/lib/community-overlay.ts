@@ -89,6 +89,29 @@ export type CommunityAggregateGeoJson = {
   };
 };
 
+export type CommunityAggregateReleaseManifest = {
+  id: string;
+  schemaVersion: 'harbourmesh.community-aggregate-release.v1';
+  generatedAt: string;
+  region: 'NB_PILOT';
+  productKind: 'aggregate_geojson';
+  product: {
+    fileName: string;
+    mediaType: 'application/geo+json';
+    byteLength: number;
+    sha256: string;
+    sourceRecordCounts: CommunityAggregateGeoJson['metadata']['sourceRecordCounts'];
+    aggregateCells: number;
+  };
+  rules: {
+    intendedUse: 'community_reference_overlay';
+    communityProductsAreReferenceOnly: true;
+    officialChartDataIncluded: false;
+    rawRecordIdsIncluded: false;
+    vesselIdsIncluded: false;
+  };
+};
+
 export type FetchCommunityOverlayOptions = {
   apiBaseUrl?: string;
   fetchImpl?: typeof fetch;
@@ -144,6 +167,21 @@ function isCommunityAggregate(value: unknown): value is CommunityAggregateGeoJso
   );
 }
 
+function isCommunityAggregateRelease(value: unknown): value is CommunityAggregateReleaseManifest {
+  const release = value as Partial<CommunityAggregateReleaseManifest>;
+  return (
+    release.schemaVersion === 'harbourmesh.community-aggregate-release.v1' &&
+    release.region === 'NB_PILOT' &&
+    release.productKind === 'aggregate_geojson' &&
+    release.rules?.communityProductsAreReferenceOnly === true &&
+    release.rules.officialChartDataIncluded === false &&
+    release.rules.rawRecordIdsIncluded === false &&
+    release.rules.vesselIdsIncluded === false &&
+    typeof release.product?.byteLength === 'number' &&
+    /^[a-f0-9]{64}$/.test(release.product.sha256 ?? '')
+  );
+}
+
 export function getCommunityOverlayFeaturesByKind(
   overlay: CommunityGeoJsonOverlay,
   kind: 'sounding' | 'hazard'
@@ -196,6 +234,31 @@ export async function fetchCommunityAggregates(
 
   if (!isCommunityAggregate(body)) {
     throw new Error('Community aggregate response was not a HarbourMesh aggregate overlay');
+  }
+
+  return body;
+}
+
+export async function fetchCommunityAggregateReleaseManifest(
+  options: FetchCommunityOverlayOptions = {}
+): Promise<CommunityAggregateReleaseManifest> {
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const endpoint = resolveEndpoint('/api/community/releases/aggregates/latest', options.apiBaseUrl ?? import.meta.env.VITE_API_BASE_URL);
+  const response = await fetchImpl(endpoint, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+    },
+  });
+  const body: unknown = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const error = body && typeof body === 'object' && 'error' in body ? String(body.error) : response.statusText;
+    throw new Error(error || `Community aggregate release request failed with HTTP ${response.status}`);
+  }
+
+  if (!isCommunityAggregateRelease(body)) {
+    throw new Error('Community aggregate release response was not a HarbourMesh release manifest');
   }
 
   return body;

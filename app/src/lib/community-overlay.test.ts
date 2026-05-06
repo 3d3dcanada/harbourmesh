@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  fetchCommunityAggregateReleaseManifest,
   fetchCommunityAggregates,
   fetchCommunityOverlay,
   getCommunityOverlayFeaturesByKind,
+  type CommunityAggregateReleaseManifest,
   type CommunityAggregateGeoJson,
   type CommunityGeoJsonOverlay,
 } from './community-overlay';
@@ -115,6 +117,29 @@ const aggregate: CommunityAggregateGeoJson = {
   },
 };
 
+const aggregateRelease: CommunityAggregateReleaseManifest = {
+  id: 'community-aggregate-release:2026-05-06T12:13:00.000Z',
+  schemaVersion: 'harbourmesh.community-aggregate-release.v1',
+  generatedAt: '2026-05-06T12:13:00.000Z',
+  region: 'NB_PILOT',
+  productKind: 'aggregate_geojson',
+  product: {
+    fileName: 'community-aggregates-2026-05-06.geojson',
+    mediaType: 'application/geo+json',
+    byteLength: 1200,
+    sha256: 'a'.repeat(64),
+    sourceRecordCounts: aggregate.metadata.sourceRecordCounts,
+    aggregateCells: 1,
+  },
+  rules: {
+    intendedUse: 'community_reference_overlay',
+    communityProductsAreReferenceOnly: true,
+    officialChartDataIncluded: false,
+    rawRecordIdsIncluded: false,
+    vesselIdsIncluded: false,
+  },
+};
+
 describe('community overlay client', () => {
   it('fetches and validates the community GeoJSON overlay', async () => {
     const fetchImpl = vi.fn(async () => new Response(JSON.stringify(overlay), { status: 200 }));
@@ -184,5 +209,25 @@ describe('community overlay client', () => {
     await expect(fetchCommunityAggregates({
       fetchImpl: fetchImpl as unknown as typeof fetch,
     })).rejects.toThrow('Community aggregate response was not a HarbourMesh aggregate overlay');
+  });
+
+  it('fetches and validates aggregate release manifests', async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify(aggregateRelease), { status: 200 }));
+
+    await expect(fetchCommunityAggregateReleaseManifest({
+      apiBaseUrl: 'http://localhost:3001',
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    })).resolves.toMatchObject({
+      schemaVersion: 'harbourmesh.community-aggregate-release.v1',
+      rules: {
+        officialChartDataIncluded: false,
+        rawRecordIdsIncluded: false,
+        vesselIdsIncluded: false,
+      },
+    });
+
+    expect(fetchImpl).toHaveBeenCalledWith('http://localhost:3001/api/community/releases/aggregates/latest', expect.objectContaining({
+      method: 'GET',
+    }));
   });
 });
