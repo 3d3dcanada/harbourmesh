@@ -6,6 +6,7 @@ import {
   parseApiKeys,
   requireApiAccess,
 } from './api-auth.js';
+import { getNBPilotChartPackageArtifactManifest } from './chart-package-artifacts.js';
 import { getNBPilotChartCatalog, getNBPilotChartPackageManifest } from './chart-catalog.js';
 import { buildCommunityAggregateGeoJson } from './community-aggregates.js';
 import { buildCommunityGeoJsonOverlay } from './community-geojson.js';
@@ -104,6 +105,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
 
   app.get('/api/charts/nb/catalog', async () => getNBPilotChartCatalog());
   app.get('/api/charts/nb/packages', async () => getNBPilotChartPackageManifest());
+  app.get('/api/charts/nb/package-artifacts', async () => getNBPilotChartPackageArtifactManifest());
 
   app.post('/api/community/hazards', async (request, reply) => {
     if (!(await requireApiAccess(request, reply, apiAuth))) return reply;

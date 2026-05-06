@@ -25,6 +25,7 @@ Default API:
 - `GET /api/community/aggregates.geojson`
 - `GET /api/charts/nb/catalog`
 - `GET /api/charts/nb/packages`
+- `GET /api/charts/nb/package-artifacts`
 - `POST /api/devices/register`
 - `GET /api/devices`
 - `GET /api/devices/:deviceId`

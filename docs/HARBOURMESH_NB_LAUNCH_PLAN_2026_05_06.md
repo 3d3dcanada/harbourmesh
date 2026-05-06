@@ -6,7 +6,7 @@ Scope: New Brunswick pilot first, international architecture second
 
 ## Executive Status
 
-HarbourMesh is currently a React/Vite NB pilot app with an early Fastify backend for device registration, chart source catalog, chart package manifests, community sounding upload, community hazard upload, hazard review, and privacy-preserving aggregate GeoJSON. It still does not have a production chart engine, hardware ingest proof, AI runtime, weather-routing engine, operator identity/audit trails, vector tile products, or production cloud mesh. The next goal is not a public launch. The next goal is a stable NB pilot foundation that is honest about what is implemented, legally clean around chart data, and ready for real vessel telemetry.
+HarbourMesh is currently a React/Vite NB pilot app with an early Fastify backend for device registration, chart source catalog, chart package manifests, generated GeoJSON package artifacts, community sounding upload, community hazard upload, hazard review, and privacy-preserving aggregate GeoJSON. It still does not have a production chart engine, hardware ingest proof, AI runtime, weather-routing engine, operator identity/audit trails, vector tile products, or production cloud mesh. The next goal is not a public launch. The next goal is a stable NB pilot foundation that is honest about what is implemented, legally clean around chart data, and ready for real vessel telemetry.
 
 The product ambition is correct: a boat-first operating layer where charts, vessel telemetry, sonar soundings, radar-derived observations, hazards, weather, maintenance, and community-contributed local knowledge can become useful together. The implementation has to be phased carefully because official navigation charts, user-generated bathymetry, privacy, liability, and sensor quality are separate problems that should not be mixed into one ungoverned data pool.
 
@@ -44,7 +44,7 @@ Observed state:
 Last light checks:
 
 - `npm run test:run`: passing, 112 web tests.
-- `npm test` in `server`: passing, 19 server tests.
+- `npm test` in `server`: passing, 20 server tests.
 - `npm run type-check`: passing.
 - `npm run type-check` in `server`: passing.
 - `npm run lint`: passing with 0 warnings.
@@ -56,7 +56,7 @@ Last light checks:
 - Server API auth tests cover missing keys, accepted header keys, accepted Bearer keys, scoped write/review key separation, protected device registry reads, and fail-closed production-style config.
 - Server hazard review tests cover pending hazards being withheld from public GeoJSON until accepted, accepted hazards becoming overlay-eligible, and unknown hazard review returning 404.
 - Server aggregate GeoJSON tests cover cell polygons, sounding depth averages, accepted-hazard counts, official chart exclusion, and raw vessel/source ID omission.
-- Server chart package tests cover `/api/charts/nb/packages`, planned NB coast and inland-waterway packages, PMTiles/MBTiles/GeoJSON format declarations, community-overlay inclusion, and official CHS exclusion.
+- Server chart package tests cover `/api/charts/nb/packages`, `/api/charts/nb/package-artifacts`, NB coast and inland-waterway package definitions, generated GeoJSON artifact checksums, pending PMTiles/MBTiles flags, community-overlay inclusion, and official CHS exclusion.
 - Server PostGIS schema tests cover the NB pilot migration, spatial observation/hazard/aggregate columns, GIST indexes, and schema-level exclusion of official chart data/raw identifiers from shared products.
 - Web NMEA regression tests cover longitude degree-width parsing, 1990s RMC date handling, checksum rejection, DBT meter depth parsing, and legacy utility parser parity.
 - Web demo-source notice tests cover accessible status rendering for simulated/demo data surfaces.
@@ -85,6 +85,7 @@ Completed in the active checkout:
 - Added a New Brunswick pilot chart source registry with GeoNB overlays and CHS local-only boundaries.
 - Added a backend NB chart catalog endpoint at `/api/charts/nb/catalog` with GeoNB, CHS NONNA, and CHS official-product source policies.
 - Added a backend NB chart package manifest endpoint at `/api/charts/nb/packages` for planned reference-only coast and inland-waterway offline packages.
+- Added `/api/charts/nb/package-artifacts` to generate reference-only GeoJSON package artifacts with bounds, source policy, byte sizes, and SHA-256 checksums while excluding official CHS data.
 - Replaced the navigation canvas demo with an NB pilot map component.
 - Added Signal K URL building, delta mapping, recorded replay data, and telemetry mode settings.
 - Added a persisted navigation planning store, route distance/course calculations, and an NB pilot reference route overlay.
@@ -112,7 +113,7 @@ Completed in the active checkout:
 
 Still not done:
 
-- No full production user auth, runtime PostGIS repositories, operator identity/audit trails, generated offline tile artifacts, vector tile generation, or reviewed aggregate tile release process exists.
+- No full production user auth, runtime PostGIS repositories, operator identity/audit trails, generated PMTiles/MBTiles artifacts, vector tile generation, or reviewed aggregate tile release process exists.
 - No full route-by-route browser/mobile visual verification has been run in this session.
 - No real Signal K server, sonar, radar, AIS receiver, or Boat Node hardware has been tested.
 - Community hazards can now be queued, uploaded to the pilot backend, reviewed through the API/UI with review-scoped keys, included in the raw reference overlay only after acceptance, and counted in privacy-preserving aggregates; per-operator audit trails and vector tile products are still not implemented.

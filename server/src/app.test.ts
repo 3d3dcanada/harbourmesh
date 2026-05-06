@@ -381,6 +381,48 @@ describe('HarbourMesh API', () => {
     );
   });
 
+  it('serves generated NB reference package artifacts without official chart data', async () => {
+    const app = await createTestApp();
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/charts/nb/package-artifacts',
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      id: 'nb-pilot-chart-package-artifacts',
+      schemaVersion: 'harbourmesh.chart-package-artifacts.v1',
+      rules: {
+        artifactsAreReferenceOnly: true,
+        officialChartDataExcluded: true,
+        pmtilesGenerationPending: true,
+        mbtilesGenerationPending: true,
+      },
+    });
+    expect(response.json().artifacts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          packageId: 'nb-coast-reference',
+          format: 'geojson',
+          mediaType: 'application/geo+json',
+          officialChartDataIncluded: false,
+          excludedSourceIds: expect.arrayContaining(['chs-official-digital-products']),
+          byteLength: expect.any(Number),
+          sha256: expect.stringMatching(/^[a-f0-9]{64}$/),
+          content: expect.objectContaining({
+            type: 'FeatureCollection',
+            metadata: expect.objectContaining({
+              officialChartDataIncluded: false,
+            }),
+          }),
+        }),
+      ])
+    );
+    const artifactBody = JSON.stringify(response.json());
+    expect(artifactBody).not.toContain('"officialChartDataIncluded":true');
+    expect(response.json().artifacts[0].sourceIds).not.toContain('chs-official-digital-products');
+  });
+
   it('accepts and summarizes community hazard batches', async () => {
     const app = await createTestApp();
     const receipt = await app.inject({
