@@ -6,6 +6,8 @@ import type { CommunityHazardBatch } from './community-hazards.js';
 import type { CommunitySoundingBatch } from './community-soundings.js';
 
 const TEST_API_KEY = 'hm_test_api_key_1234567890';
+const TEST_WRITE_API_KEY = 'hm_test_write_key_1234567890';
+const TEST_REVIEW_API_KEY = 'hm_test_review_key_1234567890';
 
 const sampleBatch: CommunitySoundingBatch = {
   id: 'batch-1',
@@ -155,6 +157,92 @@ describe('HarbourMesh API', () => {
       url: '/api/community/soundings/summary',
     });
     expect(publicSummary.statusCode).toBe(200);
+  });
+
+  it('separates write and review scoped pilot API keys', async () => {
+    const app = await createTestApp({
+      writeApiKeys: [TEST_WRITE_API_KEY],
+      reviewApiKeys: [TEST_REVIEW_API_KEY],
+      requireApiAuth: true,
+    });
+
+    const reviewOnlyUpload = await app.inject({
+      method: 'POST',
+      url: '/api/community/soundings',
+      headers: {
+        'x-harbourmesh-api-key': TEST_REVIEW_API_KEY,
+      },
+      payload: sampleBatch,
+    });
+    expect(reviewOnlyUpload.statusCode).toBe(403);
+    expect(reviewOnlyUpload.json()).toMatchObject({
+      ok: false,
+      error: 'api_key_scope_required',
+      requiredScope: 'write',
+    });
+
+    const writeUpload = await app.inject({
+      method: 'POST',
+      url: '/api/community/soundings',
+      headers: {
+        'x-harbourmesh-api-key': TEST_WRITE_API_KEY,
+      },
+      payload: sampleBatch,
+    });
+    expect(writeUpload.statusCode).toBe(202);
+
+    await app.inject({
+      method: 'POST',
+      url: '/api/community/hazards',
+      headers: {
+        'x-harbourmesh-api-key': TEST_WRITE_API_KEY,
+      },
+      payload: sampleHazardBatch,
+    });
+
+    const writeReviewQueue = await app.inject({
+      method: 'GET',
+      url: '/api/community/hazards/review',
+      headers: {
+        'x-harbourmesh-api-key': TEST_WRITE_API_KEY,
+      },
+    });
+    expect(writeReviewQueue.statusCode).toBe(403);
+    expect(writeReviewQueue.json()).toMatchObject({
+      ok: false,
+      error: 'api_key_scope_required',
+      requiredScope: 'review',
+    });
+
+    const reviewQueue = await app.inject({
+      method: 'GET',
+      url: '/api/community/hazards/review',
+      headers: {
+        authorization: `Bearer ${TEST_REVIEW_API_KEY}`,
+      },
+    });
+    expect(reviewQueue.statusCode).toBe(200);
+    expect(reviewQueue.json()).toMatchObject({
+      hazards: [
+        {
+          id: 'hazard-1',
+          reviewStatus: 'pending',
+        },
+      ],
+    });
+
+    const reviewDecision = await app.inject({
+      method: 'POST',
+      url: '/api/community/hazards/hazard-1/review',
+      headers: {
+        'x-harbourmesh-api-key': TEST_REVIEW_API_KEY,
+      },
+      payload: {
+        status: 'accepted',
+        reviewedBy: 'nb-pilot-reviewer',
+      },
+    });
+    expect(reviewDecision.statusCode).toBe(202);
   });
 
   it('fails closed when pilot API auth is required without configured keys', async () => {

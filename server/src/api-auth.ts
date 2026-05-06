@@ -3,8 +3,17 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 
 export const HARBOURMESH_API_KEY_HEADER = 'x-harbourmesh-api-key';
 
+export type ApiAccessScope = 'write' | 'review';
+
+const ALL_API_SCOPES: ApiAccessScope[] = ['write', 'review'];
+
+export type ScopedApiKey = {
+  key: string;
+  scopes: ReadonlySet<ApiAccessScope>;
+};
+
 export type ApiAuthConfig = {
-  keys: readonly string[];
+  keys: readonly ScopedApiKey[];
   required: boolean;
 };
 
@@ -21,10 +30,28 @@ export function parseApiKeys(...values: Array<string | undefined>): string[] {
 
 export function createApiAuthConfig(config: {
   keys?: readonly string[];
+  writeKeys?: readonly string[];
+  reviewKeys?: readonly string[];
   required?: boolean;
 }): ApiAuthConfig {
+  const scopedKeys = new Map<string, Set<ApiAccessScope>>();
+
+  function addKeys(keys: readonly string[] | undefined, scopes: readonly ApiAccessScope[]) {
+    for (const rawKey of keys ?? []) {
+      const key = rawKey.trim();
+      if (!key) continue;
+      const existingScopes = scopedKeys.get(key) ?? new Set<ApiAccessScope>();
+      for (const scope of scopes) existingScopes.add(scope);
+      scopedKeys.set(key, existingScopes);
+    }
+  }
+
+  addKeys(config.keys, ALL_API_SCOPES);
+  addKeys(config.writeKeys, ['write']);
+  addKeys(config.reviewKeys, ['review']);
+
   return {
-    keys: [...new Set((config.keys ?? []).map((key) => key.trim()).filter(Boolean))],
+    keys: [...scopedKeys.entries()].map(([key, scopes]) => ({ key, scopes })),
     required: config.required ?? false,
   };
 }
@@ -50,18 +77,25 @@ function constantTimeEquals(left: string, right: string): boolean {
   return timingSafeEqual(leftBytes, rightBytes);
 }
 
-export function isApiKeyAccepted(config: ApiAuthConfig, apiKey: string | undefined): boolean {
+export function isApiKeyAccepted(
+  config: ApiAuthConfig,
+  apiKey: string | undefined,
+  scope: ApiAccessScope
+): boolean {
   const authIsActive = config.required || config.keys.length > 0;
   if (!authIsActive) return true;
   if (config.keys.length === 0 || !apiKey) return false;
 
-  return config.keys.some((configuredKey) => constantTimeEquals(apiKey, configuredKey));
+  return config.keys.some((configuredKey) => (
+    configuredKey.scopes.has(scope) && constantTimeEquals(apiKey, configuredKey.key)
+  ));
 }
 
 export async function requireApiAccess(
   request: FastifyRequest,
   reply: FastifyReply,
-  config: ApiAuthConfig
+  config: ApiAuthConfig,
+  scope: ApiAccessScope = 'write'
 ): Promise<boolean> {
   const authIsActive = config.required || config.keys.length > 0;
   if (!authIsActive) return true;
@@ -74,13 +108,25 @@ export async function requireApiAccess(
     return false;
   }
 
-  if (!isApiKeyAccepted(config, extractApiKey(request))) {
+  const apiKey = extractApiKey(request);
+  if (!apiKey) {
     await reply
       .code(401)
       .header('WWW-Authenticate', 'Bearer realm="harbourmesh-api"')
       .send({
         ok: false,
         error: 'api_key_required',
+      });
+    return false;
+  }
+
+  if (!isApiKeyAccepted(config, apiKey, scope)) {
+    await reply
+      .code(403)
+      .send({
+        ok: false,
+        error: 'api_key_scope_required',
+        requiredScope: scope,
       });
     return false;
   }

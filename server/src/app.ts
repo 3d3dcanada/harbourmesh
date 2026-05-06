@@ -31,6 +31,8 @@ export type BuildAppOptions = {
   hazardRepository?: CommunityHazardRepository;
   deviceRepository?: DeviceRepository;
   apiKeys?: readonly string[];
+  writeApiKeys?: readonly string[];
+  reviewApiKeys?: readonly string[];
   requireApiAuth?: boolean;
   logger?: boolean;
 };
@@ -41,11 +43,9 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   const hazardRepository = options.hazardRepository ?? createCommunityHazardRepository(options.dataDir);
   const deviceRepository = options.deviceRepository ?? createDeviceRepository(options.dataDir);
   const apiAuth = createApiAuthConfig({
-    keys: options.apiKeys ?? parseApiKeys(
-      process.env.HARBOURMESH_API_KEYS,
-      process.env.HARBOURMESH_WRITE_API_KEYS,
-      process.env.HARBOURMESH_API_KEY
-    ),
+    keys: options.apiKeys ?? parseApiKeys(process.env.HARBOURMESH_API_KEYS, process.env.HARBOURMESH_API_KEY),
+    writeKeys: options.writeApiKeys ?? parseApiKeys(process.env.HARBOURMESH_WRITE_API_KEYS),
+    reviewKeys: options.reviewApiKeys ?? parseApiKeys(process.env.HARBOURMESH_REVIEW_API_KEYS),
     required: options.requireApiAuth ?? process.env.NODE_ENV === 'production',
   });
 
@@ -131,7 +131,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   app.get('/api/community/hazards/summary', async () => hazardRepository.getSummary());
 
   app.get('/api/community/hazards/review', async (request, reply) => {
-    if (!(await requireApiAccess(request, reply, apiAuth))) return reply;
+    if (!(await requireApiAccess(request, reply, apiAuth, 'review'))) return reply;
 
     return {
       hazards: await hazardRepository.listRecords(),
@@ -139,7 +139,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   });
 
   app.post('/api/community/hazards/:hazardId/review', async (request, reply) => {
-    if (!(await requireApiAccess(request, reply, apiAuth))) return reply;
+    if (!(await requireApiAccess(request, reply, apiAuth, 'review'))) return reply;
 
     try {
       const { hazardId } = request.params as { hazardId: string };
