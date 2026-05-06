@@ -34,6 +34,11 @@ import {
   type CommunitySoundingUploadBatch,
   type RawDepthSounding,
 } from '@/lib/community-soundings';
+import {
+  buildCommunityObservationUploadBatch,
+  type CommunityObservationUpload,
+  type CommunityObservationUploadBatch,
+} from '@/lib/community-observations';
 
 // ============================================================================
 // APP STORE
@@ -774,15 +779,25 @@ export const useSettingsStore = create<SettingsStore>()(
 
 interface CommunityDataStore {
   rawSoundings: RawDepthSounding[];
+  observations: CommunityObservationUpload[];
   uploadBatches: CommunitySyncBatch[];
+  observationBatches: CommunityObservationSyncBatch[];
   hazardBatches: CommunityHazardSyncBatch[];
   hazards: CommunityHazard[];
   addRawSoundings: (soundings: RawDepthSounding[]) => void;
+  addObservations: (observations: CommunityObservationUpload[]) => void;
   reportHazard: (hazard: Omit<CommunityHazard, 'id' | 'reportedAt' | 'status'> & { id?: string; reportedAt?: string }) => CommunityHazard;
   getShareableSoundings: () => CommunitySoundingUpload[];
+  getShareableObservations: () => CommunityObservationUpload[];
   queueShareableSoundingBatch: (options?: QueueCommunitySoundingBatchOptions) => CommunitySyncBatch | null;
+  queueShareableObservationBatch: (options?: QueueCommunityObservationBatchOptions) => CommunityObservationSyncBatch | null;
   queueShareableHazardBatch: (options?: QueueCommunityHazardBatchOptions) => CommunityHazardSyncBatch | null;
   markUploadBatchStatus: (
+    batchId: string,
+    status: CommunitySyncBatchStatus,
+    details?: { updatedAt?: string; acknowledgedId?: string; error?: string }
+  ) => void;
+  markObservationBatchStatus: (
     batchId: string,
     status: CommunitySyncBatchStatus,
     details?: { updatedAt?: string; acknowledgedId?: string; error?: string }
@@ -793,6 +808,7 @@ interface CommunityDataStore {
     details?: { updatedAt?: string; acknowledgedId?: string; error?: string }
   ) => void;
   getQueuedUploadBatches: () => CommunitySyncBatch[];
+  getQueuedObservationBatches: () => CommunityObservationSyncBatch[];
   getQueuedHazardBatches: () => CommunityHazardSyncBatch[];
 }
 
@@ -858,12 +874,18 @@ export type CommunityHazardSyncBatch = Omit<CommunitySyncBatch, 'payload'> & {
   payload: CommunityHazardUploadBatch;
 };
 
+export type CommunityObservationSyncBatch = Omit<CommunitySyncBatch, 'payload'> & {
+  payload: CommunityObservationUploadBatch;
+};
+
 export type QueueCommunitySoundingBatchOptions = {
   now?: string;
   endpoint?: string;
   region?: string;
   maxRecords?: number;
 };
+
+export type QueueCommunityObservationBatchOptions = QueueCommunitySoundingBatchOptions;
 
 export type QueueCommunityHazardBatchOptions = {
   now?: string;
@@ -887,6 +909,7 @@ export type CommunityHazard = {
 };
 
 const DEFAULT_COMMUNITY_SOUNDING_ENDPOINT = '/api/community/soundings';
+const DEFAULT_COMMUNITY_OBSERVATION_ENDPOINT = '/api/community/observations';
 const DEFAULT_COMMUNITY_HAZARD_ENDPOINT = '/api/community/hazards';
 const DEFAULT_COMMUNITY_REGION = 'NB_PILOT';
 
@@ -989,7 +1012,9 @@ export const useCommunityDataStore = create<CommunityDataStore>()(
   persist(
     (set, get) => ({
       rawSoundings: [],
+      observations: [],
       uploadBatches: [],
+      observationBatches: [],
       hazardBatches: [],
       hazards: [],
       addRawSoundings: (soundings) =>
@@ -1003,6 +1028,20 @@ export const useCommunityDataStore = create<CommunityDataStore>()(
           return {
             rawSoundings: [...byId.values()]
               .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+              .slice(0, 5000),
+          };
+        }),
+      addObservations: (observations) =>
+        set((state) => {
+          const byId = new Map(state.observations.map((observation) => [observation.id, observation]));
+
+          for (const observation of observations) {
+            byId.set(observation.id, observation);
+          }
+
+          return {
+            observations: [...byId.values()]
+              .sort((a, b) => new Date(b.observedAt).getTime() - new Date(a.observedAt).getTime())
               .slice(0, 5000),
           };
         }),
@@ -1025,6 +1064,7 @@ export const useCommunityDataStore = create<CommunityDataStore>()(
           const upload = prepareSoundingForCommunityUpload(sounding);
           return upload ? [upload] : [];
         }),
+      getShareableObservations: () => get().observations.filter((observation) => !observation.quality.rejected),
       queueShareableSoundingBatch: (options) => {
         const state = get();
         const now = options?.now ?? new Date().toISOString();
@@ -1057,6 +1097,44 @@ export const useCommunityDataStore = create<CommunityDataStore>()(
 
         set((current) => ({
           uploadBatches: [batch, ...current.uploadBatches].slice(0, 100),
+        }));
+
+        return batch;
+      },
+      queueShareableObservationBatch: (options) => {
+        const state = get();
+        const now = options?.now ?? new Date().toISOString();
+        const endpoint = options?.endpoint ?? DEFAULT_COMMUNITY_OBSERVATION_ENDPOINT;
+        const queuedObservationIds = new Set(
+          state.observationBatches
+            .filter((batch) => batch.status !== 'failed')
+            .flatMap((batch) => batch.payload.observations.map((observation) => observation.id))
+        );
+        const candidateObservations = state.observations.filter(
+          (observation) => !queuedObservationIds.has(observation.id) && !observation.quality.rejected
+        );
+        const payload = buildCommunityObservationUploadBatch(candidateObservations, {
+          batchId: crypto.randomUUID(),
+          createdAt: now,
+          uploadEndpoint: endpoint,
+          region: options?.region,
+          maxRecords: options?.maxRecords,
+        });
+
+        if (!payload) return null;
+
+        const batch: CommunityObservationSyncBatch = {
+          id: payload.id,
+          status: 'queued',
+          queuedAt: now,
+          updatedAt: now,
+          endpoint,
+          attemptCount: 0,
+          payload,
+        };
+
+        set((current) => ({
+          observationBatches: [batch, ...current.observationBatches].slice(0, 100),
         }));
 
         return batch;
@@ -1119,6 +1197,21 @@ export const useCommunityDataStore = create<CommunityDataStore>()(
               : batch
           ),
         })),
+      markObservationBatchStatus: (batchId, status, details) =>
+        set((state) => ({
+          observationBatches: state.observationBatches.map((batch) =>
+            batch.id === batchId
+              ? {
+                  ...batch,
+                  status,
+                  updatedAt: details?.updatedAt ?? new Date().toISOString(),
+                  attemptCount: status === 'sent' ? batch.attemptCount + 1 : batch.attemptCount,
+                  acknowledgedId: details?.acknowledgedId ?? batch.acknowledgedId,
+                  lastError: status === 'failed' ? details?.error ?? 'Upload failed' : undefined,
+                }
+              : batch
+          ),
+        })),
       markHazardBatchStatus: (batchId, status, details) =>
         set((state) => {
           const targetBatch = state.hazardBatches.find((batch) => batch.id === batchId);
@@ -1151,13 +1244,16 @@ export const useCommunityDataStore = create<CommunityDataStore>()(
           };
         }),
       getQueuedUploadBatches: () => get().uploadBatches.filter((batch) => batch.status === 'queued'),
+      getQueuedObservationBatches: () => get().observationBatches.filter((batch) => batch.status === 'queued'),
       getQueuedHazardBatches: () => get().hazardBatches.filter((batch) => batch.status === 'queued'),
     }),
     {
       name: 'harbormesh-community-data',
       partialize: (state) => ({
         rawSoundings: state.rawSoundings,
+        observations: state.observations,
         uploadBatches: state.uploadBatches,
+        observationBatches: state.observationBatches,
         hazardBatches: state.hazardBatches,
         hazards: state.hazards,
       }),

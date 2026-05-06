@@ -18,6 +18,7 @@ import {
 import { createMockVessel, createMockLogEntry, createMockTask, createMockDocument, createMockItem } from '../test/setup';
 import { SharePositionLevel, SpaceType } from '../types';
 import type { RawDepthSounding } from '../lib/community-soundings';
+import type { CommunityObservationUpload } from '../lib/community-observations';
 import { NB_PILOT_REFERENCE_ROUTE } from '../lib/navigation-planning';
 
 function readPersistedState<T>(key: string): T {
@@ -568,6 +569,29 @@ describe('Navigation Plan Store', () => {
 });
 
 describe('Community Data Store', () => {
+  const createObservation = (overrides: Partial<CommunityObservationUpload> = {}): CommunityObservationUpload => ({
+    id: 'observation-1',
+    vesselId: 'vessel-1',
+    sourceDeviceId: 'boat-node-001',
+    sourceProtocol: 'signalk',
+    observationType: 'weather',
+    observedAt: '2026-05-06T12:07:00.000Z',
+    receivedAt: '2026-05-06T12:07:01.000Z',
+    sharingState: 'shareable_no_position',
+    consentCapturedAt: '2026-05-06T11:59:00.000Z',
+    metrics: {
+      windSpeedKnots: 13.4,
+    },
+    quality: {
+      confidence: 0.84,
+      rejected: false,
+      flags: [],
+    },
+    rawPayloadIncluded: false,
+    officialChartDataIncluded: false,
+    ...overrides,
+  });
+
   const createRawSounding = (overrides: Partial<RawDepthSounding> = {}): RawDepthSounding => ({
     id: 'sounding-1',
     vesselId: 'vessel-1',
@@ -605,7 +629,9 @@ describe('Community Data Store', () => {
   beforeEach(() => {
     useCommunityDataStore.setState({
       rawSoundings: [],
+      observations: [],
       uploadBatches: [],
+      observationBatches: [],
       hazardBatches: [],
       hazards: [],
     });
@@ -766,6 +792,74 @@ describe('Community Data Store', () => {
     });
     expect(secondBatch).toBeNull();
     expect(result.current.getQueuedUploadBatches()).toHaveLength(1);
+  });
+
+  it('queues governed community observations once for offline-first sync', () => {
+    const { result } = renderHook(() => useCommunityDataStore());
+    let firstBatch = null;
+    let secondBatch = null;
+
+    act(() => {
+      result.current.addObservations([
+        createObservation(),
+        createObservation({
+          id: 'observation-2',
+          observationType: 'condition',
+          observedAt: '2026-05-06T12:08:00.000Z',
+          metrics: {
+            waterTemperatureC: 11.5,
+          },
+        }),
+      ]);
+      firstBatch = result.current.queueShareableObservationBatch({
+        now: '2026-05-06T12:09:00.000Z',
+        endpoint: '/api/community/observations',
+      });
+      secondBatch = result.current.queueShareableObservationBatch({
+        now: '2026-05-06T12:10:00.000Z',
+        endpoint: '/api/community/observations',
+      });
+    });
+
+    expect(firstBatch).toMatchObject({
+      status: 'queued',
+      endpoint: '/api/community/observations',
+      payload: {
+        schemaVersion: 'harbourmesh.community-observations.v1',
+        recordCount: 2,
+        policy: {
+          officialChartDataIncluded: false,
+          rawLocalPositionsIncluded: false,
+          rawSensorPayloadsIncluded: false,
+        },
+      },
+    });
+    expect(secondBatch).toBeNull();
+    expect(result.current.getQueuedObservationBatches()).toHaveLength(1);
+  });
+
+  it('tracks community observation upload batch status', () => {
+    const { result } = renderHook(() => useCommunityDataStore());
+    let batchId = '';
+
+    act(() => {
+      result.current.addObservations([createObservation()]);
+      const batch = result.current.queueShareableObservationBatch({
+        now: '2026-05-06T12:09:00.000Z',
+      });
+      batchId = batch?.id ?? '';
+      result.current.markObservationBatchStatus(batchId, 'acknowledged', {
+        acknowledgedId: 'observation-receipt-1',
+        updatedAt: '2026-05-06T12:10:00.000Z',
+      });
+    });
+
+    expect(result.current.observationBatches[0]).toMatchObject({
+      id: batchId,
+      status: 'acknowledged',
+      acknowledgedId: 'observation-receipt-1',
+      updatedAt: '2026-05-06T12:10:00.000Z',
+    });
   });
 
   it('tracks community sounding upload batch status', () => {

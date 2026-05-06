@@ -30,7 +30,7 @@ Active checkout:
 
 Observed state:
 
-- Frontend: React/Vite app exists, with the community section now wired to local telemetry, AIS targets, soundings, hazards, upload batches, local map overlay features, and NB reference mapping instead of hard-coded demo community data.
+- Frontend: React/Vite app exists, with the community section now wired to local telemetry, AIS targets, soundings, governed observations, hazards, upload batches, local map overlay features, and NB reference mapping instead of hard-coded demo community data.
 - Charts: NB pilot reference chart work has started with React Leaflet, OSM base tiles, legal GeoNB WMS overlays, a chart source catalog, NB offline package manifests, generated reference-only GeoJSON package artifacts, a disk artifact writer, and a Navigation chart package panel; it is not a certified navigation chart system and PMTiles/MBTiles products are not generated yet.
 - Telemetry: recorded Signal K replay and live Signal K WebSocket wiring now exist; live hardware ingest remains unverified.
 - Backend: a Fastify API now exists for NB chart source catalog, NB chart package manifests, community sounding upload, governed community observation upload, community hazard upload, hazard review, community reference GeoJSON overlay, device registration, and summary endpoints with JSONL local persistence; a PostGIS migration now defines the production target schema, but runtime storage is still JSONL.
@@ -43,14 +43,14 @@ Observed state:
 
 Last light checks:
 
-- `npm run test:run`: passing, 124 web tests.
+- `npm run test:run`: passing, 130 web tests.
 - `npm test` in `server`: passing, 26 server tests.
 - `npm run type-check`: passing.
 - `npm run type-check` in `server`: passing.
 - `npm run lint`: passing with 0 warnings.
 - `npm audit --json`: 0 vulnerabilities.
 - `npm run build`: passing for the web app.
-- `npm run build`: section-level code splitting is active; the initial app JS chunk is 280.08 kB / 89.01 kB gzip, the Navigation section chunk is 29.42 kB / 6.88 kB gzip, the Settings section chunk is 44.40 kB / 9.00 kB gzip, and the prior Vite oversized chunk warning is gone.
+- `npm run build`: section-level code splitting is active; the initial app JS chunk is 286.85 kB / 90.35 kB gzip, the Navigation section chunk is 29.42 kB / 6.89 kB gzip, the Settings section chunk is 44.40 kB / 9.01 kB gzip, the Community section chunk is 56.82 kB / 9.96 kB gzip, and the prior Vite oversized chunk warning is gone.
 - `npm run build` in `server`: passing.
 - `npm audit --json` in `server`: 0 vulnerabilities.
 - Server API auth tests cover missing keys, accepted header keys, accepted Bearer keys, scoped write/review key separation, review-operator key parsing, reviewer identity override for audit history, protected device registry reads, and fail-closed production-style config.
@@ -67,6 +67,7 @@ Last light checks:
 - Web pilot API credential tests cover local secret-store save/clear, trim behavior, explicit override precedence, stored API key resolution, and stored review-operator identity resolution.
 - Web telemetry health tests cover fresh/stale/missing channel classification, compact age formatting, and `receivedAt`-based feed freshness while preserving observed telemetry timestamps.
 - Web sounding quality tests cover abrupt depth-jump rejection before upload and slower depth changes outside the jump window staying valid.
+- Web observation tests cover consent-safe telemetry observation derivation, raw sensor payload exclusion, AIS identifier omission from metrics, upload batch policy, local queue de-duplication, status tracking, and upload receipt validation.
 - Web hazard moderation tests cover protected review-queue loading, review history loading, review receipt validation, API error handling, and invalid receipt rejection.
 - Web aggregate overlay tests cover aggregate GeoJSON fetching, privacy metadata validation, and rejection when raw IDs or official chart data are exposed.
 - Web chart artifact tests cover `/api/charts/nb/package-artifacts` client validation, GeoJSON artifact manifest loading, pending PMTiles/MBTiles flags, and rejection of artifacts that include official chart data.
@@ -124,6 +125,7 @@ Completed in the active checkout:
 - Added Navigation Sensor Health with fresh/stale/missing states for GPS, Depth/Wx, AIS, and Engine channels, using `receivedAt` for feed freshness so recorded replay can prove active delivery without changing original observation timestamps.
 - Added a sounding quality guard that flags abrupt sonar/depth jumps and rejects likely depth spikes before they enter community upload batches.
 - Added a protected community observation API and JSONL repository for governed radar, AIS, weather, track, condition, and system-health observations with consent, quality, raw-payload exclusion, duplicate handling, and summary metadata.
+- Wired frontend community observation derivation, local persistence, offline queueing, upload receipt validation, and Community conditions controls for governed telemetry observations.
 - Added an operator hazard moderation surface in Community with protected review-queue loading and accept/reject actions against the pilot API.
 - Split pilot API keys into backward-compatible legacy keys plus scoped write keys and review keys so intake/device access can be separated from hazard moderation.
 - Added `HARBOURMESH_REVIEW_OPERATOR_KEYS` support so review-scoped API keys can carry server-side operator IDs and override client-supplied reviewer names before moderation audit history is written.

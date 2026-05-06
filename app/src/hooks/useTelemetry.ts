@@ -5,6 +5,7 @@
 
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useTelemetryStore, useAppStore, useSettingsStore, useCommunityDataStore } from '@/store';
+import { createCommunityObservationsFromTelemetry } from '@/lib/community-observations';
 import { createSoundingsFromTelemetry, type SoundingSourceProtocol } from '@/lib/community-soundings';
 import { buildSignalKStreamUrl, mapSignalKDeltaToTelemetry, type SignalKDelta } from '@/lib/signalk';
 import { mapRecordedSignalKDelta } from '@/lib/signalk-replay';
@@ -150,6 +151,7 @@ export function useTelemetry(options: UseTelemetryOptions = {}): UseTelemetryRet
   const boatNode = useSettingsStore((state) => state.boatNode);
   const consent = useSettingsStore((state) => state.consent);
   const addRawSoundings = useCommunityDataStore((state) => state.addRawSoundings);
+  const addObservations = useCommunityDataStore((state) => state.addObservations);
 
   const stopStreams = useCallback(() => {
     if (reconnectTimeoutRef.current) {
@@ -198,8 +200,19 @@ export function useTelemetry(options: UseTelemetryOptions = {}): UseTelemetryRet
     if (soundings.length > 0) {
       addRawSoundings(soundings);
     }
+
+    const observations = createCommunityObservationsFromTelemetry([...receivedMessages, ...storeMessages], consent, {
+      vesselId: consent?.vesselId ?? 'demo-vessel',
+      sourceProtocol,
+      receivedAt,
+    });
+
+    if (observations.length > 0) {
+      addObservations(observations);
+    }
   }, [
     addMessage,
+    addObservations,
     addRawSoundings,
     boatNode.surfaceToTransducerMeters,
     boatNode.transducerToKeelMeters,

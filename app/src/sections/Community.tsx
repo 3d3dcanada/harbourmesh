@@ -42,7 +42,7 @@ import {
   type CommunityAggregateFeature,
 } from '@/lib/community-overlay';
 import { prepareSoundingForCommunityUpload, type RawDepthSounding } from '@/lib/community-soundings';
-import { uploadCommunityHazardBatch, uploadCommunitySoundingBatch } from '@/lib/community-sync';
+import { uploadCommunityHazardBatch, uploadCommunityObservationBatch, uploadCommunitySoundingBatch } from '@/lib/community-sync';
 import { buildLocalCommunityOverlayFeatures } from '@/lib/local-community-overlay';
 import { resolvePilotOperatorId } from '@/lib/pilot-api-credentials';
 import { cn } from '@/lib/utils';
@@ -52,6 +52,7 @@ import {
   useTelemetryStore,
   type CommunityHazard,
   type CommunityHazardSyncBatch,
+  type CommunityObservationSyncBatch,
   type CommunitySyncBatch,
 } from '@/store';
 import { SharePositionLevel } from '@/types';
@@ -83,6 +84,13 @@ function getHazardBatchStatusClass(batch: CommunityHazardSyncBatch): string {
   return 'text-amber-500 border-amber-200';
 }
 
+function getObservationBatchStatusClass(batch: CommunityObservationSyncBatch): string {
+  if (batch.status === 'acknowledged') return 'text-emerald-500 border-emerald-200';
+  if (batch.status === 'sent') return 'text-blue-500 border-blue-200';
+  if (batch.status === 'failed') return 'text-red-500 border-red-200';
+  return 'text-amber-500 border-amber-200';
+}
+
 function formatOptionalNumber(value: number | undefined, suffix: string): string {
   return typeof value === 'number' ? `${value.toFixed(1)} ${suffix}` : '--';
 }
@@ -93,17 +101,22 @@ export function Community() {
   const {
     hazards,
     hazardBatches,
+    observations,
+    observationBatches,
     rawSoundings,
     uploadBatches,
     getShareableSoundings,
     markHazardBatchStatus,
+    markObservationBatchStatus,
     markUploadBatchStatus,
+    queueShareableObservationBatch,
     queueShareableHazardBatch,
     queueShareableSoundingBatch,
     reportHazard,
   } = useCommunityDataStore();
   const [activeTab, setActiveTab] = useState('map');
   const [syncingBatchId, setSyncingBatchId] = useState<string | null>(null);
+  const [syncingObservationBatchId, setSyncingObservationBatchId] = useState<string | null>(null);
   const [syncingHazardBatchId, setSyncingHazardBatchId] = useState<string | null>(null);
   const [reviewHazards, setReviewHazards] = useState<CommunityHazardReviewRecord[]>([]);
   const [reviewLoading, setReviewLoading] = useState(false);
@@ -118,10 +131,18 @@ export function Community() {
   const isOptedIn = consent?.shareTelemetryForCommunity || false;
   const shareableSoundings = getShareableSoundings();
   const queuedBatches = useMemo(() => uploadBatches.filter((batch) => batch.status === 'queued'), [uploadBatches]);
+  const queuedObservationBatches = useMemo(
+    () => observationBatches.filter((batch) => batch.status === 'queued'),
+    [observationBatches]
+  );
   const queuedHazardBatches = useMemo(() => hazardBatches.filter((batch) => batch.status === 'queued'), [hazardBatches]);
   const acknowledgedBatches = useMemo(
     () => uploadBatches.filter((batch) => batch.status === 'acknowledged'),
     [uploadBatches]
+  );
+  const acknowledgedObservationBatches = useMemo(
+    () => observationBatches.filter((batch) => batch.status === 'acknowledged'),
+    [observationBatches]
   );
   const acknowledgedHazardBatches = useMemo(
     () => hazardBatches.filter((batch) => batch.status === 'acknowledged'),
@@ -136,6 +157,15 @@ export function Community() {
       ),
     [uploadBatches]
   );
+  const queuedObservationIds = useMemo(
+    () =>
+      new Set(
+        observationBatches
+          .filter((batch) => batch.status !== 'failed')
+          .flatMap((batch) => batch.payload.observations.map((observation) => observation.id))
+      ),
+    [observationBatches]
+  );
   const queuedHazardIds = useMemo(
     () =>
       new Set(
@@ -149,6 +179,10 @@ export function Community() {
     () => shareableSoundings.filter((record) => !queuedRecordIds.has(record.id)).length,
     [queuedRecordIds, shareableSoundings]
   );
+  const pendingObservationCount = useMemo(
+    () => observations.filter((observation) => !queuedObservationIds.has(observation.id)).length,
+    [observations, queuedObservationIds]
+  );
   const pendingHazardCount = useMemo(
     () => hazards.filter((hazard) => hazard.status !== 'acknowledged' && !queuedHazardIds.has(hazard.id)).length,
     [hazards, queuedHazardIds]
@@ -157,9 +191,17 @@ export function Community() {
     () => queuedBatches.reduce((total, batch) => total + batch.payload.recordCount, 0),
     [queuedBatches]
   );
+  const queuedObservationRecordCount = useMemo(
+    () => queuedObservationBatches.reduce((total, batch) => total + batch.payload.recordCount, 0),
+    [queuedObservationBatches]
+  );
   const acknowledgedRecordCount = useMemo(
     () => acknowledgedBatches.reduce((total, batch) => total + batch.payload.recordCount, 0),
     [acknowledgedBatches]
+  );
+  const acknowledgedObservationCount = useMemo(
+    () => acknowledgedObservationBatches.reduce((total, batch) => total + batch.payload.recordCount, 0),
+    [acknowledgedObservationBatches]
   );
   const acknowledgedHazardCount = useMemo(
     () => acknowledgedHazardBatches.reduce((total, batch) => total + batch.payload.recordCount, 0),
@@ -179,6 +221,7 @@ export function Community() {
     ?.environment?.waterTemperatureC;
   const todayPrefix = new Date().toISOString().slice(0, 10);
   const reportsToday = rawSoundings.filter((sounding) => sounding.receivedAt.startsWith(todayPrefix)).length +
+    observations.filter((observation) => observation.receivedAt.startsWith(todayPrefix)).length +
     hazards.filter((hazard) => hazard.reportedAt.startsWith(todayPrefix)).length;
   const communityOverlayFeatures = useMemo(
     () => buildLocalCommunityOverlayFeatures(rawSoundings, hazards),
@@ -217,6 +260,10 @@ export function Community() {
     });
   };
 
+  const handleQueueObservations = () => {
+    queueShareableObservationBatch();
+  };
+
   const handleSyncNextBatch = async () => {
     const batch = queuedBatches[0];
     if (!batch) return;
@@ -248,6 +295,28 @@ export function Community() {
       description: 'Local hazard report',
       position: latestPosition ?? undefined,
     });
+  };
+
+  const handleSyncNextObservationBatch = async () => {
+    const batch = queuedObservationBatches[0];
+    if (!batch) return;
+
+    setSyncingObservationBatchId(batch.id);
+    markObservationBatchStatus(batch.id, 'sent');
+
+    try {
+      const receipt = await uploadCommunityObservationBatch(batch);
+      markObservationBatchStatus(batch.id, 'acknowledged', {
+        acknowledgedId: receipt.receiptId,
+        updatedAt: receipt.storedAt,
+      });
+    } catch (error) {
+      markObservationBatchStatus(batch.id, 'failed', {
+        error: error instanceof Error ? error.message : 'Community observation sync failed',
+      });
+    } finally {
+      setSyncingObservationBatchId(null);
+    }
   };
 
   const handleSyncNextHazardBatch = async () => {
@@ -502,7 +571,7 @@ export function Community() {
         </TabsContent>
 
         <TabsContent value="conditions" className="mt-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             <Card>
               <CardContent className="py-4">
                 <p className="text-sm text-muted-foreground">Latest Depth</p>
@@ -530,6 +599,12 @@ export function Community() {
                 <p className="text-2xl font-bold">{aisTargets.length}</p>
               </CardContent>
             </Card>
+            <Card>
+              <CardContent className="py-4">
+                <p className="text-sm text-muted-foreground">Observations</p>
+                <p className="text-2xl font-bold">{observations.length}</p>
+              </CardContent>
+            </Card>
           </div>
 
           <Card className="mt-4">
@@ -543,6 +618,82 @@ export function Community() {
               <p className="text-sm text-muted-foreground">
                 Conditions shown here are derived from local telemetry, AIS targets, and captured soundings. Sea-state estimation is not enabled until motion calibration and backend aggregation are implemented.
               </p>
+            </CardContent>
+          </Card>
+
+          <Card className="mt-4">
+            <CardHeader>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Activity className="h-5 w-5" />
+                    Observation Sync Queue
+                  </CardTitle>
+                  <CardDescription>
+                    Weather, AIS, motion, health, and condition observations use the governed community observation API.
+                  </CardDescription>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" onClick={handleQueueObservations} disabled={pendingObservationCount === 0}>
+                    <Database className="mr-2 h-4 w-4" />
+                    Queue Observations
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleSyncNextObservationBatch}
+                    disabled={queuedObservationBatches.length === 0 || syncingObservationBatchId !== null}
+                  >
+                    <Database className="mr-2 h-4 w-4" />
+                    {syncingObservationBatchId ? 'Syncing' : 'Sync Next'}
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-3 grid gap-3 sm:grid-cols-3">
+                <div className="rounded-lg bg-muted p-3">
+                  <p className="text-xs text-muted-foreground">Pending</p>
+                  <p className="text-xl font-bold">{pendingObservationCount}</p>
+                </div>
+                <div className="rounded-lg bg-muted p-3">
+                  <p className="text-xs text-muted-foreground">Queued</p>
+                  <p className="text-xl font-bold">{queuedObservationRecordCount}</p>
+                </div>
+                <div className="rounded-lg bg-muted p-3">
+                  <p className="text-xs text-muted-foreground">Acknowledged</p>
+                  <p className="text-xl font-bold">{acknowledgedObservationCount}</p>
+                </div>
+              </div>
+              {observationBatches.length === 0 ? (
+                <div className="rounded-lg border border-dashed p-6 text-center">
+                  <p className="text-sm text-muted-foreground">No observation batches queued.</p>
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {observationBatches.slice(0, 5).map((batch) => (
+                    <div key={batch.id} className="flex flex-col gap-2 py-3 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-medium">{batch.payload.recordCount} observations</p>
+                          <Badge variant="outline" className={cn('text-xs capitalize', getObservationBatchStatusClass(batch))}>
+                            {batch.status}
+                          </Badge>
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {new Date(batch.queuedAt).toLocaleString()} · {batch.payload.region} · {batch.endpoint}
+                        </p>
+                      </div>
+                      <div className="text-sm md:text-right">
+                        <p className="font-medium">Attempt {batch.attemptCount}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {batch.lastError ?? batch.acknowledgedId ?? batch.payload.schemaVersion}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -1035,6 +1186,11 @@ export function Community() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Shareable soundings</span>
                   <span className="font-medium">{shareableSoundings.length}</span>
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Governed observations</span>
+                  <span className="font-medium">{observations.length}</span>
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
