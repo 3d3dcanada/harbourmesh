@@ -688,7 +688,10 @@ describe('HarbourMesh API', () => {
   });
 
   it('serves generated NB reference package artifacts without official chart data', async () => {
-    const app = await createTestApp();
+    const app = await createTestApp({
+      artifactSigningKey: 'chart-artifact-signing-test-secret',
+      artifactSigningKeyId: 'nb-chart-test-key',
+    });
     const response = await app.inject({
       method: 'GET',
       url: '/api/charts/nb/package-artifacts',
@@ -769,6 +772,10 @@ describe('HarbourMesh API', () => {
     expect(pmtilesDownload.headers['x-harbourmesh-sha256']).toBe(pmtilesArtifact.sha256);
     expect(pmtilesDownload.headers['x-harbourmesh-reference-only']).toBe('true');
     expect(pmtilesDownload.headers['x-harbourmesh-official-chart-data-included']).toBe('false');
+    expect(pmtilesDownload.headers['x-harbourmesh-artifact-signature-algorithm']).toBe('HMAC-SHA256');
+    expect(pmtilesDownload.headers['x-harbourmesh-artifact-signature-key-id']).toBe('nb-chart-test-key');
+    expect(pmtilesDownload.headers['x-harbourmesh-artifact-signature-payload-sha256']).toMatch(/^[a-f0-9]{64}$/);
+    expect(pmtilesDownload.headers['x-harbourmesh-artifact-signature']).toMatch(/^[a-f0-9]{64}$/);
     expect(pmtilesDownload.rawPayload.subarray(0, 7).toString('utf8')).toBe('PMTiles');
 
     const missingArtifact = await app.inject({
@@ -1093,7 +1100,10 @@ describe('HarbourMesh API', () => {
   });
 
   it('serves a checksum release manifest for the latest aggregate product', async () => {
-    const app = await createTestApp();
+    const app = await createTestApp({
+      artifactSigningKey: 'aggregate-artifact-signing-test-secret',
+      artifactSigningKeyId: 'nb-aggregate-test-key',
+    });
 
     await app.inject({
       method: 'POST',
@@ -1204,6 +1214,10 @@ describe('HarbourMesh API', () => {
     expect(pmtilesDownload.headers['content-type']).toContain('application/vnd.pmtiles');
     expect(pmtilesDownload.headers['x-harbourmesh-sha256']).toBe(pmtilesArtifact.sha256);
     expect(pmtilesDownload.headers['x-harbourmesh-vessel-ids-included']).toBe('false');
+    expect(pmtilesDownload.headers['x-harbourmesh-artifact-signature-algorithm']).toBe('HMAC-SHA256');
+    expect(pmtilesDownload.headers['x-harbourmesh-artifact-signature-key-id']).toBe('nb-aggregate-test-key');
+    expect(pmtilesDownload.headers['x-harbourmesh-artifact-signature-payload-sha256']).toMatch(/^[a-f0-9]{64}$/);
+    expect(pmtilesDownload.headers['x-harbourmesh-artifact-signature']).toMatch(/^[a-f0-9]{64}$/);
     expect(pmtilesDownload.rawPayload.subarray(0, 7).toString('utf8')).toBe('PMTiles');
 
     const missingArtifact = await app.inject({

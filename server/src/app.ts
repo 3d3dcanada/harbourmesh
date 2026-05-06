@@ -1,5 +1,6 @@
+import { createHash, createHmac } from 'node:crypto';
 import cors from '@fastify/cors';
-import Fastify, { type FastifyInstance } from 'fastify';
+import Fastify, { type FastifyInstance, type FastifyReply } from 'fastify';
 import { z, ZodError } from 'zod';
 import {
   createApiAuthConfig,
@@ -71,7 +72,23 @@ export type BuildAppOptions = {
   databaseUrl?: string;
   runMigrations?: boolean;
   chartPackageArtifactOptions?: BuildNBPilotChartPackageArtifactsOptions;
+  artifactSigningKey?: string;
+  artifactSigningKeyId?: string;
   logger?: boolean;
+};
+
+type DownloadableArtifact = {
+  id: string;
+  fileName: string;
+  mediaType: string;
+  byteLength: number;
+  sha256: string;
+  generatedAt: string;
+};
+
+type ArtifactSigningConfig = {
+  key: string;
+  keyId: string;
 };
 
 function chartArtifactOptionsFromEnvironment(): BuildNBPilotChartPackageArtifactsOptions {
@@ -80,6 +97,45 @@ function chartArtifactOptionsFromEnvironment(): BuildNBPilotChartPackageArtifact
     includeGeoNBFeatures: process.env.HARBOURMESH_FETCH_GEONB_FEATURES === 'true',
     maxGeoNBFeaturesPerSource: Number.isFinite(maxFeatures) && maxFeatures > 0 ? maxFeatures : 100,
   };
+}
+
+function artifactSigningConfigFromOptions(options: BuildAppOptions): ArtifactSigningConfig | null {
+  const key = options.artifactSigningKey ?? process.env.HARBOURMESH_ARTIFACT_SIGNING_KEY;
+  if (!key) return null;
+
+  return {
+    key,
+    keyId: options.artifactSigningKeyId ?? process.env.HARBOURMESH_ARTIFACT_SIGNING_KEY_ID ?? 'harbourmesh-artifact-signing-key',
+  };
+}
+
+function artifactSigningPayload(artifact: DownloadableArtifact): string {
+  return JSON.stringify({
+    artifactId: artifact.id,
+    fileName: artifact.fileName,
+    mediaType: artifact.mediaType,
+    byteLength: artifact.byteLength,
+    sha256: artifact.sha256,
+    generatedAt: artifact.generatedAt,
+  });
+}
+
+function addArtifactSignatureHeaders(
+  reply: FastifyReply,
+  artifact: DownloadableArtifact,
+  signingConfig: ArtifactSigningConfig | null
+): FastifyReply {
+  if (!signingConfig) return reply;
+
+  const payload = artifactSigningPayload(artifact);
+  const payloadSha256 = createHash('sha256').update(payload).digest('hex');
+  const signature = createHmac('sha256', signingConfig.key).update(payload).digest('hex');
+
+  return reply
+    .header('X-HarbourMesh-Artifact-Signature-Algorithm', 'HMAC-SHA256')
+    .header('X-HarbourMesh-Artifact-Signature-Key-Id', signingConfig.keyId)
+    .header('X-HarbourMesh-Artifact-Signature-Payload-SHA256', payloadSha256)
+    .header('X-HarbourMesh-Artifact-Signature', signature);
 }
 
 export async function buildApp(options: BuildAppOptions): Promise<FastifyInstance> {
@@ -103,6 +159,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     ?? postgisRepositories?.aggregateReleases
     ?? createCommunityAggregateReleaseRepository(options.dataDir);
   const chartPackageArtifactOptions = options.chartPackageArtifactOptions ?? chartArtifactOptionsFromEnvironment();
+  const artifactSigningConfig = artifactSigningConfigFromOptions(options);
   const apiAuth = createApiAuthConfig({
     keys: options.apiKeys ?? parseApiKeys(process.env.HARBOURMESH_API_KEYS, process.env.HARBOURMESH_API_KEY),
     keySha256Hashes: options.apiKeySha256Hashes ?? parseApiKeySha256Hashes(process.env.HARBOURMESH_API_KEY_SHA256S, process.env.HARBOURMESH_API_KEY_SHA256),
@@ -224,15 +281,16 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
       return reply.code(404).send({ ok: false, error: 'aggregate_release_artifact_not_available' });
     }
 
-    return reply
+    const response = reply
       .type(artifact.mediaType)
       .header('Content-Disposition', `attachment; filename="${artifact.fileName}"`)
       .header('X-HarbourMesh-Release-Id', artifact.releaseId)
       .header('X-HarbourMesh-SHA256', artifact.sha256)
       .header('X-HarbourMesh-Official-Chart-Data-Included', 'false')
       .header('X-HarbourMesh-Raw-Record-Ids-Included', 'false')
-      .header('X-HarbourMesh-Vessel-Ids-Included', 'false')
-      .send(artifact.bytes);
+      .header('X-HarbourMesh-Vessel-Ids-Included', 'false');
+
+    return addArtifactSignatureHeaders(response, artifact, artifactSigningConfig).send(artifact.bytes);
   });
 
   app.get('/api/community/releases/aggregates', async () => ({
@@ -289,14 +347,15 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
       return reply.code(404).send({ ok: false, error: 'chart_package_artifact_not_found' });
     }
 
-    return reply
+    const response = reply
       .type(artifact.mediaType)
       .header('Content-Disposition', `attachment; filename="${artifact.fileName}"`)
       .header('X-HarbourMesh-Artifact-Id', artifact.id)
       .header('X-HarbourMesh-SHA256', artifact.sha256)
       .header('X-HarbourMesh-Reference-Only', 'true')
-      .header('X-HarbourMesh-Official-Chart-Data-Included', 'false')
-      .send(artifact.bytes);
+      .header('X-HarbourMesh-Official-Chart-Data-Included', 'false');
+
+    return addArtifactSignatureHeaders(response, artifact, artifactSigningConfig).send(artifact.bytes);
   });
 
   app.post('/api/community/observations', async (request, reply) => {
