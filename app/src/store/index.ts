@@ -64,7 +64,7 @@ export const useAppStore = create<AppStore>()(
       theme: ThemeMode.AUTO,
       connectionStatus: 'offline',
       notifications: [],
-      
+
       // Actions
       setCurrentVessel: (vesselId) => set({ currentVesselId: vesselId }),
       setCurrentUser: (user) => set({ currentUser: user }),
@@ -115,77 +115,91 @@ interface VesselStore {
   spaces: Space[];
   items: Item[];
   systems: SystemComponent[];
-  
+
   // Actions
   setVessels: (vessels: Vessel[]) => void;
   addVessel: (vessel: Vessel) => void;
   updateVessel: (id: string, updates: Partial<Vessel>) => void;
   deleteVessel: (id: string) => void;
   setCurrentVessel: (vessel: Vessel | null) => void;
-  
+
   setSpaces: (spaces: Space[]) => void;
   addSpace: (space: Space) => void;
   updateSpace: (id: string, updates: Partial<Space>) => void;
   deleteSpace: (id: string) => void;
-  
+
   setItems: (items: Item[]) => void;
   addItem: (item: Item) => void;
   updateItem: (id: string, updates: Partial<Item>) => void;
   deleteItem: (id: string) => void;
-  
+
   setSystems: (systems: SystemComponent[]) => void;
   addSystem: (system: SystemComponent) => void;
   updateSystem: (id: string, updates: Partial<SystemComponent>) => void;
 }
 
-export const useVesselStore = create<VesselStore>()((set) => ({
-  vessels: [],
-  currentVessel: null,
-  spaces: [],
-  items: [],
-  systems: [],
-  
-  setVessels: (vessels) => set({ vessels }),
-  addVessel: (vessel) => set((state) => ({ vessels: [...state.vessels, vessel] })),
-  updateVessel: (id, updates) =>
-    set((state) => ({
-      vessels: state.vessels.map((v) => (v.id === id ? { ...v, ...updates } : v)),
-      currentVessel: state.currentVessel?.id === id 
-        ? { ...state.currentVessel, ...updates } 
-        : state.currentVessel,
-    })),
-  deleteVessel: (id) =>
-    set((state) => ({
-      vessels: state.vessels.filter((v) => v.id !== id),
-      currentVessel: state.currentVessel?.id === id ? null : state.currentVessel,
-    })),
-  setCurrentVessel: (vessel) => set({ currentVessel: vessel }),
-  
-  setSpaces: (spaces) => set({ spaces }),
-  addSpace: (space) => set((state) => ({ spaces: [...state.spaces, space] })),
-  updateSpace: (id, updates) =>
-    set((state) => ({
-      spaces: state.spaces.map((s) => (s.id === id ? { ...s, ...updates } : s)),
-    })),
-  deleteSpace: (id) =>
-    set((state) => ({ spaces: state.spaces.filter((s) => s.id !== id) })),
-  
-  setItems: (items) => set({ items }),
-  addItem: (item) => set((state) => ({ items: [...state.items, item] })),
-  updateItem: (id, updates) =>
-    set((state) => ({
-      items: state.items.map((i) => (i.id === id ? { ...i, ...updates } : i)),
-    })),
-  deleteItem: (id) =>
-    set((state) => ({ items: state.items.filter((i) => i.id !== id) })),
-  
-  setSystems: (systems) => set({ systems }),
-  addSystem: (system) => set((state) => ({ systems: [...state.systems, system] })),
-  updateSystem: (id, updates) =>
-    set((state) => ({
-      systems: state.systems.map((s) => (s.id === id ? { ...s, ...updates } : s)),
-    })),
-}));
+export const useVesselStore = create<VesselStore>()(
+  persist(
+    (set) => ({
+      vessels: [],
+      currentVessel: null,
+      spaces: [],
+      items: [],
+      systems: [],
+
+      setVessels: (vessels) => set({ vessels }),
+      addVessel: (vessel) => set((state) => ({ vessels: [...state.vessels, vessel] })),
+      updateVessel: (id, updates) =>
+        set((state) => ({
+          vessels: state.vessels.map((v) => (v.id === id ? { ...v, ...updates } : v)),
+          currentVessel: state.currentVessel?.id === id
+            ? { ...state.currentVessel, ...updates }
+            : state.currentVessel,
+        })),
+      deleteVessel: (id) =>
+        set((state) => ({
+          vessels: state.vessels.filter((v) => v.id !== id),
+          currentVessel: state.currentVessel?.id === id ? null : state.currentVessel,
+        })),
+      setCurrentVessel: (vessel) => set({ currentVessel: vessel }),
+
+      setSpaces: (spaces) => set({ spaces }),
+      addSpace: (space) => set((state) => ({ spaces: [...state.spaces, space] })),
+      updateSpace: (id, updates) =>
+        set((state) => ({
+          spaces: state.spaces.map((s) => (s.id === id ? { ...s, ...updates } : s)),
+        })),
+      deleteSpace: (id) =>
+        set((state) => ({ spaces: state.spaces.filter((s) => s.id !== id) })),
+
+      setItems: (items) => set({ items }),
+      addItem: (item) => set((state) => ({ items: [...state.items, item] })),
+      updateItem: (id, updates) =>
+        set((state) => ({
+          items: state.items.map((i) => (i.id === id ? { ...i, ...updates } : i)),
+        })),
+      deleteItem: (id) =>
+        set((state) => ({ items: state.items.filter((i) => i.id !== id) })),
+
+      setSystems: (systems) => set({ systems }),
+      addSystem: (system) => set((state) => ({ systems: [...state.systems, system] })),
+      updateSystem: (id, updates) =>
+        set((state) => ({
+          systems: state.systems.map((s) => (s.id === id ? { ...s, ...updates } : s)),
+        })),
+    }),
+    {
+      name: 'harbormesh-vessel-data',
+      partialize: (state) => ({
+        vessels: state.vessels,
+        currentVessel: state.currentVessel,
+        spaces: state.spaces,
+        items: state.items,
+        systems: state.systems,
+      }),
+    }
+  )
+);
 
 // ============================================================================
 // DOCUMENT STORE
@@ -195,7 +209,7 @@ interface DocumentStore {
   documents: Document[];
   selectedDocument: Document | null;
   isLoading: boolean;
-  
+
   // Actions
   setDocuments: (documents: Document[]) => void;
   addDocument: (document: Document) => void;
@@ -203,49 +217,59 @@ interface DocumentStore {
   deleteDocument: (id: string) => void;
   selectDocument: (document: Document | null) => void;
   setLoading: (isLoading: boolean) => void;
-  
+
   // Getters
   getDocumentsByType: (type: string) => Document[];
   getDocumentsByVessel: (vesselId: string) => Document[];
   getExpiringDocuments: (days: number) => Document[];
 }
 
-export const useDocumentStore = create<DocumentStore>()((set, get) => ({
-  documents: [],
-  selectedDocument: null,
-  isLoading: false,
-  
-  setDocuments: (documents) => set({ documents }),
-  addDocument: (document) =>
-    set((state) => ({ documents: [...state.documents, document] })),
-  updateDocument: (id, updates) =>
-    set((state) => ({
-      documents: state.documents.map((d) =>
-        d.id === id ? { ...d, ...updates } : d
-      ),
-    })),
-  deleteDocument: (id) =>
-    set((state) => ({
-      documents: state.documents.filter((d) => d.id !== id),
-      selectedDocument: state.selectedDocument?.id === id ? null : state.selectedDocument,
-    })),
-  selectDocument: (document) => set({ selectedDocument: document }),
-  setLoading: (isLoading) => set({ isLoading }),
-  
-  getDocumentsByType: (type) =>
-    get().documents.filter((d) => d.type === type),
-  getDocumentsByVessel: (vesselId) =>
-    get().documents.filter((d) => d.vesselId === vesselId),
-  getExpiringDocuments: (days) => {
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() + days);
-    return get().documents.filter((d) => {
-      if (!d.metadata.expiryDate) return false;
-      const expiry = new Date(d.metadata.expiryDate);
-      return expiry <= cutoff && expiry >= new Date();
-    });
-  },
-}));
+export const useDocumentStore = create<DocumentStore>()(
+  persist(
+    (set, get) => ({
+      documents: [],
+      selectedDocument: null,
+      isLoading: false,
+
+      setDocuments: (documents) => set({ documents }),
+      addDocument: (document) =>
+        set((state) => ({ documents: [...state.documents, document] })),
+      updateDocument: (id, updates) =>
+        set((state) => ({
+          documents: state.documents.map((d) =>
+            d.id === id ? { ...d, ...updates } : d
+          ),
+        })),
+      deleteDocument: (id) =>
+        set((state) => ({
+          documents: state.documents.filter((d) => d.id !== id),
+          selectedDocument: state.selectedDocument?.id === id ? null : state.selectedDocument,
+        })),
+      selectDocument: (document) => set({ selectedDocument: document }),
+      setLoading: (isLoading) => set({ isLoading }),
+
+      getDocumentsByType: (type) =>
+        get().documents.filter((d) => d.type === type),
+      getDocumentsByVessel: (vesselId) =>
+        get().documents.filter((d) => d.vesselId === vesselId),
+      getExpiringDocuments: (days) => {
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() + days);
+        return get().documents.filter((d) => {
+          if (!d.metadata.expiryDate) return false;
+          const expiry = new Date(d.metadata.expiryDate);
+          return expiry <= cutoff && expiry >= new Date();
+        });
+      },
+    }),
+    {
+      name: 'harbormesh-documents',
+      partialize: (state) => ({
+        documents: state.documents,
+      }),
+    }
+  )
+);
 
 // ============================================================================
 // LOG & TASK STORE
@@ -256,14 +280,14 @@ interface LogTaskStore {
   tasks: Task[];
   selectedLog: LogEntry | null;
   selectedTask: Task | null;
-  
+
   // Actions
   setLogs: (logs: LogEntry[]) => void;
   addLog: (log: LogEntry) => void;
   updateLog: (id: string, updates: Partial<LogEntry>) => void;
   deleteLog: (id: string) => void;
   selectLog: (log: LogEntry | null) => void;
-  
+
   setTasks: (tasks: Task[]) => void;
   addTask: (task: Task) => void;
   updateTask: (id: string, updates: Partial<Task>) => void;
@@ -271,7 +295,7 @@ interface LogTaskStore {
   selectTask: (task: Task | null) => void;
   completeTask: (id: string, completedBy: string, note?: string) => void;
   approveTask: (taskId: string, approval: { approverId: string; approverName: string; status: 'approved' | 'rejected'; note?: string }) => void;
-  
+
   // Getters
   getOpenTasks: () => Task[];
   getOverdueTasks: () => Task[];
@@ -279,88 +303,99 @@ interface LogTaskStore {
   getLogsByVessel: (vesselId: string) => LogEntry[];
 }
 
-export const useLogTaskStore = create<LogTaskStore>()((set, get) => ({
-  logs: [],
-  tasks: [],
-  selectedLog: null,
-  selectedTask: null,
-  
-  setLogs: (logs) => set({ logs }),
-  addLog: (log) => set((state) => ({ logs: [log, ...state.logs] })),
-  updateLog: (id, updates) =>
-    set((state) => ({
-      logs: state.logs.map((l) => (l.id === id ? { ...l, ...updates } : l)),
-    })),
-  deleteLog: (id) =>
-    set((state) => ({
-      logs: state.logs.filter((l) => l.id !== id),
-      selectedLog: state.selectedLog?.id === id ? null : state.selectedLog,
-    })),
-  selectLog: (log) => set({ selectedLog: log }),
-  
-  setTasks: (tasks) => set({ tasks }),
-  addTask: (task) => set((state) => ({ tasks: [...state.tasks, task] })),
-  updateTask: (id, updates) =>
-    set((state) => ({
-      tasks: state.tasks.map((t) => (t.id === id ? { ...t, ...updates } : t)),
-    })),
-  deleteTask: (id) =>
-    set((state) => ({
-      tasks: state.tasks.filter((t) => t.id !== id),
-      selectedTask: state.selectedTask?.id === id ? null : state.selectedTask,
-    })),
-  selectTask: (task) => set({ selectedTask: task }),
-  completeTask: (id, completedBy, note) =>
-    set((state) => ({
-      tasks: state.tasks.map((t) =>
-        t.id === id
-          ? {
-              ...t,
-              status: (t.requiresApproval ? 'needs_approval' : 'complete') as Task['status'],
-              completedAt: new Date().toISOString(),
-              signOffNote: note,
-              signedOffBy: completedBy,
-              signedOffAt: new Date().toISOString(),
-            }
-          : t
-      ),
-    })),
-  approveTask: (taskId, approval) =>
-    set((state) => ({
-      tasks: state.tasks.map((t) =>
-        t.id === taskId
-          ? {
-              ...t,
-              approvals: [
-                ...(t.approvals || []),
-                {
-                  id: crypto.randomUUID(),
-                  approverId: approval.approverId,
-                  approverName: approval.approverName,
-                  status: approval.status,
-                  timestamp: new Date().toISOString(),
-                  note: approval.note,
-                },
-              ],
-              status: (approval.status === 'approved' ? 'complete' : 'open') as Task['status'],
-            }
-          : t
-      ),
-    })),
-  
-  getOpenTasks: () => get().tasks.filter((t) => t.status === 'open' || t.status === 'in_progress'),
-  getOverdueTasks: () => {
-    const now = new Date();
-    return get().tasks.filter(
-      (t) =>
-        (t.status === 'open' || t.status === 'in_progress') &&
-        t.dueDate &&
-        new Date(t.dueDate) < now
-    );
-  },
-  getTasksByVessel: (vesselId) => get().tasks.filter((t) => t.vesselId === vesselId),
-  getLogsByVessel: (vesselId) => get().logs.filter((l) => l.vesselId === vesselId),
-}));
+export const useLogTaskStore = create<LogTaskStore>()(
+  persist(
+    (set, get) => ({
+      logs: [],
+      tasks: [],
+      selectedLog: null,
+      selectedTask: null,
+
+      setLogs: (logs) => set({ logs }),
+      addLog: (log) => set((state) => ({ logs: [log, ...state.logs] })),
+      updateLog: (id, updates) =>
+        set((state) => ({
+          logs: state.logs.map((l) => (l.id === id ? { ...l, ...updates } : l)),
+        })),
+      deleteLog: (id) =>
+        set((state) => ({
+          logs: state.logs.filter((l) => l.id !== id),
+          selectedLog: state.selectedLog?.id === id ? null : state.selectedLog,
+        })),
+      selectLog: (log) => set({ selectedLog: log }),
+
+      setTasks: (tasks) => set({ tasks }),
+      addTask: (task) => set((state) => ({ tasks: [...state.tasks, task] })),
+      updateTask: (id, updates) =>
+        set((state) => ({
+          tasks: state.tasks.map((t) => (t.id === id ? { ...t, ...updates } : t)),
+        })),
+      deleteTask: (id) =>
+        set((state) => ({
+          tasks: state.tasks.filter((t) => t.id !== id),
+          selectedTask: state.selectedTask?.id === id ? null : state.selectedTask,
+        })),
+      selectTask: (task) => set({ selectedTask: task }),
+      completeTask: (id, completedBy, note) =>
+        set((state) => ({
+          tasks: state.tasks.map((t) =>
+            t.id === id
+              ? {
+                  ...t,
+                  status: (t.requiresApproval ? 'needs_approval' : 'complete') as Task['status'],
+                  completedAt: new Date().toISOString(),
+                  signOffNote: note,
+                  signedOffBy: completedBy,
+                  signedOffAt: new Date().toISOString(),
+                }
+              : t
+          ),
+        })),
+      approveTask: (taskId, approval) =>
+        set((state) => ({
+          tasks: state.tasks.map((t) =>
+            t.id === taskId
+              ? {
+                  ...t,
+                  approvals: [
+                    ...(t.approvals || []),
+                    {
+                      id: crypto.randomUUID(),
+                      approverId: approval.approverId,
+                      approverName: approval.approverName,
+                      status: approval.status,
+                      timestamp: new Date().toISOString(),
+                      note: approval.note,
+                    },
+                  ],
+                  status: (approval.status === 'approved' ? 'complete' : 'open') as Task['status'],
+                }
+              : t
+          ),
+        })),
+
+      getOpenTasks: () => get().tasks.filter((t) => t.status === 'open' || t.status === 'in_progress'),
+      getOverdueTasks: () => {
+        const now = new Date();
+        return get().tasks.filter(
+          (t) =>
+            (t.status === 'open' || t.status === 'in_progress') &&
+            t.dueDate &&
+            new Date(t.dueDate) < now
+        );
+      },
+      getTasksByVessel: (vesselId) => get().tasks.filter((t) => t.vesselId === vesselId),
+      getLogsByVessel: (vesselId) => get().logs.filter((l) => l.vesselId === vesselId),
+    }),
+    {
+      name: 'harbormesh-logbook',
+      partialize: (state) => ({
+        logs: state.logs,
+        tasks: state.tasks,
+      }),
+    }
+  )
+);
 
 // ============================================================================
 // TELEMETRY STORE
@@ -386,12 +421,12 @@ interface TelemetryStore {
     sog: number;
     lastUpdate: string;
   }>;
-  
+
   // Actions
   addMessage: (message: TelemetryMessage) => void;
   setMessages: (messages: TelemetryMessage[]) => void;
   clearOldMessages: (maxAge: number) => void;
-  
+
   // Getters
   getLatestByType: (type: string) => TelemetryMessage | undefined;
 }
@@ -403,13 +438,13 @@ export const useTelemetryStore = create<TelemetryStore>()((set, get) => ({
   latestEnvironment: null,
   latestEngine: {},
   aisTargets: [],
-  
+
   addMessage: (message) => {
     set((state) => {
       const newState: Partial<TelemetryStore> = {
         messages: [message, ...state.messages].slice(0, 1000),
       };
-      
+
       // Update derived state based on message type
       switch (message.messageType) {
         case 'position': {
@@ -481,20 +516,20 @@ export const useTelemetryStore = create<TelemetryStore>()((set, get) => ({
           break;
         }
       }
-      
+
       return newState as TelemetryStore;
     });
   },
-  
+
   setMessages: (messages) => set({ messages }),
-  
+
   clearOldMessages: (maxAge) => {
     const cutoff = Date.now() - maxAge;
     set((state) => ({
       messages: state.messages.filter((m) => new Date(m.timestamp).getTime() > cutoff),
     }));
   },
-  
+
   getLatestByType: (type) =>
     get().messages.find((m) => m.messageType === type),
 }));
@@ -575,7 +610,7 @@ interface AIStore {
   activeProvider: AIProviderConfig | null;
   isProcessing: boolean;
   conversation: Array<{ role: 'user' | 'assistant'; content: string; timestamp: string }>;
-  
+
   // Actions
   setProviders: (providers: AIProviderConfig[]) => void;
   addProvider: (provider: AIProviderConfig) => void;
@@ -594,7 +629,7 @@ export const useAIStore = create<AIStore>()(
       activeProvider: null,
       isProcessing: false,
       conversation: [],
-      
+
       setProviders: (providers) => set({ providers }),
       addProvider: (provider) =>
         set((state) => ({ providers: [...state.providers, provider] }),
@@ -689,7 +724,7 @@ interface SettingsStore {
     timeFormat: '12h' | '24h';
   };
   boatNode: BoatNodeSettings;
-  
+
   // Actions
   setConsent: (consent: ConsentSettings) => void;
   updateConsent: (updates: Partial<ConsentSettings>) => void;
@@ -711,7 +746,7 @@ export const useSettingsStore = create<SettingsStore>()(
 	        timeFormat: '24h' as const,
 	      },
 	      boatNode: DEFAULT_BOAT_NODE_SETTINGS,
-	      
+
 	      setConsent: (consent) => set({ consent }),
       updateConsent: (updates) =>
         set((state) => ({
@@ -1142,7 +1177,7 @@ interface OnboardingStore {
   items: Partial<Item>[];
   documents: Partial<Document>[];
   aiSuggestions: Array<{ id: string; type: string; title: string; description: string; accepted?: boolean }>;
-  
+
   // Actions
   startOnboarding: () => void;
   completeOnboarding: () => void;
@@ -1166,7 +1201,7 @@ export const useOnboardingStore = create<OnboardingStore>()((set) => ({
   items: [],
   documents: [],
   aiSuggestions: [],
-  
+
   startOnboarding: () => set({ isOnboarding: true, currentStep: 0 }),
   completeOnboarding: () => set({ isOnboarding: false }),
   setCurrentStep: (step) => set({ currentStep: step }),

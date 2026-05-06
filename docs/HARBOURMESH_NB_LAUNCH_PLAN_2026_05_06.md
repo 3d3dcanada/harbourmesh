@@ -43,7 +43,7 @@ Observed state:
 
 Last light checks:
 
-- `npm run test:run`: passing, 101 web tests.
+- `npm run test:run`: passing, 104 web tests.
 - `npm test` in `server`: passing, 9 API tests.
 - `npm run type-check`: passing.
 - `npm run type-check` in `server`: passing.
@@ -58,6 +58,7 @@ Last light checks:
 - Server chart package tests cover `/api/charts/nb/packages`, planned NB coast and inland-waterway packages, PMTiles/MBTiles/GeoJSON format declarations, community-overlay inclusion, and official CHS exclusion.
 - Web NMEA regression tests cover longitude degree-width parsing, 1990s RMC date handling, checksum rejection, DBT meter depth parsing, and legacy utility parser parity.
 - Web demo-source notice tests cover accessible status rendering for simulated/demo data surfaces.
+- Web local persistence tests cover vessel/items, documents, logs, and tasks writing to named local-first stores.
 - Local API smoke on port 3101: `/health`, `POST /api/community/soundings`, and `/api/community/soundings/summary` returned expected responses.
 - Local API smoke on port 3102: `POST /api/devices/register` and `GET /api/devices` returned expected responses.
 - Local API smoke on port 3103: `/health`, `POST /api/community/hazards`, and `/api/community/hazards/summary` returned expected responses.
@@ -93,6 +94,7 @@ Completed in the active checkout:
 - Added pending-by-default hazard review for backend community hazards so public GeoJSON overlays only include accepted hazards.
 - Added NMEA 0183 parser regressions and fixed GGA field indexing, longitude degree parsing, RMC date/time handling, checksum rejection, and DBT offset handling.
 - Added shared demo-data notices to vessel, boat map, inventory, documents, logs/tasks, and fleet surfaces, and stopped auto-saving demo documents/logs/tasks/vessel data into local stores.
+- Added local-first persistence for user-owned vessel data, items, documents, logs, and tasks.
 
 Still not done:
 
