@@ -77,7 +77,7 @@ function resolveEndpoint(endpoint: string, apiBaseUrl?: string): string {
 }
 
 function resolveApiKey(apiKey?: string): string | undefined {
-  return (apiKey ?? import.meta.env.VITE_HARBOURMESH_API_KEY)?.trim() || undefined;
+  return resolvePilotApiKey(apiKey);
 }
 
 function buildJsonHeaders(apiKey?: string): Record<string, string> {
@@ -212,3 +212,4 @@ export async function reviewCommunityHazard(
 
   return body;
 }
+import { resolvePilotApiKey } from './pilot-api-credentials';

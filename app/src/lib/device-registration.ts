@@ -1,5 +1,6 @@
 import type { BoatNodeSettings } from '@/store';
 import type { ConsentSettings } from '@/types';
+import { resolvePilotApiKey } from './pilot-api-credentials';
 
 export type DeviceRegistrationPayload = {
   deviceId: string;
@@ -47,7 +48,7 @@ function isReceipt(value: unknown): value is DeviceRegistrationReceipt {
 }
 
 function resolveApiKey(apiKey?: string): string | undefined {
-  return (apiKey ?? import.meta.env.VITE_HARBOURMESH_API_KEY)?.trim() || undefined;
+  return resolvePilotApiKey(apiKey);
 }
 
 function buildJsonHeaders(apiKey?: string): Record<string, string> {

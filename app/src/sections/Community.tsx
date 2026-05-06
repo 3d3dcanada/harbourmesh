@@ -44,6 +44,7 @@ import {
 import { prepareSoundingForCommunityUpload, type RawDepthSounding } from '@/lib/community-soundings';
 import { uploadCommunityHazardBatch, uploadCommunitySoundingBatch } from '@/lib/community-sync';
 import { buildLocalCommunityOverlayFeatures } from '@/lib/local-community-overlay';
+import { resolvePilotOperatorId } from '@/lib/pilot-api-credentials';
 import { cn } from '@/lib/utils';
 import {
   useCommunityDataStore,
@@ -318,7 +319,7 @@ export function Community() {
     hazardId: string,
     status: 'accepted' | 'rejected'
   ) => {
-    const reviewedBy = consent?.vesselId ?? boatNode.deviceId ?? 'local-operator';
+    const reviewedBy = resolvePilotOperatorId() ?? consent?.vesselId ?? boatNode.deviceId ?? 'local-operator';
 
     setReviewingHazardId(`${hazardId}:${status}`);
     setReviewError(null);

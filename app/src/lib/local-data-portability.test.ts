@@ -22,6 +22,7 @@ describe('local data portability', () => {
     const storage = createStorage({
       'harbormesh-vessel-data': JSON.stringify({ state: { vessels: [{ id: 'vessel-1' }] } }),
       'harbormesh-ai': JSON.stringify({ state: { providers: [{ apiKey: 'secret' }] } }),
+      'harbormesh-pilot-api': JSON.stringify({ apiKey: 'hm_secret' }),
     });
 
     const bundle = buildLocalDataExport(storage, '2026-05-06T12:30:00.000Z');
@@ -29,10 +30,11 @@ describe('local data portability', () => {
     expect(bundle).toMatchObject({
       schemaVersion: 'harbourmesh.local-data-export.v1',
       exportedAt: '2026-05-06T12:30:00.000Z',
-      excludedStores: ['harbormesh-ai'],
+      excludedStores: ['harbormesh-ai', 'harbormesh-pilot-api'],
     });
     expect(bundle.stores['harbormesh-vessel-data']).toEqual({ state: { vessels: [{ id: 'vessel-1' }] } });
     expect(bundle.stores).not.toHaveProperty('harbormesh-ai');
+    expect(bundle.stores).not.toHaveProperty('harbormesh-pilot-api');
   });
 
   it('round-trips valid exports into portable local stores', () => {
@@ -50,7 +52,7 @@ describe('local data portability', () => {
     expect(target.store['harbormesh-settings']).toContain('nautical');
   });
 
-  it('rejects malformed exports and bundles containing excluded AI stores', () => {
+  it('rejects malformed exports and bundles containing excluded secret stores', () => {
     expect(() => parseLocalDataExport(JSON.stringify({ ok: true }))).toThrow('not a HarbourMesh local data export');
     expect(() => parseLocalDataExport(JSON.stringify({
       schemaVersion: 'harbourmesh.local-data-export.v1',
@@ -59,6 +61,14 @@ describe('local data portability', () => {
         'harbormesh-ai': { state: { providers: [{ apiKey: 'secret' }] } },
       },
       excludedStores: [],
-    }))).toThrow('must not include AI provider secrets');
+    }))).toThrow('must not include secret stores');
+    expect(() => parseLocalDataExport(JSON.stringify({
+      schemaVersion: 'harbourmesh.local-data-export.v1',
+      exportedAt: '2026-05-06T12:30:00.000Z',
+      stores: {
+        'harbormesh-pilot-api': { apiKey: 'hm_secret' },
+      },
+      excludedStores: [],
+    }))).toThrow('must not include secret stores');
   });
 });

@@ -35,7 +35,7 @@ Observed state:
 - Telemetry: recorded Signal K replay and live Signal K WebSocket wiring now exist; live hardware ingest remains unverified.
 - Backend: a Fastify API now exists for NB chart source catalog, NB chart package manifests, community sounding upload, community hazard upload, hazard review, community reference GeoJSON overlay, device registration, and summary endpoints with JSONL local persistence; a PostGIS migration now defines the production target schema, but runtime storage is still JSONL.
 - Community mesh: local raw sounding capture, local hazard reporting, consent-safe offline upload queues, backend upload endpoints, pending-by-default hazard moderation, an operator review surface, review-operator API key identity, queryable review history, a raw reference overlay, and privacy-preserving aggregate GeoJSON now exist; vector tile products are still not implemented.
-- Security: docs no longer claim production readiness; the weak SHA-256 placeholder key derivation, token signing, and password hashing helpers have been replaced with PBKDF2-HMAC-SHA256/HMAC-SHA256 regressions, and the pilot API now has configurable scoped API-key gates for write/device plus review-operator keys that override client-supplied reviewer names. Full user auth, secret-management, and fleet/team identity are still not implemented.
+- Security: docs no longer claim production readiness; the weak SHA-256 placeholder key derivation, token signing, and password hashing helpers have been replaced with PBKDF2-HMAC-SHA256/HMAC-SHA256 regressions, the pilot API now has configurable scoped API-key gates for write/device plus review-operator keys that override client-supplied reviewer names, and the web app can save pilot credentials in a local secret store excluded from data exports. Full user auth, production secret management, and fleet/team identity are still not implemented.
 - CI/release: workflows have been adjusted to stop calling missing package scripts.
 - Testing: current tests now cover chart source metadata, Signal K mapping, community sounding extraction, local hazard reporting, device registration, store queue behavior, and crypto helper regressions; they still do not prove navigation safety, hardware ingest, production auth, browser layout, or security readiness.
 
@@ -43,14 +43,14 @@ Observed state:
 
 Last light checks:
 
-- `npm run test:run`: passing, 116 web tests.
+- `npm run test:run`: passing, 119 web tests.
 - `npm test` in `server`: passing, 24 server tests.
 - `npm run type-check`: passing.
 - `npm run type-check` in `server`: passing.
 - `npm run lint`: passing with 0 warnings.
 - `npm audit --json`: 0 vulnerabilities.
 - `npm run build`: passing for the web app.
-- `npm run build`: section-level code splitting is active; the initial app JS chunk is 279.29 kB / 88.73 kB gzip, the Navigation section chunk is 27.08 kB / 6.31 kB gzip, and the prior Vite oversized chunk warning is gone.
+- `npm run build`: section-level code splitting is active; the initial app JS chunk is 279.30 kB / 88.73 kB gzip, the Navigation section chunk is 27.08 kB / 6.31 kB gzip, the Settings section chunk is 44.40 kB / 9.00 kB gzip, and the prior Vite oversized chunk warning is gone.
 - `npm run build` in `server`: passing.
 - `npm audit --json` in `server`: 0 vulnerabilities.
 - Server API auth tests cover missing keys, accepted header keys, accepted Bearer keys, scoped write/review key separation, review-operator key parsing, reviewer identity override for audit history, protected device registry reads, and fail-closed production-style config.
@@ -62,7 +62,8 @@ Last light checks:
 - Web NMEA regression tests cover longitude degree-width parsing, 1990s RMC date handling, checksum rejection, DBT meter depth parsing, and legacy utility parser parity.
 - Web demo-source notice tests cover accessible status rendering for simulated/demo data surfaces.
 - Web local persistence tests cover vessel/items, documents, logs, and tasks writing to named local-first stores.
-- Web local data portability tests cover export/import round trips and verify AI provider secret stores are excluded.
+- Web local data portability tests cover export/import round trips and verify AI provider plus pilot API credential secret stores are excluded.
+- Web pilot API credential tests cover local secret-store save/clear, trim behavior, explicit override precedence, stored API key resolution, and stored review-operator identity resolution.
 - Web hazard moderation tests cover protected review-queue loading, review history loading, review receipt validation, API error handling, and invalid receipt rejection.
 - Web aggregate overlay tests cover aggregate GeoJSON fetching, privacy metadata validation, and rejection when raw IDs or official chart data are exposed.
 - Web chart artifact tests cover `/api/charts/nb/package-artifacts` client validation, GeoJSON artifact manifest loading, pending PMTiles/MBTiles flags, and rejection of artifacts that include official chart data.
@@ -76,6 +77,7 @@ Last light checks:
 - Browser smoke on port 5176: Dashboard and Community lazy-loaded through sidebar navigation at 1280x900 and the Community view rendered at 360x780.
 - Browser smoke on port 5176: demo-data notices rendered on Inventory, Documents, Logs & Tasks, Vessel, and Boat Map after sidebar navigation.
 - Browser smoke on port 5176: Settings Data & Storage rendered the Export All Data and Import Data controls at 1280x900.
+- Browser smoke on port 5173: Settings Network rendered Pilot API Credentials, saved a test API key/operator ID into `harbormesh-pilot-api`, verified the local secret-store value, cleared it, and verified the key was removed; the Network tab also stayed contained at 360x800.
 - Browser smoke on port 5176: Community Moderation rendered the Load Review Queue control at 1280x900 and the tab list stayed inside the 360x780 viewport.
 - Browser smoke on port 5176: Community Moderation rendered the Review History card and Load History control at 1280x900 and 360x780.
 - Browser smoke on port 5176: Community Map rendered the Load Aggregates control at 1280x900 and 360x780, with the map card contained at both sizes.
@@ -113,7 +115,8 @@ Completed in the active checkout:
 - Added NMEA 0183 parser regressions and fixed GGA field indexing, longitude degree parsing, RMC date/time handling, checksum rejection, and DBT offset handling.
 - Added shared demo-data notices to vessel, boat map, inventory, documents, logs/tasks, and fleet surfaces, and stopped auto-saving demo documents/logs/tasks/vessel data into local stores.
 - Added local-first persistence for user-owned vessel data, items, documents, logs, and tasks.
-- Wired Settings data export/import to a versioned local-data bundle that excludes AI provider secret storage.
+- Wired Settings data export/import to a versioned local-data bundle that excludes AI provider and pilot API credential secret storage.
+- Added Settings Network controls for local pilot API key and review-operator ID storage so community upload, device registration, and hazard review clients can use beta credentials without hard-coding them in the build environment.
 - Added an operator hazard moderation surface in Community with protected review-queue loading and accept/reject actions against the pilot API.
 - Split pilot API keys into backward-compatible legacy keys plus scoped write keys and review keys so intake/device access can be separated from hazard moderation.
 - Added `HARBOURMESH_REVIEW_OPERATOR_KEYS` support so review-scoped API keys can carry server-side operator IDs and override client-supplied reviewer names before moderation audit history is written.

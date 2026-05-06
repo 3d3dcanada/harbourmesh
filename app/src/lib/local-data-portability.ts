@@ -10,6 +10,7 @@ export const PORTABLE_STORE_KEYS = [
 
 export const EXCLUDED_STORE_KEYS = [
   'harbormesh-ai',
+  'harbormesh-pilot-api',
 ] as const;
 
 export type PortableStoreKey = typeof PORTABLE_STORE_KEYS[number];
@@ -62,8 +63,10 @@ export function parseLocalDataExport(contents: string): LocalDataExportBundle {
     throw new Error('HarbourMesh local data export is missing required fields');
   }
 
-  if ('harbormesh-ai' in parsed.stores) {
-    throw new Error('HarbourMesh local data export must not include AI provider secrets');
+  for (const key of EXCLUDED_STORE_KEYS) {
+    if (key in parsed.stores) {
+      throw new Error('HarbourMesh local data export must not include secret stores');
+    }
   }
 
   const stores: LocalDataExportBundle['stores'] = {};

@@ -21,6 +21,7 @@ import {
   Upload,
   Trash2,
   Info,
+  KeyRound,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -41,6 +42,11 @@ import {
   parseLocalDataExport,
   serializeLocalDataExport,
 } from '@/lib/local-data-portability';
+import {
+  clearPilotApiCredentials,
+  getPilotApiCredentials,
+  savePilotApiCredentials,
+} from '@/lib/pilot-api-credentials';
 import { useSettingsStore, useAIStore, useAppStore, type TelemetryMode } from '@/store';
 import { ThemeMode, UnitSystem, AIProviderType, SharePositionLevel } from '@/types';
 
@@ -52,6 +58,10 @@ export function Settings() {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [registeringDevice, setRegisteringDevice] = useState(false);
   const importInputRef = useRef<HTMLInputElement>(null);
+  const savedPilotApiCredentials = getPilotApiCredentials();
+  const [pilotApiKeyInput, setPilotApiKeyInput] = useState(savedPilotApiCredentials?.apiKey ?? '');
+  const [pilotOperatorIdInput, setPilotOperatorIdInput] = useState(savedPilotApiCredentials?.operatorId ?? '');
+  const [pilotCredentialsSavedAt, setPilotCredentialsSavedAt] = useState(savedPilotApiCredentials?.savedAt ?? null);
   const [newProvider, setNewProvider] = useState({
     name: '',
     providerType: AIProviderType.LOCAL,
@@ -117,6 +127,33 @@ export function Settings() {
       type: 'info',
       title: 'Boat Node Settings Saved',
       message: 'Navigation will reconnect with the current telemetry source.',
+    });
+  };
+
+  const handleSavePilotApiCredentials = () => {
+    const savedCredentials = savePilotApiCredentials({
+      apiKey: pilotApiKeyInput,
+      operatorId: pilotOperatorIdInput,
+    });
+    setPilotCredentialsSavedAt(savedCredentials?.savedAt ?? null);
+    addNotification({
+      type: savedCredentials ? 'success' : 'info',
+      title: savedCredentials ? 'Pilot API Credentials Saved' : 'Pilot API Credentials Cleared',
+      message: savedCredentials
+        ? 'Community sync and moderation requests will use the saved local credentials.'
+        : 'Community requests will fall back to environment configuration.',
+    });
+  };
+
+  const handleClearPilotApiCredentials = () => {
+    clearPilotApiCredentials();
+    setPilotApiKeyInput('');
+    setPilotOperatorIdInput('');
+    setPilotCredentialsSavedAt(null);
+    addNotification({
+      type: 'info',
+      title: 'Pilot API Credentials Cleared',
+      message: 'Community requests will fall back to environment configuration.',
     });
   };
 
@@ -629,6 +666,54 @@ export function Settings() {
         
         {/* Network Settings */}
         <TabsContent value="network" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <KeyRound className="h-5 w-5" />
+                Pilot API Credentials
+              </CardTitle>
+              <CardDescription>
+                Stored locally and excluded from local data exports.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>API Key</Label>
+                  <Input
+                    type="password"
+                    value={pilotApiKeyInput}
+                    onChange={(event) => setPilotApiKeyInput(event.target.value)}
+                    placeholder="hm_..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Review Operator ID</Label>
+                  <Input
+                    value={pilotOperatorIdInput}
+                    onChange={(event) => setPilotOperatorIdInput(event.target.value)}
+                    placeholder="nb-ops-reviewer"
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-muted-foreground">
+                  {pilotCredentialsSavedAt
+                    ? `Saved ${new Date(pilotCredentialsSavedAt).toLocaleString()}`
+                    : 'No local pilot credentials saved'}
+                </p>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={handleClearPilotApiCredentials}>
+                    Clear
+                  </Button>
+                  <Button onClick={handleSavePilotApiCredentials}>
+                    Save Credentials
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
