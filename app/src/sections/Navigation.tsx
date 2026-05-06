@@ -285,6 +285,7 @@ export function Navigation() {
             <div className="flex flex-wrap gap-2">
               <Badge variant="outline">{chartArtifactCounts.geojson ?? 0} GeoJSON</Badge>
               <Badge variant="outline">{chartArtifactCounts.mbtiles ?? 0} MBTiles</Badge>
+              <Badge variant="outline">{chartArtifactCounts.pmtiles ?? 0} PMTiles</Badge>
               {chartArtifacts.rules.pmtilesGenerationPending && <Badge variant="secondary">PMTiles pending</Badge>}
               {chartArtifacts.rules.mbtilesGenerationPending && <Badge variant="secondary">MBTiles pending</Badge>}
             </div>

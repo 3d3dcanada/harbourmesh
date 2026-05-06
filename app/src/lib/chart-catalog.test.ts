@@ -131,7 +131,7 @@ const artifactManifest: NBPilotChartPackageArtifactManifest = {
       officialChartDataIncluded: false,
       sourceIds: ['geonb-nbhn-watercourse'],
       excludedSourceIds: ['chs-official-digital-products'],
-      warnings: ['PMTiles pending'],
+      warnings: ['GeoJSON reference artifact'],
       sourceFeatureCount: 3,
       sourceFeatureSummaries: [{
         sourceId: 'geonb-nbhn-watercourse',
@@ -163,7 +163,42 @@ const artifactManifest: NBPilotChartPackageArtifactManifest = {
       officialChartDataIncluded: false,
       sourceIds: ['geonb-nbhn-watercourse'],
       excludedSourceIds: ['chs-official-digital-products'],
-      warnings: ['PMTiles pending'],
+      warnings: ['MBTiles reference artifact'],
+      sourceFeatureCount: 3,
+      sourceFeatureSummaries: [{
+        sourceId: 'geonb-nbhn-watercourse',
+        sourceLabel: 'GeoNB NBHN watercourses',
+        fetchedFeatureCount: 3,
+        maxFeatures: 10,
+        truncated: false,
+      }],
+      tileSummary: {
+        layerName: 'harbourmesh_reference',
+        minZoom: 6,
+        maxZoom: 8,
+        tileCount: 7,
+        bounds: {
+          south: 44.47,
+          west: -67.15,
+          north: 47.25,
+          east: -63.66,
+        },
+      },
+    },
+    {
+      id: 'artifact:nb-coast-reference:pmtiles',
+      packageId: 'nb-coast-reference',
+      region: 'NB_PILOT',
+      format: 'pmtiles',
+      mediaType: 'application/vnd.pmtiles',
+      fileName: 'nb-coast-reference.pmtiles',
+      byteLength: 8192,
+      sha256: 'c'.repeat(64),
+      generatedAt: '2026-05-06T12:16:00.000Z',
+      officialChartDataIncluded: false,
+      sourceIds: ['geonb-nbhn-watercourse'],
+      excludedSourceIds: ['chs-official-digital-products'],
+      warnings: ['PMTiles reference artifact'],
       sourceFeatureCount: 3,
       sourceFeatureSummaries: [{
         sourceId: 'geonb-nbhn-watercourse',
@@ -189,7 +224,7 @@ const artifactManifest: NBPilotChartPackageArtifactManifest = {
   rules: {
     artifactsAreReferenceOnly: true,
     officialChartDataExcluded: true,
-    pmtilesGenerationPending: true,
+    pmtilesGenerationPending: false,
     mbtilesGenerationPending: false,
   },
 };
@@ -246,7 +281,7 @@ describe('NB pilot chart catalog client', () => {
       id: 'nb-pilot-chart-package-artifacts',
       rules: {
         officialChartDataExcluded: true,
-        pmtilesGenerationPending: true,
+        pmtilesGenerationPending: false,
         mbtilesGenerationPending: false,
       },
     });

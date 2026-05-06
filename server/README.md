@@ -51,9 +51,9 @@ The container runs `node dist/index.js` as the non-root `node` user, stores pilo
 
 For PostGIS-backed runtime storage, run the container with `HARBOURMESH_DATABASE_URL=postgres://...` and set `HARBOURMESH_RUN_MIGRATIONS=true` only for a controlled migration pass.
 
-NB reference chart package artifacts can be written to disk with `npm run charts:nb:artifacts -- <output-dir>`. The writer creates compact GeoJSON files, starter MBTiles vector-tile archives, and `manifest.json`; generated files are reference-only and exclude official CHS chart data.
+NB reference chart package artifacts can be written to disk with `npm run charts:nb:artifacts -- <output-dir>`. The writer creates compact GeoJSON files, starter MBTiles vector-tile archives, PMTiles v3 MVT archives, and `manifest.json`; generated files are reference-only and exclude official CHS chart data.
 
-Set `HARBOURMESH_FETCH_GEONB_FEATURES=true` during artifact generation to query eligible GeoNB ArcGIS MapServer layers into the generated GeoJSON and MBTiles files. Use `HARBOURMESH_GEONB_MAX_FEATURES_PER_SOURCE=<number>` to cap each source during pilot runs.
+Set `HARBOURMESH_FETCH_GEONB_FEATURES=true` during artifact generation to query eligible GeoNB ArcGIS MapServer layers into the generated GeoJSON, MBTiles, and PMTiles files. Use `HARBOURMESH_GEONB_MAX_FEATURES_PER_SOURCE=<number>` to cap each source during pilot runs.
 
 The production persistence target starts in `db/migrations/0001_nb_pilot_community_mesh.sql`. With `HARBOURMESH_DATABASE_URL`, the current server writes devices, soundings, observations, hazards, and reviews to PostGIS. JSONL remains the no-database local fallback; aggregate cells and release manifests are still generated at request time.
 

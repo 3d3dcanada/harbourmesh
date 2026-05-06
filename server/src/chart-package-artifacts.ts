@@ -12,6 +12,7 @@ import {
   type NBPilotChartPackage,
 } from './chart-catalog.js';
 import { fetchGeoNBSourceFeatures, type GeoNBFeatureFetchResult } from './geonb-feature-client.js';
+import { buildPmTilesArchive } from './pmtiles-writer.js';
 
 const require = createRequire(import.meta.url);
 const MBTILES_LAYER_NAME = 'harbourmesh_reference';
@@ -39,8 +40,8 @@ type ChartPackageArtifactContent = FeatureCollection<Geometry, GeoJsonProperties
   };
 };
 
-type ChartPackageArtifactFormat = 'geojson' | 'mbtiles';
-type ChartPackageArtifactMediaType = 'application/geo+json' | 'application/x-sqlite3';
+type ChartPackageArtifactFormat = 'geojson' | 'mbtiles' | 'pmtiles';
+type ChartPackageArtifactMediaType = 'application/geo+json' | 'application/x-sqlite3' | 'application/vnd.pmtiles';
 
 export type NBPilotChartPackageArtifact = {
   id: string;
@@ -128,6 +129,36 @@ type TileAddress = {
   z: number;
   x: number;
   y: number;
+};
+
+type BuiltVectorTile = TileAddress & {
+  bytes: Buffer;
+};
+
+type BuiltVectorTileSet = {
+  content: ChartPackageArtifactContent;
+  minZoom: number;
+  maxZoom: number;
+  tiles: BuiltVectorTile[];
+  metadata: {
+    name: string;
+    description: string;
+    version: string;
+    type: 'overlay';
+    attribution: string;
+    bounds: [number, number, number, number];
+    center: [number, number, number];
+    minzoom: number;
+    maxzoom: number;
+    vector_layers: Array<{
+      id: typeof MBTILES_LAYER_NAME;
+      description: string;
+      minzoom: number;
+      maxzoom: number;
+      fields: Record<string, string>;
+    }>;
+  };
+  tileSummary: NonNullable<NBPilotChartPackageArtifact['tileSummary']>;
 };
 
 type SqlJsStatic = Awaited<ReturnType<typeof initSqlJs>>;
@@ -277,11 +308,56 @@ function artifactContentToGeoJson(content: ChartPackageArtifactContent): Feature
   };
 }
 
-async function buildMbTilesArtifact(
+function buildTileMetadata(
+  chartPackage: NBPilotChartPackage,
+  minZoom: number,
+  maxZoom: number
+): BuiltVectorTileSet['metadata'] {
+  return {
+    name: chartPackage.id,
+    description: `${chartPackage.label} HarbourMesh reference-only boundary and source-policy vector tiles`,
+    version: '1',
+    type: 'overlay',
+    attribution: chartPackage.sourceIds.join(', '),
+    bounds: [
+      chartPackage.bounds.west,
+      chartPackage.bounds.south,
+      chartPackage.bounds.east,
+      chartPackage.bounds.north,
+    ],
+    center: [
+      (chartPackage.bounds.west + chartPackage.bounds.east) / 2,
+      (chartPackage.bounds.south + chartPackage.bounds.north) / 2,
+      minZoom,
+    ],
+    minzoom: minZoom,
+    maxzoom: maxZoom,
+    vector_layers: [
+      {
+        id: MBTILES_LAYER_NAME,
+        description: 'HarbourMesh reference-only NB package boundary and source policy metadata',
+        minzoom: minZoom,
+        maxzoom: maxZoom,
+        fields: {
+          packageId: 'String',
+          label: 'String',
+          region: 'String',
+          intendedUse: 'String',
+          communityOverlayIncluded: 'Boolean',
+          officialChartDataIncluded: 'Boolean',
+          harbourmeshSourceId: 'String',
+          harbourmeshReferenceOnly: 'Boolean',
+        },
+      },
+    ],
+  };
+}
+
+function buildVectorTileSet(
   chartPackage: NBPilotChartPackage,
   generatedAt: string,
   sourceBundle: PackageSourceFeatureBundle
-): Promise<BuiltNBPilotChartPackageArtifact> {
+): BuiltVectorTileSet {
   const minZoom = chartPackage.minZoom;
   const maxZoom = Math.min(chartPackage.maxZoom, chartPackage.minZoom + MBTILES_ZOOM_SPAN);
   const content = buildArtifactContent(chartPackage, generatedAt, sourceBundle.features);
@@ -291,10 +367,46 @@ async function buildMbTilesArtifact(
     extent: 4096,
     buffer: 64,
   });
+  const tileAddresses = enumerateTiles(chartPackage.bounds, minZoom, maxZoom);
+  const tiles: BuiltVectorTile[] = [];
+
+  for (const tileAddress of tileAddresses) {
+    const tile = tileIndex.getTile(tileAddress.z, tileAddress.x, tileAddress.y);
+    if (!tile || tile.features.length === 0) continue;
+
+    tiles.push({
+      ...tileAddress,
+      bytes: Buffer.from(fromGeojsonVt(
+        { [MBTILES_LAYER_NAME]: tile as unknown as ReturnType<typeof geojsonvt> },
+        { version: 2, extent: 4096 }
+      )),
+    });
+  }
+
+  return {
+    content,
+    minZoom,
+    maxZoom,
+    tiles,
+    metadata: buildTileMetadata(chartPackage, minZoom, maxZoom),
+    tileSummary: {
+      layerName: MBTILES_LAYER_NAME,
+      minZoom,
+      maxZoom,
+      tileCount: tiles.length,
+      bounds: chartPackage.bounds,
+    },
+  };
+}
+
+async function buildMbTilesArtifact(
+  chartPackage: NBPilotChartPackage,
+  generatedAt: string,
+  sourceBundle: PackageSourceFeatureBundle
+): Promise<BuiltNBPilotChartPackageArtifact> {
+  const tileSet = buildVectorTileSet(chartPackage, generatedAt, sourceBundle);
   const SQL = await loadSqlJs();
   const db = new SQL.Database();
-  const tileAddresses = enumerateTiles(chartPackage.bounds, minZoom, maxZoom);
-  let tileCount = 0;
 
   try {
     db.run(`
@@ -304,35 +416,18 @@ async function buildMbTilesArtifact(
     `);
 
     const metadata = [
-      ['name', chartPackage.id],
-      ['description', `${chartPackage.label} HarbourMesh reference-only boundary and source-policy vector tiles`],
-      ['version', '1'],
-      ['type', 'overlay'],
+      ['name', tileSet.metadata.name],
+      ['description', tileSet.metadata.description],
+      ['version', tileSet.metadata.version],
+      ['type', tileSet.metadata.type],
       ['format', 'pbf'],
-      ['bounds', `${chartPackage.bounds.west},${chartPackage.bounds.south},${chartPackage.bounds.east},${chartPackage.bounds.north}`],
-      ['center', `${(chartPackage.bounds.west + chartPackage.bounds.east) / 2},${(chartPackage.bounds.south + chartPackage.bounds.north) / 2},${minZoom}`],
-      ['minzoom', String(minZoom)],
-      ['maxzoom', String(maxZoom)],
-      ['attribution', chartPackage.sourceIds.join(', ')],
+      ['bounds', tileSet.metadata.bounds.join(',')],
+      ['center', tileSet.metadata.center.join(',')],
+      ['minzoom', String(tileSet.minZoom)],
+      ['maxzoom', String(tileSet.maxZoom)],
+      ['attribution', tileSet.metadata.attribution],
       ['json', JSON.stringify({
-        vector_layers: [
-          {
-            id: MBTILES_LAYER_NAME,
-            description: 'HarbourMesh reference-only NB package boundary and source policy metadata',
-            minzoom: minZoom,
-            maxzoom: maxZoom,
-            fields: {
-              packageId: 'String',
-              label: 'String',
-              region: 'String',
-              intendedUse: 'String',
-              communityOverlayIncluded: 'Boolean',
-              officialChartDataIncluded: 'Boolean',
-              harbourmeshSourceId: 'String',
-              harbourmeshReferenceOnly: 'Boolean',
-            },
-          },
-        ],
+        vector_layers: tileSet.metadata.vector_layers,
       })],
     ];
     const insertMetadata = db.prepare('INSERT INTO metadata (name, value) VALUES (?, ?)');
@@ -340,17 +435,9 @@ async function buildMbTilesArtifact(
     insertMetadata.free();
 
     const insertTile = db.prepare('INSERT INTO tiles (zoom_level, tile_column, tile_row, tile_data) VALUES (?, ?, ?, ?)');
-    for (const tileAddress of tileAddresses) {
-      const tile = tileIndex.getTile(tileAddress.z, tileAddress.x, tileAddress.y);
-      if (!tile || tile.features.length === 0) continue;
-
-      const tmsY = 2 ** tileAddress.z - 1 - tileAddress.y;
-      const tileBytes = fromGeojsonVt(
-        { [MBTILES_LAYER_NAME]: tile as unknown as ReturnType<typeof geojsonvt> },
-        { version: 2, extent: 4096 }
-      );
-      insertTile.run([tileAddress.z, tileAddress.x, tmsY, tileBytes]);
-      tileCount += 1;
+    for (const tile of tileSet.tiles) {
+      const tmsY = 2 ** tile.z - 1 - tile.y;
+      insertTile.run([tile.z, tile.x, tmsY, tile.bytes]);
     }
     insertTile.free();
 
@@ -377,18 +464,58 @@ async function buildMbTilesArtifact(
       ],
       sourceFeatureCount: sourceBundle.features.length,
       sourceFeatureSummaries: sourceBundle.summaries,
-      tileSummary: {
-        layerName: MBTILES_LAYER_NAME,
-        minZoom,
-        maxZoom,
-        tileCount,
-        bounds: chartPackage.bounds,
-      },
+      tileSummary: tileSet.tileSummary,
       bytes,
     };
   } finally {
     db.close();
   }
+}
+
+function buildPmTilesArtifact(
+  chartPackage: NBPilotChartPackage,
+  generatedAt: string,
+  sourceBundle: PackageSourceFeatureBundle
+): BuiltNBPilotChartPackageArtifact {
+  const tileSet = buildVectorTileSet(chartPackage, generatedAt, sourceBundle);
+  const bytes = buildPmTilesArchive({
+    tiles: tileSet.tiles.map((tile) => ({
+      z: tile.z,
+      x: tile.x,
+      y: tile.y,
+      data: tile.bytes,
+    })),
+    minZoom: tileSet.minZoom,
+    maxZoom: tileSet.maxZoom,
+    bounds: chartPackage.bounds,
+    metadata: tileSet.metadata,
+  });
+  const { byteLength, sha256 } = hashBytes(bytes);
+
+  return {
+    id: `artifact:${chartPackage.id}:pmtiles`,
+    packageId: chartPackage.id,
+    region: chartPackage.region,
+    format: 'pmtiles',
+    mediaType: 'application/vnd.pmtiles',
+    fileName: `${chartPackage.id}.pmtiles`,
+    byteLength,
+    sha256,
+    generatedAt,
+    officialChartDataIncluded: false,
+    sourceIds: chartPackage.sourceIds,
+    excludedSourceIds: chartPackage.excludedSourceIds,
+    warnings: [
+      ...chartPackage.warnings,
+      sourceBundle.features.length > 0
+        ? 'PMTiles contains capped eligible GeoNB source features plus package boundary/source-policy tiles; full production tiling still has to remove pilot feature limits.'
+        : 'PMTiles contains starter reference boundary/source-policy vector tiles; eligible hydrography feature conversion still has to be expanded.',
+    ],
+    sourceFeatureCount: sourceBundle.features.length,
+    sourceFeatureSummaries: sourceBundle.summaries,
+    tileSummary: tileSet.tileSummary,
+    bytes,
+  };
 }
 
 function summarizeGeoNBFetch(fetchResult: GeoNBFeatureFetchResult): NBPilotChartPackageArtifact['sourceFeatureSummaries'][number] {
@@ -443,6 +570,7 @@ async function buildArtifacts(
     const sourceBundle = await loadPackageSourceFeatures(chartPackage, options);
     artifacts.push(buildGeoJsonArtifact(chartPackage, generatedAt, sourceBundle));
     artifacts.push(await buildMbTilesArtifact(chartPackage, generatedAt, sourceBundle));
+    artifacts.push(buildPmTilesArtifact(chartPackage, generatedAt, sourceBundle));
   }
 
   return artifacts;
@@ -467,7 +595,7 @@ export async function getNBPilotChartPackageArtifactManifest(
     rules: {
       artifactsAreReferenceOnly: true,
       officialChartDataExcluded: true,
-      pmtilesGenerationPending: true,
+      pmtilesGenerationPending: false,
       mbtilesGenerationPending: false,
     },
   };

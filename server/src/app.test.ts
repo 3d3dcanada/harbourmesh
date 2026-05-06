@@ -701,7 +701,7 @@ describe('HarbourMesh API', () => {
       rules: {
         artifactsAreReferenceOnly: true,
         officialChartDataExcluded: true,
-        pmtilesGenerationPending: true,
+        pmtilesGenerationPending: false,
         mbtilesGenerationPending: false,
       },
     });
@@ -726,6 +726,19 @@ describe('HarbourMesh API', () => {
           packageId: 'nb-coast-reference',
           format: 'mbtiles',
           mediaType: 'application/x-sqlite3',
+          officialChartDataIncluded: false,
+          excludedSourceIds: expect.arrayContaining(['chs-official-digital-products']),
+          byteLength: expect.any(Number),
+          sha256: expect.stringMatching(/^[a-f0-9]{64}$/),
+          tileSummary: expect.objectContaining({
+            layerName: 'harbourmesh_reference',
+            tileCount: expect.any(Number),
+          }),
+        }),
+        expect.objectContaining({
+          packageId: 'nb-coast-reference',
+          format: 'pmtiles',
+          mediaType: 'application/vnd.pmtiles',
           officialChartDataIncluded: false,
           excludedSourceIds: expect.arrayContaining(['chs-official-digital-products']),
           byteLength: expect.any(Number),
