@@ -41,6 +41,25 @@ const sampleBatch: CommunitySoundingBatch = {
   },
 };
 
+const sampleDeviceRegistration = {
+  deviceId: 'boat-node-001',
+  vesselId: 'vessel-1',
+  displayName: 'NB Pilot Boat Node',
+  kind: 'boat_node',
+  softwareVersion: '0.1.0',
+  signalKBaseUrl: 'http://boat-node.local:3000',
+  registeredAt: '2026-05-06T12:00:00.000Z',
+  consentCapturedAt: '2026-05-06T11:59:00.000Z',
+  capabilities: {
+    position: true,
+    depth: true,
+    ais: true,
+    radar: false,
+    sonar: true,
+    weather: false,
+  },
+};
+
 async function createTestApp() {
   const testRoot = join(process.cwd(), 'tmp');
   await mkdir(testRoot, { recursive: true });
@@ -109,6 +128,60 @@ describe('HarbourMesh API', () => {
         NB_PILOT: 1,
       },
       latestTimestamp: '2026-05-06T12:00:00.000Z',
+    });
+  });
+
+  it('registers and lists Boat Node devices', async () => {
+    const app = await createTestApp();
+    const registration = await app.inject({
+      method: 'POST',
+      url: '/api/devices/register',
+      payload: sampleDeviceRegistration,
+    });
+
+    expect(registration.statusCode).toBe(202);
+    expect(registration.json()).toMatchObject({
+      ok: true,
+      deviceId: 'boat-node-001',
+      status: 'registered',
+    });
+
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/devices',
+    });
+
+    expect(list.statusCode).toBe(200);
+    expect(list.json()).toMatchObject({
+      devices: [
+        {
+          deviceId: 'boat-node-001',
+          capabilities: {
+            depth: true,
+            sonar: true,
+          },
+        },
+      ],
+    });
+  });
+
+  it('rejects invalid device registration payloads', async () => {
+    const app = await createTestApp();
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/devices/register',
+      payload: {
+        ...sampleDeviceRegistration,
+        capabilities: {
+          position: true,
+        },
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toMatchObject({
+      ok: false,
+      error: 'invalid_device_registration',
     });
   });
 });

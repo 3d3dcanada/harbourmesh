@@ -637,6 +637,9 @@ export const useAIStore = create<AIStore>()(
 export type TelemetryMode = 'replay' | 'signalk' | 'simulated';
 
 export interface BoatNodeSettings {
+  deviceId: string;
+  deviceName: string;
+  deviceRegisteredAt?: string;
   telemetryMode: TelemetryMode;
   signalKBaseUrl: string;
   signalKSubscribe: 'self' | 'all' | 'none';
@@ -644,9 +647,19 @@ export interface BoatNodeSettings {
   fallbackToReplay: boolean;
   surfaceToTransducerMeters: number;
   transducerToKeelMeters: number;
+  capabilities: {
+    position: boolean;
+    depth: boolean;
+    ais: boolean;
+    radar: boolean;
+    sonar: boolean;
+    weather: boolean;
+  };
 }
 
 export const DEFAULT_BOAT_NODE_SETTINGS: BoatNodeSettings = {
+  deviceId: 'boat-node-001',
+  deviceName: 'NB Pilot Boat Node',
   telemetryMode: 'replay',
   signalKBaseUrl: 'http://192.168.1.100:3000',
   signalKSubscribe: 'self',
@@ -654,6 +667,14 @@ export const DEFAULT_BOAT_NODE_SETTINGS: BoatNodeSettings = {
   fallbackToReplay: true,
   surfaceToTransducerMeters: 0.5,
   transducerToKeelMeters: 0.3,
+  capabilities: {
+    position: true,
+    depth: true,
+    ais: true,
+    radar: false,
+    sonar: true,
+    weather: false,
+  },
 };
 
 interface SettingsStore {

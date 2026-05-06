@@ -43,8 +43,8 @@ Observed state:
 
 Last light checks:
 
-- `npm run test:run`: passing, 74 web tests.
-- `npm test` in `server`: passing, 3 API tests.
+- `npm run test:run`: passing, 76 web tests.
+- `npm test` in `server`: passing, 5 API tests.
 - `npm run type-check`: passing.
 - `npm run type-check` in `server`: passing.
 - `npm run lint`: passing with 60 warnings.
@@ -53,6 +53,7 @@ Last light checks:
 - `npm run build` in `server`: passing.
 - `npm audit --json` in `server`: 0 vulnerabilities.
 - Local API smoke on port 3101: `/health`, `POST /api/community/soundings`, and `/api/community/soundings/summary` returned expected responses.
+- Local API smoke on port 3102: `POST /api/devices/register` and `GET /api/devices` returned expected responses.
 - No browser test, live Signal K hardware test, or real-vessel API load test was run for this snapshot.
 
 ## Implementation Progress On 2026-05-06
@@ -67,10 +68,11 @@ Completed in the active checkout:
 - Added local raw depth sounding capture from telemetry with consent, position precision, quality flags, and transducer offsets.
 - Added community sounding upload payloads and local offline sync batches that explicitly exclude official chart data and raw local positions.
 - Added a Fastify community sounding API at `/api/community/soundings`, strict Zod validation, JSONL storage, summary endpoint, and frontend sync adapter.
+- Added Boat Node device identity settings and `/api/devices/register` so contributed data can carry registered source provenance.
 
 Still not done:
 
-- No production auth, device registration, PostGIS schema, moderation workflow, or public aggregate tile product exists.
+- No production auth, PostGIS schema, moderation workflow, or public aggregate tile product exists.
 - No browser/mobile visual verification has been run in this session.
 - No real Signal K server, sonar, radar, AIS receiver, or Boat Node hardware has been tested.
 - Community map, conditions, hazards, and statistics still contain demo data outside the new bathymetry path.

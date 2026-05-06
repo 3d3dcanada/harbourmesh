@@ -438,8 +438,10 @@ describe('Settings Store', () => {
   it('defaults telemetry to recorded replay for hardware-free NB testing', () => {
     const { result } = renderHook(() => useSettingsStore());
 
+    expect(result.current.boatNode.deviceId).toBe('boat-node-001');
     expect(result.current.boatNode.telemetryMode).toBe('replay');
     expect(result.current.boatNode.fallbackToReplay).toBe(true);
+    expect(result.current.boatNode.capabilities.depth).toBe(true);
   });
 
   it('updates Boat Node settings without replacing the full settings object', () => {
@@ -450,14 +452,17 @@ describe('Settings Store', () => {
         telemetryMode: 'signalk',
         signalKBaseUrl: 'http://boat-node.local:3000',
         connectionTimeoutSeconds: 15,
+        deviceRegisteredAt: '2026-05-06T12:00:00.000Z',
       });
     });
 
     expect(result.current.boatNode).toMatchObject({
+      deviceId: 'boat-node-001',
       telemetryMode: 'signalk',
       signalKBaseUrl: 'http://boat-node.local:3000',
       connectionTimeoutSeconds: 15,
       fallbackToReplay: true,
+      deviceRegisteredAt: '2026-05-06T12:00:00.000Z',
     });
   });
 });

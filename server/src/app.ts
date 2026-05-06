@@ -6,16 +6,23 @@ import {
   createCommunitySoundingRepository,
   type CommunitySoundingRepository,
 } from './community-sounding-repository.js';
+import {
+  createDeviceRepository,
+  type DeviceRepository,
+} from './device-repository.js';
+import { deviceRegistrationSchema } from './devices.js';
 
 export type BuildAppOptions = {
   dataDir: string;
   repository?: CommunitySoundingRepository;
+  deviceRepository?: DeviceRepository;
   logger?: boolean;
 };
 
 export async function buildApp(options: BuildAppOptions): Promise<FastifyInstance> {
   const app = Fastify({ logger: options.logger ?? false });
   const repository = options.repository ?? createCommunitySoundingRepository(options.dataDir);
+  const deviceRepository = options.deviceRepository ?? createDeviceRepository(options.dataDir);
 
   await app.register(cors, {
     origin: true,
@@ -49,6 +56,41 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   });
 
   app.get('/api/community/soundings/summary', async () => repository.getSummary());
+
+  app.post('/api/devices/register', async (request, reply) => {
+    try {
+      const registration = deviceRegistrationSchema.parse(request.body);
+      const receipt = await deviceRepository.registerDevice(registration);
+      return reply.code(202).send(receipt);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return reply.code(400).send({
+          ok: false,
+          error: 'invalid_device_registration',
+          issues: error.issues.map((issue) => ({
+            path: issue.path.join('.'),
+            message: issue.message,
+          })),
+        });
+      }
+
+      throw error;
+    }
+  });
+
+  app.get('/api/devices', async () => ({
+    devices: await deviceRepository.listDevices(),
+  }));
+
+  app.get('/api/devices/:deviceId', async (request, reply) => {
+    const { deviceId } = request.params as { deviceId: string };
+    const device = await deviceRepository.getDevice(deviceId);
+    if (!device) {
+      return reply.code(404).send({ ok: false, error: 'device_not_found' });
+    }
+
+    return device;
+  });
 
   return app;
 }

@@ -43,6 +43,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { buildSignalKStreamUrl } from '@/lib/signalk';
+import { buildBoatNodeRegistrationPayload, registerBoatNode } from '@/lib/device-registration';
 import { useSettingsStore, useAIStore, useAppStore, type TelemetryMode } from '@/store';
 import { ThemeMode, UnitSystem, AIProviderType, SharePositionLevel } from '@/types';
 
@@ -52,6 +53,7 @@ export function Settings() {
   const { connectionStatus, addNotification } = useAppStore();
   const [showAddAI, setShowAddAI] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [registeringDevice, setRegisteringDevice] = useState(false);
   const [newProvider, setNewProvider] = useState({
     name: '',
     providerType: AIProviderType.LOCAL,
@@ -118,6 +120,31 @@ export function Settings() {
       title: 'Boat Node Settings Saved',
       message: 'Navigation will reconnect with the current telemetry source.',
     });
+  };
+
+  const handleRegisterBoatNode = async () => {
+    setRegisteringDevice(true);
+
+    try {
+      const payload = buildBoatNodeRegistrationPayload(boatNode, consent);
+      const receipt = await registerBoatNode(payload);
+      updateBoatNodeSettings({
+        deviceRegisteredAt: receipt.registeredAt,
+      });
+      addNotification({
+        type: 'success',
+        title: 'Boat Node Registered',
+        message: `${receipt.deviceId} is registered for community data provenance.`,
+      });
+    } catch (error) {
+      addNotification({
+        type: 'error',
+        title: 'Boat Node Registration Failed',
+        message: error instanceof Error ? error.message : 'Registration failed.',
+      });
+    } finally {
+      setRegisteringDevice(false);
+    }
   };
   
   return (
@@ -577,6 +604,22 @@ export function Settings() {
 	                </Badge>
 	              </div>
 	              <Separator />
+	              <div className="grid gap-4 sm:grid-cols-2">
+	                <div className="space-y-2">
+	                  <Label>Boat Node ID</Label>
+	                  <Input
+	                    value={boatNode.deviceId}
+	                    onChange={(event) => updateBoatNodeSettings({ deviceId: event.target.value })}
+	                  />
+	                </div>
+	                <div className="space-y-2">
+	                  <Label>Boat Node Name</Label>
+	                  <Input
+	                    value={boatNode.deviceName}
+	                    onChange={(event) => updateBoatNodeSettings({ deviceName: event.target.value })}
+	                  />
+	                </div>
+	              </div>
 	              <div className="space-y-2">
 	                <Label>Telemetry Source</Label>
 	                <Select
@@ -673,6 +716,29 @@ export function Settings() {
 	                  checked={boatNode.fallbackToReplay}
 	                  onCheckedChange={(checked) => updateBoatNodeSettings({ fallbackToReplay: checked })}
 	                />
+	              </div>
+	              <div className="rounded-lg border p-3">
+	                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+	                  <div>
+	                    <p className="font-medium">Device Registration</p>
+	                    <p className="text-sm text-muted-foreground">
+	                      {boatNode.deviceRegisteredAt
+	                        ? `Registered ${new Date(boatNode.deviceRegisteredAt).toLocaleString()}`
+	                        : 'Not registered with the community API'}
+	                    </p>
+	                  </div>
+	                  <Button size="sm" variant="outline" onClick={handleRegisterBoatNode} disabled={registeringDevice}>
+	                    <Wifi className="mr-2 h-4 w-4" />
+	                    {registeringDevice ? 'Registering' : 'Register Node'}
+	                  </Button>
+	                </div>
+	                <div className="mt-3 flex flex-wrap gap-2">
+	                  {Object.entries(boatNode.capabilities).map(([capability, enabled]) => (
+	                    <Badge key={capability} variant={enabled ? 'default' : 'secondary'} className="capitalize">
+	                      {capability}
+	                    </Badge>
+	                  ))}
+	                </div>
 	              </div>
 	              <Button onClick={applyBoatNodeSettings}>
 	                <RefreshCw className="h-4 w-4 mr-2" />
