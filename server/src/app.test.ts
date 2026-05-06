@@ -1107,12 +1107,30 @@ describe('HarbourMesh API', () => {
     ]);
     expect(releaseArtifacts.json().artifacts.find((artifact: { format: string }) => artifact.format === 'pmtiles')).toMatchObject({
       mediaType: 'application/vnd.pmtiles',
+      downloadPath: '/api/community/releases/aggregates/latest/artifacts/pmtiles',
       tileSummary: {
         layerName: 'harbourmesh_community_aggregate',
         tileCount: expect.any(Number),
       },
     });
     expect(JSON.stringify(releaseArtifacts.json())).not.toContain('vessel-1');
+
+    const pmtilesArtifact = releaseArtifacts.json().artifacts.find((artifact: { format: string }) => artifact.format === 'pmtiles');
+    const pmtilesDownload = await app.inject({
+      method: 'GET',
+      url: '/api/community/releases/aggregates/latest/artifacts/pmtiles',
+    });
+    expect(pmtilesDownload.statusCode).toBe(200);
+    expect(pmtilesDownload.headers['content-type']).toContain('application/vnd.pmtiles');
+    expect(pmtilesDownload.headers['x-harbourmesh-sha256']).toBe(pmtilesArtifact.sha256);
+    expect(pmtilesDownload.headers['x-harbourmesh-vessel-ids-included']).toBe('false');
+    expect(pmtilesDownload.rawPayload.subarray(0, 7).toString('utf8')).toBe('PMTiles');
+
+    const missingArtifact = await app.inject({
+      method: 'GET',
+      url: '/api/community/releases/aggregates/latest/artifacts/kml',
+    });
+    expect(missingArtifact.statusCode).toBe(404);
   });
 
   it('publishes reviewed aggregate releases through the release endpoint', async () => {

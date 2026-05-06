@@ -19,7 +19,10 @@ import {
   createCommunityAggregateReleaseRepository,
   type CommunityAggregateReleaseRepository,
 } from './community-aggregate-release-repository.js';
-import { getCommunityAggregateReleaseArtifactManifest } from './community-aggregate-release-artifacts.js';
+import {
+  buildCommunityAggregateReleaseArtifacts,
+  getCommunityAggregateReleaseArtifactManifest,
+} from './community-aggregate-release-artifacts.js';
 import { buildCommunityGeoJsonOverlay } from './community-geojson.js';
 import { buildCommunityAggregateReleaseManifest } from './community-release-manifests.js';
 import { communityHazardBatchSchema, communityHazardReviewSchema } from './community-hazards.js';
@@ -189,6 +192,32 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     const aggregate = buildCommunityAggregateGeoJsonFromStoredRelease(release, cells);
 
     return getCommunityAggregateReleaseArtifactManifest(release, aggregate);
+  });
+
+  app.get('/api/community/releases/aggregates/latest/artifacts/:format', async (request, reply) => {
+    const { format } = request.params as { format: string };
+    if (format !== 'geojson' && format !== 'mbtiles' && format !== 'pmtiles') {
+      return reply.code(404).send({ ok: false, error: 'aggregate_release_artifact_not_found' });
+    }
+
+    const release = await getOrPublishLatestAggregateRelease();
+    const cells = await aggregateReleaseRepository.listAggregateCells(release.id);
+    const aggregate = buildCommunityAggregateGeoJsonFromStoredRelease(release, cells);
+    const artifacts = await buildCommunityAggregateReleaseArtifacts(release, aggregate);
+    const artifact = artifacts.find((candidate) => candidate.format === format);
+    if (!artifact) {
+      return reply.code(404).send({ ok: false, error: 'aggregate_release_artifact_not_available' });
+    }
+
+    return reply
+      .type(artifact.mediaType)
+      .header('Content-Disposition', `attachment; filename="${artifact.fileName}"`)
+      .header('X-HarbourMesh-Release-Id', artifact.releaseId)
+      .header('X-HarbourMesh-SHA256', artifact.sha256)
+      .header('X-HarbourMesh-Official-Chart-Data-Included', 'false')
+      .header('X-HarbourMesh-Raw-Record-Ids-Included', 'false')
+      .header('X-HarbourMesh-Vessel-Ids-Included', 'false')
+      .send(artifact.bytes);
   });
 
   app.get('/api/community/releases/aggregates', async () => ({

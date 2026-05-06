@@ -76,6 +76,7 @@ export type CommunityAggregateReleaseArtifact = {
   format: CommunityAggregateReleaseArtifactFormat;
   mediaType: 'application/geo+json' | 'application/x-sqlite3' | 'application/vnd.pmtiles';
   fileName: string;
+  downloadPath: string;
   byteLength: number;
   sha256: string;
   generatedAt: string;
@@ -129,6 +130,10 @@ function releaseDate(release: CommunityAggregateReleaseManifest): string {
   return release.generatedAt.slice(0, 10);
 }
 
+function artifactDownloadPath(format: CommunityAggregateReleaseArtifactFormat): string {
+  return `/api/community/releases/aggregates/latest/artifacts/${format}`;
+}
+
 function buildGeoJsonArtifact(
   release: CommunityAggregateReleaseManifest,
   aggregate: CommunityAggregateGeoJson
@@ -143,6 +148,7 @@ function buildGeoJsonArtifact(
     format: 'geojson',
     mediaType: 'application/geo+json',
     fileName: `community-aggregates-${releaseDate(release)}.geojson`,
+    downloadPath: artifactDownloadPath('geojson'),
     byteLength,
     sha256,
     generatedAt: release.generatedAt,
@@ -352,6 +358,7 @@ async function buildMbTilesArtifact(
       format: 'mbtiles',
       mediaType: 'application/x-sqlite3',
       fileName: `community-aggregates-${releaseDate(release)}.mbtiles`,
+      downloadPath: artifactDownloadPath('mbtiles'),
       byteLength,
       sha256,
       generatedAt: release.generatedAt,
@@ -396,6 +403,7 @@ function buildPmTilesArtifact(
     format: 'pmtiles',
     mediaType: 'application/vnd.pmtiles',
     fileName: `community-aggregates-${releaseDate(release)}.pmtiles`,
+    downloadPath: artifactDownloadPath('pmtiles'),
     byteLength,
     sha256,
     generatedAt: release.generatedAt,

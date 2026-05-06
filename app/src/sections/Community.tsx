@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   ClipboardCheck,
   Database,
+  Download,
   Droplets,
   Eye,
   Globe,
@@ -695,6 +696,12 @@ export function Community() {
                             z{artifact.tileSummary.minZoom}-z{artifact.tileSummary.maxZoom} / {artifact.tileSummary.tileCount} tiles
                           </p>
                         )}
+                        <Button asChild size="sm" variant="outline" className="mt-3 w-full">
+                          <a href={artifact.downloadPath} download={artifact.fileName}>
+                            <Download className="h-4 w-4" />
+                            Download
+                          </a>
+                        </Button>
                       </div>
                     ))}
                   </div>

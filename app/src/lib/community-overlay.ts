@@ -121,6 +121,7 @@ export type CommunityAggregateReleaseArtifact = {
   format: 'geojson' | 'mbtiles' | 'pmtiles';
   mediaType: 'application/geo+json' | 'application/x-sqlite3' | 'application/vnd.pmtiles';
   fileName: string;
+  downloadPath: string;
   byteLength: number;
   sha256: string;
   generatedAt: string;
@@ -264,6 +265,7 @@ function isCommunityAggregateReleaseArtifactManifest(value: unknown): value is C
     manifest.artifacts.every((artifact) => (
       typeof artifact.id === 'string' &&
       artifact.releaseId === manifest.releaseId &&
+      typeof artifact.downloadPath === 'string' &&
       ['geojson', 'mbtiles', 'pmtiles'].includes(artifact.format ?? '') &&
       artifact.officialChartDataIncluded === false &&
       artifact.rawRecordIdsIncluded === false &&
