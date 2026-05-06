@@ -175,12 +175,18 @@ export function useTelemetry(options: UseTelemetryOptions = {}): UseTelemetryRet
   }, []);
 
   const pushMessages = useCallback((messages: TelemetryMessage[], sourceProtocol: SoundingSourceProtocol) => {
-    for (const message of messages) {
+    const receivedAt = new Date().toISOString();
+    const receivedMessages = messages.map((message) => ({
+      ...message,
+      receivedAt,
+    }));
+
+    for (const message of receivedMessages) {
       addMessage(message);
     }
 
     const storeMessages = useTelemetryStore.getState().messages;
-    const soundings = createSoundingsFromTelemetry([...messages, ...storeMessages], consent, {
+    const soundings = createSoundingsFromTelemetry([...receivedMessages, ...storeMessages], consent, {
       vesselId: consent?.vesselId ?? 'demo-vessel',
       sourceProtocol,
       offsets: {

@@ -29,11 +29,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn, formatCoordinate, formatHeading } from '@/lib/utils';
 import { useTelemetry } from '@/hooks/useTelemetry';
 import { NBPilotChart } from '@/components/NBPilotChart';
-import { useNavigationPlanStore } from '@/store';
+import { useNavigationPlanStore, useTelemetryStore } from '@/store';
 import {
   fetchNBPilotChartPackageArtifacts,
   type NBPilotChartPackageArtifactManifest,
 } from '@/lib/chart-catalog';
+import {
+  formatTelemetryAge,
+  getTelemetryHealth,
+  type TelemetryHealthStatus,
+} from '@/lib/telemetry-health';
 
 // Compass rose component
 function CompassRose({ heading, course, size = 200 }: { heading: number; course?: number; size?: number }) {
@@ -155,6 +160,12 @@ function DigitalGauge({
   );
 }
 
+function getTelemetryHealthClass(status: TelemetryHealthStatus): string {
+  if (status === 'fresh') return 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-emerald-200';
+  if (status === 'stale') return 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/20 dark:text-amber-200';
+  return 'border-red-200 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-200';
+}
+
 // Attitude indicator (artificial horizon)
 function AttitudeIndicator({ roll, pitch }: { roll: number; pitch: number }) {
   return (
@@ -209,6 +220,8 @@ export function Navigation() {
   const [chartArtifacts, setChartArtifacts] = useState<NBPilotChartPackageArtifactManifest | null>(null);
   const [chartArtifactsLoading, setChartArtifactsLoading] = useState(false);
   const [chartArtifactsError, setChartArtifactsError] = useState<string | null>(null);
+  const telemetryMessages = useTelemetryStore((state) => state.messages);
+  const telemetryHealth = getTelemetryHealth(telemetryMessages);
   const {
     routes,
     activeRouteId,
@@ -332,6 +345,35 @@ export function Navigation() {
           </CardContent>
         </Card>
       )}
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Activity className="h-5 w-5" />
+            Sensor Health
+          </CardTitle>
+          <CardDescription>
+            Live instruments are marked stale or missing when updates stop.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {telemetryHealth.map((item) => (
+              <div key={item.channel} className={cn('rounded-lg border p-3', getTelemetryHealthClass(item.status))}>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-medium">{item.label}</span>
+                  <Badge variant="outline" className="capitalize">
+                    {item.status}
+                  </Badge>
+                </div>
+                <p className="mt-1 text-xs opacity-80">
+                  {formatTelemetryAge(item.ageSeconds)}
+                </p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
       
       {/* View Tabs */}
       <Tabs value={activeView} onValueChange={setActiveView}>

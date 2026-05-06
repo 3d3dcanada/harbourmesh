@@ -43,14 +43,14 @@ Observed state:
 
 Last light checks:
 
-- `npm run test:run`: passing, 119 web tests.
+- `npm run test:run`: passing, 122 web tests.
 - `npm test` in `server`: passing, 24 server tests.
 - `npm run type-check`: passing.
 - `npm run type-check` in `server`: passing.
 - `npm run lint`: passing with 0 warnings.
 - `npm audit --json`: 0 vulnerabilities.
 - `npm run build`: passing for the web app.
-- `npm run build`: section-level code splitting is active; the initial app JS chunk is 279.30 kB / 88.73 kB gzip, the Navigation section chunk is 27.08 kB / 6.31 kB gzip, the Settings section chunk is 44.40 kB / 9.00 kB gzip, and the prior Vite oversized chunk warning is gone.
+- `npm run build`: section-level code splitting is active; the initial app JS chunk is 279.30 kB / 88.74 kB gzip, the Navigation section chunk is 29.42 kB / 6.88 kB gzip, the Settings section chunk is 44.40 kB / 9.01 kB gzip, and the prior Vite oversized chunk warning is gone.
 - `npm run build` in `server`: passing.
 - `npm audit --json` in `server`: 0 vulnerabilities.
 - Server API auth tests cover missing keys, accepted header keys, accepted Bearer keys, scoped write/review key separation, review-operator key parsing, reviewer identity override for audit history, protected device registry reads, and fail-closed production-style config.
@@ -64,6 +64,7 @@ Last light checks:
 - Web local persistence tests cover vessel/items, documents, logs, and tasks writing to named local-first stores.
 - Web local data portability tests cover export/import round trips and verify AI provider plus pilot API credential secret stores are excluded.
 - Web pilot API credential tests cover local secret-store save/clear, trim behavior, explicit override precedence, stored API key resolution, and stored review-operator identity resolution.
+- Web telemetry health tests cover fresh/stale/missing channel classification, compact age formatting, and `receivedAt`-based feed freshness while preserving observed telemetry timestamps.
 - Web hazard moderation tests cover protected review-queue loading, review history loading, review receipt validation, API error handling, and invalid receipt rejection.
 - Web aggregate overlay tests cover aggregate GeoJSON fetching, privacy metadata validation, and rejection when raw IDs or official chart data are exposed.
 - Web chart artifact tests cover `/api/charts/nb/package-artifacts` client validation, GeoJSON artifact manifest loading, pending PMTiles/MBTiles flags, and rejection of artifacts that include official chart data.
@@ -78,6 +79,7 @@ Last light checks:
 - Browser smoke on port 5176: demo-data notices rendered on Inventory, Documents, Logs & Tasks, Vessel, and Boat Map after sidebar navigation.
 - Browser smoke on port 5176: Settings Data & Storage rendered the Export All Data and Import Data controls at 1280x900.
 - Browser smoke on port 5173: Settings Network rendered Pilot API Credentials, saved a test API key/operator ID into `harbormesh-pilot-api`, verified the local secret-store value, cleared it, and verified the key was removed; the Network tab also stayed contained at 360x800.
+- Browser smoke on port 5173: Navigation rendered Sensor Health for GPS, Depth/Wx, AIS, and Engine; replay feed updates showed fresh channel states at 1280x900 and 360x800.
 - Browser smoke on port 5176: Community Moderation rendered the Load Review Queue control at 1280x900 and the tab list stayed inside the 360x780 viewport.
 - Browser smoke on port 5176: Community Moderation rendered the Review History card and Load History control at 1280x900 and 360x780.
 - Browser smoke on port 5176: Community Map rendered the Load Aggregates control at 1280x900 and 360x780, with the map card contained at both sizes.
@@ -117,6 +119,7 @@ Completed in the active checkout:
 - Added local-first persistence for user-owned vessel data, items, documents, logs, and tasks.
 - Wired Settings data export/import to a versioned local-data bundle that excludes AI provider and pilot API credential secret storage.
 - Added Settings Network controls for local pilot API key and review-operator ID storage so community upload, device registration, and hazard review clients can use beta credentials without hard-coding them in the build environment.
+- Added Navigation Sensor Health with fresh/stale/missing states for GPS, Depth/Wx, AIS, and Engine channels, using `receivedAt` for feed freshness so recorded replay can prove active delivery without changing original observation timestamps.
 - Added an operator hazard moderation surface in Community with protected review-queue loading and accept/reject actions against the pilot API.
 - Split pilot API keys into backward-compatible legacy keys plus scoped write keys and review keys so intake/device access can be separated from hazard moderation.
 - Added `HARBOURMESH_REVIEW_OPERATOR_KEYS` support so review-scoped API keys can carry server-side operator IDs and override client-supplied reviewer names before moderation audit history is written.

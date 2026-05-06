@@ -657,6 +657,7 @@ export interface TelemetryMessage {
   vesselId: string;
   sourceDeviceId: string;
   timestamp: string;
+  receivedAt?: string;
   messageType: TelemetryMessageType;
   payload: TelemetryPayload;
   
