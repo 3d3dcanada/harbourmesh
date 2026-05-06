@@ -33,7 +33,7 @@ Observed state:
 - Frontend: React/Vite app exists, with the community section now wired to local telemetry, AIS targets, soundings, governed observations, hazards, upload batches, local map overlay features, and NB reference mapping instead of hard-coded demo community data.
 - Charts: NB pilot reference chart work has started with React Leaflet, OSM base tiles, legal GeoNB WMS overlays, a chart source catalog, NB offline package manifests, generated reference-only GeoJSON package artifacts, a disk artifact writer, and a Navigation chart package panel; it is not a certified navigation chart system and PMTiles/MBTiles products are not generated yet.
 - Telemetry: recorded Signal K replay and live Signal K WebSocket wiring now exist; live hardware ingest remains unverified.
-- Backend: a Fastify API now exists for NB chart source catalog, NB chart package manifests, community sounding upload, governed community observation upload, community hazard upload, hazard review, community reference GeoJSON overlay, device registration, and summary endpoints with JSONL local persistence; a PostGIS migration now defines the production target schema, but runtime storage is still JSONL.
+- Backend: a Fastify API now exists for NB chart source catalog, NB chart package manifests, community sounding upload, governed community observation upload, community hazard upload, hazard review, community reference GeoJSON overlay, device registration, and summary endpoints. JSONL remains the local fallback, and `HARBOURMESH_DATABASE_URL` now activates PostGIS runtime repositories for devices, soundings, observations, hazards, and review history.
 - Community mesh: local raw sounding capture, local hazard reporting, consent-safe offline upload queues, backend upload endpoints, pending-by-default hazard moderation, an operator review surface, review-operator API key identity, queryable review history, a raw reference overlay, and privacy-preserving aggregate GeoJSON now exist; vector tile products are still not implemented.
 - Security: docs no longer claim production readiness; the weak SHA-256 placeholder key derivation, token signing, and password hashing helpers have been replaced with PBKDF2-HMAC-SHA256/HMAC-SHA256 regressions, the pilot API now has configurable scoped API-key gates for write/device plus review-operator keys that override client-supplied reviewer names, hash-based API key configuration for deployments that should not store plaintext keys, and the web app can save pilot credentials in a local secret store excluded from data exports. Full user auth, production secret management, and fleet/team identity are still not implemented.
 - CI/release: workflows have been adjusted to stop calling missing package scripts, use Node 22, run app/server checks, build the API container, and provide a manual Cloudflare Pages deploy path for the web build when Cloudflare repository secrets are configured.
@@ -44,7 +44,7 @@ Observed state:
 Last light checks:
 
 - `npm run test:run`: passing, 131 web tests.
-- `npm test` in `server`: passing, 29 server tests.
+- `npm test` in `server`: passing, 31 server tests.
 - `npm run type-check`: passing.
 - `npm run type-check` in `server`: passing.
 - `npm run lint`: passing with 0 warnings.
@@ -56,6 +56,7 @@ Last light checks:
 - Cloudflare Pages config exists at `app/wrangler.toml` with `pages_build_output_dir = "./dist"` and a manual GitHub deploy workflow at `.github/workflows/cloudflare-pages.yml`; no live Cloudflare deployment was run in this snapshot.
 - API container packaging exists at `server/Dockerfile` with a non-root runner, `/health` healthcheck, and `/data` JSONL storage path; no live container registry push was run in this snapshot.
 - API container smoke: `docker build -t harbourmesh-api:codex-smoke ./server` succeeded, the container started on local port 3106 with scoped SHA-256 smoke API key env values, `/health` returned `ok: true`, a protected sounding upload using the unhashed client key returned an accepted receipt, and the smoke container was stopped.
+- PostGIS container smoke: a throwaway `postgis/postgis:16-3.4-alpine` database plus `harbourmesh-api:codex-smoke` on port 3107 applied migrations with `HARBOURMESH_RUN_MIGRATIONS=true`; protected sounding, observation, hazard review, aggregate GeoJSON, and device registration flows all returned expected database-backed responses, then both containers and the smoke Docker network were stopped/removed.
 - Server API auth tests cover missing keys, accepted header keys, accepted Bearer keys, scoped write/review key separation, review-operator key parsing, reviewer identity override for audit history, protected device registry reads, and fail-closed production-style config.
 - Server API auth tests cover SHA-256 hash-backed write keys and review-operator keys while clients continue sending normal API keys.
 - Server hazard review tests cover pending hazards being withheld from public GeoJSON until accepted, accepted hazards becoming overlay-eligible, review history listing, and unknown hazard review returning 404.
@@ -64,7 +65,8 @@ Last light checks:
 - Server chart package tests cover `/api/charts/nb/packages`, `/api/charts/nb/package-artifacts`, NB coast and inland-waterway package definitions, generated GeoJSON artifact checksums, pending PMTiles/MBTiles flags, community-overlay inclusion, and official CHS exclusion.
 - Server chart artifact writer tests cover compact GeoJSON file output, checksum-matching bytes, `manifest.json` writing, release manifest content omission, and official chart exclusion.
 - Server observation tests cover protected upload of governed radar/weather-style observations, duplicate receipts, summary counts by type/region, raw sensor payload exclusion, and position-sharing policy rejection.
-- Server PostGIS schema tests cover the NB pilot migration, spatial observation/hazard/aggregate columns, GIST indexes, and schema-level exclusion of official chart data/raw identifiers from shared products.
+- Server PostGIS schema tests cover the NB pilot migration, spatial observation/hazard/aggregate columns, idempotent position-column/device-kind upgrades, position JSON round-trip storage, runtime device kind parity, GIST indexes, and schema-level exclusion of official chart data/raw identifiers from shared products.
+- Server startup tests cover the PostGIS runtime mode switch staying health-checkable before the first database-backed data route runs.
 - Web NMEA regression tests cover longitude degree-width parsing, 1990s RMC date handling, checksum rejection, DBT meter depth parsing, and legacy utility parser parity.
 - Web demo-source notice tests cover accessible status rendering for simulated/demo data surfaces.
 - Web local persistence tests cover vessel/items, documents, logs, and tasks writing to named local-first stores.
@@ -111,10 +113,10 @@ Completed in the active checkout:
 - Added a persisted navigation planning store, route distance/course calculations, and an NB pilot reference route overlay.
 - Added local raw depth sounding capture from telemetry with consent, position precision, quality flags, and transducer offsets.
 - Added community sounding upload payloads and local offline sync batches that explicitly exclude official chart data and raw local positions.
-- Added a Fastify community sounding API at `/api/community/soundings`, strict Zod validation, JSONL storage, summary endpoint, and frontend sync adapter.
+- Added a Fastify community sounding API at `/api/community/soundings`, strict Zod validation, JSONL fallback storage, PostGIS runtime storage, summary endpoint, and frontend sync adapter.
 - Added Boat Node device identity settings and `/api/devices/register` so contributed data can carry registered source provenance.
 - Replaced the remaining demo community map, conditions, hazards, bathymetry stats, and contribution statistics with values derived from local telemetry, AIS targets, stored soundings, local hazards, and sync batches.
-- Added a Fastify community hazard API at `/api/community/hazards`, strict Zod validation, JSONL storage, summary endpoint, frontend hazard queueing, receipt validation, and hazard status tracking.
+- Added a Fastify community hazard API at `/api/community/hazards`, strict Zod validation, JSONL fallback storage, PostGIS runtime storage, summary endpoint, frontend hazard queueing, receipt validation, and hazard status tracking.
 - Added a reference-only community GeoJSON overlay at `/api/community/overlay.geojson` that emits accepted soundings and positioned hazards while marking official chart data as excluded.
 - Added local community overlay feature generation and rendered local sounding and hazard markers on the NB community map.
 - Replaced mislabeled SHA-256 security helpers with PBKDF2-HMAC-SHA256 key derivation/password hashing, HMAC-SHA256 token signatures, AES-GCM IV/tag validation, and regression tests.
@@ -130,7 +132,7 @@ Completed in the active checkout:
 - Added Settings Network controls for local pilot API key and review-operator ID storage so community upload, device registration, and hazard review clients can use beta credentials without hard-coding them in the build environment.
 - Added Navigation Sensor Health with fresh/stale/missing states for GPS, Depth/Wx, AIS, and Engine channels, using `receivedAt` for feed freshness so recorded replay can prove active delivery without changing original observation timestamps.
 - Added a sounding quality guard that flags abrupt sonar/depth jumps and rejects likely depth spikes before they enter community upload batches.
-- Added a protected community observation API and JSONL repository for governed radar, AIS, weather, track, condition, and system-health observations with consent, quality, raw-payload exclusion, duplicate handling, and summary metadata.
+- Added a protected community observation API with JSONL fallback and PostGIS runtime repositories for governed radar, AIS, weather, track, condition, and system-health observations with consent, quality, raw-payload exclusion, duplicate handling, and summary metadata.
 - Wired frontend community observation derivation, local persistence, offline queueing, upload receipt validation, and Community conditions controls for governed telemetry observations.
 - Folded positioned governed observations into privacy-preserving aggregate GeoJSON cells and map popups without exposing raw record IDs, vessel IDs, or source device IDs.
 - Added `/api/community/releases/aggregates/latest` and a Community map release-manifest loader so aggregate products expose byte size, SHA-256 checksum, source counts, and legal/privacy rules separately from the raw GeoJSON payload.
@@ -141,6 +143,8 @@ Completed in the active checkout:
 - Added `HARBOURMESH_REVIEW_OPERATOR_KEYS` support so review-scoped API keys can carry server-side operator IDs and override client-supplied reviewer names before moderation audit history is written.
 - Added SHA-256 hash-backed API key env support for legacy, write, review, and review-operator keys so production deployments can avoid storing plaintext shared keys.
 - Added the first PostGIS migration for vessels, devices, soundings, hazards, reviews, aggregate cells, and release manifests with spatial indexes and legal/privacy checks.
+- Added `HARBOURMESH_DATABASE_URL` PostGIS runtime repositories for devices, community soundings, governed observations, hazards, and hazard review history while preserving JSONL as the no-database local fallback.
+- Hardened the first PostGIS migration so existing pilot databases can pick up position JSON columns and runtime device-kind parity without relying on a fresh schema.
 - Added review-scoped `/api/community/hazards/reviews` so hazard moderation decisions are queryable as audit history.
 - Wired hazard review history into the Community moderation tab with a protected history client and responsive review-history panel.
 - Wired generated NB chart package artifacts into the web chart catalog client and Navigation Chart View so pilots can load reference-only GeoJSON artifact manifests, byte sizes, checksums, excluded official source IDs, and pending PMTiles/MBTiles status.
@@ -149,7 +153,7 @@ Completed in the active checkout:
 
 Still not done:
 
-- No full production user auth, runtime PostGIS repositories, generated PMTiles/MBTiles artifacts, vector tile generation, or reviewed aggregate tile release process exists.
+- No full production user auth, generated PMTiles/MBTiles artifacts, vector tile generation, persisted aggregate-cell/release processing, or reviewed aggregate tile release process exists.
 - No full route-by-route browser/mobile visual verification has been run in this session.
 - No real Signal K server, sonar, radar, AIS receiver, or Boat Node hardware has been tested.
 - Community hazards can now be queued, uploaded to the pilot backend, reviewed through the API/UI with review-scoped keys or review-operator keys, listed through review history, included in the raw reference overlay only after acceptance, and counted in privacy-preserving aggregates; vector tile products are still not implemented.
@@ -384,7 +388,7 @@ Tasks:
 - Add backend API.
 - Add auth and device registration.
 - Add per-dataset consent.
-- Wire runtime PostGIS repositories for tracks, observations, hazards, soundings, and source metadata.
+- Extend runtime PostGIS persistence to raw track products, source metadata/versioning, aggregate-cell jobs, and release manifests.
 - Add upload queue for offline-first sync.
 - Add public/private/fleet visibility rules.
 - Add operator identity, audit history, and review states for hazards and community map labels.

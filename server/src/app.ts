@@ -36,6 +36,7 @@ import {
   type DeviceRepository,
 } from './device-repository.js';
 import { deviceRegistrationSchema } from './devices.js';
+import { createPostgisRepositories } from './postgis-repositories.js';
 
 export type BuildAppOptions = {
   dataDir: string;
@@ -52,15 +53,28 @@ export type BuildAppOptions = {
   reviewOperatorKeys?: readonly OperatorApiKey[];
   reviewOperatorKeySha256Hashes?: readonly OperatorApiKey[];
   requireApiAuth?: boolean;
+  databaseUrl?: string;
+  runMigrations?: boolean;
   logger?: boolean;
 };
 
 export async function buildApp(options: BuildAppOptions): Promise<FastifyInstance> {
   const app = Fastify({ logger: options.logger ?? false });
-  const repository = options.repository ?? createCommunitySoundingRepository(options.dataDir);
-  const hazardRepository = options.hazardRepository ?? createCommunityHazardRepository(options.dataDir);
-  const observationRepository = options.observationRepository ?? createCommunityObservationRepository(options.dataDir);
-  const deviceRepository = options.deviceRepository ?? createDeviceRepository(options.dataDir);
+  const databaseUrl = options.databaseUrl ?? process.env.HARBOURMESH_DATABASE_URL;
+  const postgisRepositories = databaseUrl ? createPostgisRepositories(databaseUrl) : null;
+  if (postgisRepositories && (options.runMigrations ?? process.env.HARBOURMESH_RUN_MIGRATIONS === 'true')) {
+    await postgisRepositories.runMigrations();
+  }
+  if (postgisRepositories) {
+    app.addHook('onClose', async () => {
+      await postgisRepositories.close();
+    });
+  }
+
+  const repository = options.repository ?? postgisRepositories?.soundings ?? createCommunitySoundingRepository(options.dataDir);
+  const hazardRepository = options.hazardRepository ?? postgisRepositories?.hazards ?? createCommunityHazardRepository(options.dataDir);
+  const observationRepository = options.observationRepository ?? postgisRepositories?.observations ?? createCommunityObservationRepository(options.dataDir);
+  const deviceRepository = options.deviceRepository ?? postgisRepositories?.devices ?? createDeviceRepository(options.dataDir);
   const apiAuth = createApiAuthConfig({
     keys: options.apiKeys ?? parseApiKeys(process.env.HARBOURMESH_API_KEYS, process.env.HARBOURMESH_API_KEY),
     keySha256Hashes: options.apiKeySha256Hashes ?? parseApiKeySha256Hashes(process.env.HARBOURMESH_API_KEY_SHA256S, process.env.HARBOURMESH_API_KEY_SHA256),

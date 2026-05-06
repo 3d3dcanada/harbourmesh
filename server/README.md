@@ -35,7 +35,7 @@ Default API:
 - `GET /api/devices`
 - `GET /api/devices/:deviceId`
 
-Data is appended as JSONL under `./data` by default. Set `HARBOURMESH_DATA_DIR` to move it.
+Data is appended as JSONL under `./data` by default. Set `HARBOURMESH_DATA_DIR` to move it. Set `HARBOURMESH_DATABASE_URL` to use the PostGIS runtime repositories for devices, soundings, governed observations, hazards, and hazard reviews instead of JSONL. Set `HARBOURMESH_RUN_MIGRATIONS=true` only when the process should apply `db/migrations/0001_nb_pilot_community_mesh.sql` at startup.
 
 ## Container
 
@@ -49,9 +49,11 @@ docker run --rm -p 3001:3001 \
 
 The container runs `node dist/index.js` as the non-root `node` user, stores pilot JSONL data under `/data`, and exposes `/health` for container health checks.
 
+For PostGIS-backed runtime storage, run the container with `HARBOURMESH_DATABASE_URL=postgres://...` and set `HARBOURMESH_RUN_MIGRATIONS=true` only for a controlled migration pass.
+
 NB reference chart package artifacts can be written to disk with `npm run charts:nb:artifacts -- <output-dir>`. The writer creates compact GeoJSON files plus `manifest.json`; generated files are reference-only and exclude official CHS chart data.
 
-The production persistence target starts in `db/migrations/0001_nb_pilot_community_mesh.sql`. The current server still uses JSONL, but the migration defines the PostGIS tables for devices, soundings, observations, hazards, reviews, aggregate cells, and release manifests.
+The production persistence target starts in `db/migrations/0001_nb_pilot_community_mesh.sql`. With `HARBOURMESH_DATABASE_URL`, the current server writes devices, soundings, observations, hazards, and reviews to PostGIS. JSONL remains the no-database local fallback; aggregate cells and release manifests are still generated at request time.
 
 Set `HARBOURMESH_API_KEYS` to a comma-separated list of legacy pilot API keys before exposing the server. Legacy keys can access every protected endpoint. For scoped keys, use `HARBOURMESH_WRITE_API_KEYS` for intake/device writes and `HARBOURMESH_REVIEW_API_KEYS` for hazard review operations. For deployments that should not store plaintext keys, use `HARBOURMESH_API_KEY_SHA256S`, `HARBOURMESH_WRITE_API_KEY_SHA256S`, and `HARBOURMESH_REVIEW_API_KEY_SHA256S` with comma-separated SHA-256 hex digests of the client keys. For auditable moderator identity, use `HARBOURMESH_REVIEW_OPERATOR_KEYS` with comma-separated `operator-id:key` entries, or `HARBOURMESH_REVIEW_OPERATOR_KEY_SHA256S` with `operator-id:sha256` entries; matching review keys override client-supplied `reviewedBy` values before writing review history. Protected endpoints accept either `X-HarbourMesh-API-Key: <key>` or `Authorization: Bearer <key>`.
 

@@ -1,6 +1,6 @@
 -- HarbourMesh NB pilot community mesh schema.
--- This migration defines the production PostGIS target while the current pilot
--- server still writes JSONL for local development.
+-- This migration defines the production PostGIS target. The server uses it when
+-- HARBOURMESH_DATABASE_URL is configured and keeps JSONL as the local fallback.
 
 CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS devices (
   vessel_id uuid REFERENCES vessels(id) ON DELETE SET NULL,
   external_vessel_id text,
   display_name text NOT NULL,
-  kind text NOT NULL CHECK (kind IN ('boat_node', 'signalk_server', 'mobile', 'manual_import', 'other')),
+  kind text NOT NULL CHECK (kind IN ('boat_node', 'mobile_app', 'desktop_app', 'gateway', 'signalk_server', 'mobile', 'manual_import', 'other')),
   software_version text,
   signal_k_base_url text,
   capabilities jsonb NOT NULL DEFAULT '{}'::jsonb,
@@ -38,6 +38,10 @@ CREATE TABLE IF NOT EXISTS devices (
 
 CREATE INDEX IF NOT EXISTS idx_devices_external_vessel_id ON devices(external_vessel_id);
 CREATE INDEX IF NOT EXISTS idx_devices_kind ON devices(kind);
+
+ALTER TABLE devices DROP CONSTRAINT IF EXISTS devices_kind_check;
+ALTER TABLE devices ADD CONSTRAINT devices_kind_check
+  CHECK (kind IN ('boat_node', 'mobile_app', 'desktop_app', 'gateway', 'signalk_server', 'mobile', 'manual_import', 'other'));
 
 CREATE TABLE IF NOT EXISTS community_sounding_batches (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -124,6 +128,7 @@ CREATE TABLE IF NOT EXISTS community_observations (
   consent_captured_at timestamptz NOT NULL,
   sharing_state text NOT NULL CHECK (sharing_state IN ('shareable_no_position', 'shareable_blurred', 'shareable_full')),
   geom geometry(Point, 4326),
+  position jsonb,
   position_source text CHECK (position_source IN ('gps', 'ais', 'radar', 'manual', 'estimated')),
   position_accuracy_meters numeric(10, 3) CHECK (position_accuracy_meters >= 0),
   metrics jsonb NOT NULL DEFAULT '{}'::jsonb,
@@ -140,6 +145,8 @@ CREATE INDEX IF NOT EXISTS idx_community_observations_geom ON community_observat
 CREATE INDEX IF NOT EXISTS idx_community_observations_observed_at ON community_observations(observed_at);
 CREATE INDEX IF NOT EXISTS idx_community_observations_type ON community_observations(observation_type);
 CREATE INDEX IF NOT EXISTS idx_community_observations_source_device ON community_observations(source_device_id);
+
+ALTER TABLE community_observations ADD COLUMN IF NOT EXISTS position jsonb;
 
 CREATE TABLE IF NOT EXISTS community_hazard_batches (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -179,6 +186,7 @@ CREATE TABLE IF NOT EXISTS community_hazards (
   sharing_state text NOT NULL CHECK (sharing_state IN ('shareable_no_position', 'shareable_blurred', 'shareable_full')),
   review_status text NOT NULL DEFAULT 'pending' CHECK (review_status IN ('pending', 'accepted', 'rejected')),
   public_overlay_eligible boolean NOT NULL DEFAULT false,
+  position jsonb,
   official_chart_data_included boolean NOT NULL DEFAULT false CHECK (official_chart_data_included = false),
   stored_at timestamptz NOT NULL DEFAULT now(),
   reviewed_at timestamptz,
@@ -192,6 +200,8 @@ CREATE INDEX IF NOT EXISTS idx_community_hazards_geom ON community_hazards USING
 CREATE INDEX IF NOT EXISTS idx_community_hazards_review_status ON community_hazards(review_status);
 CREATE INDEX IF NOT EXISTS idx_community_hazards_public_overlay ON community_hazards(public_overlay_eligible);
 CREATE INDEX IF NOT EXISTS idx_community_hazards_reported_at ON community_hazards(reported_at);
+
+ALTER TABLE community_hazards ADD COLUMN IF NOT EXISTS position jsonb;
 
 CREATE TABLE IF NOT EXISTS community_hazard_reviews (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

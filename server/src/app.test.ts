@@ -173,6 +173,25 @@ async function createTestApp(options: Partial<Omit<BuildAppOptions, 'dataDir'>> 
 }
 
 describe('HarbourMesh API', () => {
+  it('can start in PostGIS runtime mode without touching the database before data routes run', async () => {
+    const app = await createTestApp({
+      databaseUrl: 'postgres://harbourmesh:harbourmesh@127.0.0.1:6543/harbourmesh_test',
+      runMigrations: false,
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/health',
+    });
+    await app.close();
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      ok: true,
+      service: 'harbourmesh-server',
+    });
+  });
+
   it('parses review operator API keys from environment-style config', () => {
     expect(parseOperatorApiKeys(`nb-ops:${TEST_REVIEW_API_KEY}, broken, second: second-key `)).toEqual([
       {

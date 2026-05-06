@@ -40,6 +40,10 @@ describe('NB pilot PostGIS schema migration', () => {
     expect(sql).toMatch(/community_soundings[\s\S]+geom geometry\(Point, 4326\) NOT NULL/);
     expect(sql).toMatch(/community_observations[\s\S]+geom geometry\(Point, 4326\)/);
     expect(sql).toMatch(/community_hazards[\s\S]+geom geometry\(Point, 4326\)/);
+    expect(sql).toMatch(/community_observations[\s\S]+position jsonb/);
+    expect(sql).toMatch(/community_hazards[\s\S]+position jsonb/);
+    expect(sql).toContain('ALTER TABLE community_observations ADD COLUMN IF NOT EXISTS position jsonb');
+    expect(sql).toContain('ALTER TABLE community_hazards ADD COLUMN IF NOT EXISTS position jsonb');
     expect(sql).toMatch(/community_aggregate_cells[\s\S]+geom geometry\(Polygon, 4326\) NOT NULL/);
     expect(sql).toContain('idx_community_soundings_geom ON community_soundings USING gist(geom)');
     expect(sql).toContain('idx_community_observations_geom ON community_observations USING gist(geom)');
@@ -55,5 +59,13 @@ describe('NB pilot PostGIS schema migration', () => {
     expect(sql).toContain('raw_record_ids_included boolean NOT NULL DEFAULT false CHECK (raw_record_ids_included = false)');
     expect(sql).toContain('vessel_ids_included boolean NOT NULL DEFAULT false CHECK (vessel_ids_included = false)');
     expect(sql).toContain("CHECK (public_overlay_eligible = false OR (review_status = 'accepted' AND geom IS NOT NULL))");
+  });
+
+  it('matches runtime device kinds and documents the PostGIS env switch', async () => {
+    const sql = await readMigration();
+
+    expect(sql).toContain("kind text NOT NULL CHECK (kind IN ('boat_node', 'mobile_app', 'desktop_app', 'gateway'");
+    expect(sql).toContain('ALTER TABLE devices DROP CONSTRAINT IF EXISTS devices_kind_check');
+    expect(sql).toContain('HARBOURMESH_DATABASE_URL');
   });
 });
