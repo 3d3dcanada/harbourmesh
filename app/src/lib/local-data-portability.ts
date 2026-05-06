@@ -4,6 +4,7 @@ export const PORTABLE_STORE_KEYS = [
   'harbormesh-documents',
   'harbormesh-logbook',
   'harbormesh-navigation-plans',
+  'harbormesh-local-chart-library',
   'harbormesh-settings',
   'harbormesh-community-data',
 ] as const;

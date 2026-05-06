@@ -41,14 +41,23 @@ describe('local data portability', () => {
     const source = createStorage({
       'harbormesh-settings': JSON.stringify({ state: { userPreferences: { unitSystem: 'nautical' } } }),
       'harbormesh-logbook': JSON.stringify({ state: { logs: [{ id: 'log-1' }], tasks: [] } }),
+      'harbormesh-local-chart-library': JSON.stringify({
+        schemaVersion: 'harbourmesh.local-chart-library.v1',
+        charts: [{ id: 'chart-1', fileName: 'CA376012.000' }],
+      }),
     });
     const target = createStorage();
 
     const parsed = parseLocalDataExport(serializeLocalDataExport(buildLocalDataExport(source)));
     const result = importLocalDataExport(parsed, target);
 
-    expect(result.importedStores).toEqual(['harbormesh-logbook', 'harbormesh-settings']);
+    expect(result.importedStores).toEqual([
+      'harbormesh-logbook',
+      'harbormesh-local-chart-library',
+      'harbormesh-settings',
+    ]);
     expect(target.store['harbormesh-logbook']).toContain('log-1');
+    expect(target.store['harbormesh-local-chart-library']).toContain('CA376012.000');
     expect(target.store['harbormesh-settings']).toContain('nautical');
   });
 

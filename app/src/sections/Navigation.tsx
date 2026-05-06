@@ -3,7 +3,7 @@
  * Real-time HUD with charts, AIS, and telemetry display
  */
 
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Navigation as NavigationIcon,
   MapPin,
@@ -19,6 +19,9 @@ import {
   AlertTriangle,
   Download,
   Upload,
+  ShieldCheck,
+  FileText,
+  X,
   Info,
   Clock,
   Zap,
@@ -42,6 +45,29 @@ import {
   type TelemetryHealthStatus,
 } from '@/lib/telemetry-health';
 import { parseGpxRoute, routeToGpx } from '@/lib/gpx-routes';
+import {
+  addLocalChartReference,
+  forgetLocalChartReference,
+  loadLocalChartLibrary,
+  type LocalChartFormat,
+  type LocalChartLibrary,
+} from '@/lib/local-chart-library';
+
+const LOCAL_CHART_FORMAT_LABELS: Record<LocalChartFormat, string> = {
+  's57-enc': 'S-57 ENC',
+  'bsb-rnc': 'BSB RNC',
+  'pdf-chart': 'PDF',
+  mbtiles: 'MBTiles',
+  pmtiles: 'PMTiles',
+  geojson: 'GeoJSON',
+  unknown: 'Unknown',
+};
+
+function formatByteLength(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 // Compass rose component
 function CompassRose({ heading, course, size = 200 }: { heading: number; course?: number; size?: number }) {
@@ -223,8 +249,11 @@ export function Navigation() {
   const [chartArtifacts, setChartArtifacts] = useState<NBPilotChartPackageArtifactManifest | null>(null);
   const [chartArtifactsLoading, setChartArtifactsLoading] = useState(false);
   const [chartArtifactsError, setChartArtifactsError] = useState<string | null>(null);
+  const [localChartLibrary, setLocalChartLibrary] = useState<LocalChartLibrary>(() => loadLocalChartLibrary());
+  const [localChartImportError, setLocalChartImportError] = useState<string | null>(null);
   const [routeImportError, setRouteImportError] = useState<string | null>(null);
   const gpxInputRef = useRef<HTMLInputElement>(null);
+  const localChartInputRef = useRef<HTMLInputElement>(null);
   const telemetryMessages = useTelemetryStore((state) => state.messages);
   const telemetryHealth = getTelemetryHealth(telemetryMessages);
   const {
@@ -242,6 +271,10 @@ export function Navigation() {
     counts[artifact.format] = (counts[artifact.format] ?? 0) + 1;
     return counts;
   }, {}) ?? {};
+
+  useEffect(() => {
+    setLocalChartLibrary(loadLocalChartLibrary());
+  }, []);
 
   const handleLoadChartArtifacts = async () => {
     setChartArtifactsLoading(true);
@@ -285,6 +318,27 @@ export function Navigation() {
     } finally {
       event.currentTarget.value = '';
     }
+  };
+
+  const handleAddLocalChartReference = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.currentTarget.files?.[0];
+    if (!file) return;
+
+    try {
+      const library = addLocalChartReference(file);
+      setLocalChartLibrary(library);
+      setLocalChartImportError(null);
+    } catch (error) {
+      setLocalChartImportError(error instanceof Error ? error.message : 'Local chart registration failed');
+    } finally {
+      event.currentTarget.value = '';
+    }
+  };
+
+  const handleForgetLocalChartReference = (chartId: string) => {
+    const library = forgetLocalChartReference(chartId);
+    setLocalChartLibrary(library);
+    setLocalChartImportError(null);
   };
 
   const chartPackageCard = (
@@ -352,6 +406,81 @@ export function Navigation() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  const localChartLibraryCard = (
+    <Card>
+      <CardHeader>
+        <div className="flex flex-col gap-3 sm:flex-row xl:flex-col sm:items-start sm:justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ShieldCheck className="h-5 w-5" />
+              Local Chart Library
+            </CardTitle>
+            <CardDescription>
+              Licensed chart file bytes stay on this device; HarbourMesh stores metadata only.
+            </CardDescription>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <input
+              ref={localChartInputRef}
+              type="file"
+              accept=".000,.001,.002,.003,.004,.005,.kap,.bsb,.pdf,.mbtiles,.pmtiles,.geojson,.json"
+              className="hidden"
+              onChange={handleAddLocalChartReference}
+            />
+            <Button size="sm" variant="outline" onClick={() => localChartInputRef.current?.click()}>
+              <Upload className="h-4 w-4" />
+              Add Local Chart
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {localChartImportError && (
+          <div className="mb-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-200">
+            {localChartImportError}
+          </div>
+        )}
+
+        {localChartLibrary.charts.length === 0 ? (
+          <div className="rounded-lg border border-dashed p-6 text-center">
+            <FileText className="mx-auto mb-3 h-8 w-8 text-muted-foreground/60" />
+            <p className="text-sm text-muted-foreground">No local chart metadata saved.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {localChartLibrary.charts.map((chart) => (
+              <div key={chart.id} className="rounded-lg border p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{chart.fileName}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {formatByteLength(chart.byteLength)}
+                      {chart.lastModified ? ` · Modified ${chart.lastModified.slice(0, 10)}` : ''}
+                    </p>
+                  </div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label={`Forget ${chart.fileName}`}
+                    onClick={() => handleForgetLocalChartReference(chart.id)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Badge variant="outline">{LOCAL_CHART_FORMAT_LABELS[chart.format]}</Badge>
+                  <Badge variant="secondary">Local only</Badge>
+                  <Badge variant="secondary">No community upload</Badge>
+                  <Badge variant="secondary">No shared tiles</Badge>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </CardContent>
@@ -699,6 +828,7 @@ export function Navigation() {
               </Card>
 
               {chartPackageCard}
+              {localChartLibraryCard}
             </div>
           </div>
         </TabsContent>
