@@ -28,8 +28,12 @@ const overlay: CommunityGeoJsonOverlay = {
       },
       properties: {
         kind: 'sounding',
+        publicId: 'snd_public_1',
         depthMeters: 12.5,
         officialChartDataIncluded: false,
+        rawRecordIdsIncluded: false,
+        vesselIdsIncluded: false,
+        sourceDeviceIdsIncluded: false,
       },
     },
     {
@@ -41,8 +45,12 @@ const overlay: CommunityGeoJsonOverlay = {
       },
       properties: {
         kind: 'hazard',
+        publicId: 'hz_public_1',
         severity: 'medium',
         officialChartDataIncluded: false,
+        rawRecordIdsIncluded: false,
+        vesselIdsIncluded: false,
+        sourceDeviceIdsIncluded: false,
       },
     },
   ],
@@ -52,6 +60,9 @@ const overlay: CommunityGeoJsonOverlay = {
     intendedUse: 'community_reference_overlay',
     officialChartDataIncluded: false,
     communityProductsAreReferenceOnly: true,
+    rawRecordIdsIncluded: false,
+    vesselIdsIncluded: false,
+    sourceDeviceIdsIncluded: false,
     sourceRecordCounts: {
       soundings: 1,
       hazards: 1,
@@ -309,6 +320,23 @@ describe('community overlay client', () => {
         ...overlay.metadata,
         officialChartDataIncluded: true,
       },
+    }), { status: 200 }));
+
+    await expect(fetchCommunityOverlay({
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    })).rejects.toThrow('Community overlay response was not a HarbourMesh reference overlay');
+  });
+
+  it('rejects overlay responses that expose raw record, vessel, or source IDs', async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
+      ...overlay,
+      features: overlay.features.map((feature) => ({
+        ...feature,
+        properties: {
+          ...feature.properties,
+          vesselId: feature.properties.kind === 'sounding' ? 'vessel-1' : undefined,
+        },
+      })),
     }), { status: 200 }));
 
     await expect(fetchCommunityOverlay({

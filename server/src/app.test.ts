@@ -914,6 +914,9 @@ describe('HarbourMesh API', () => {
         intendedUse: 'community_reference_overlay',
         officialChartDataIncluded: false,
         communityProductsAreReferenceOnly: true,
+        rawRecordIdsIncluded: false,
+        vesselIdsIncluded: false,
+        sourceDeviceIdsIncluded: false,
         sourceRecordCounts: {
           soundings: 1,
           hazards: 1,
@@ -958,8 +961,12 @@ describe('HarbourMesh API', () => {
     });
 
     expect(acceptedOverlay.statusCode).toBe(200);
-    expect(acceptedOverlay.json()).toMatchObject({
+    const acceptedOverlayBody = acceptedOverlay.json();
+    expect(acceptedOverlayBody).toMatchObject({
       metadata: {
+        rawRecordIdsIncluded: false,
+        vesselIdsIncluded: false,
+        sourceDeviceIdsIncluded: false,
         sourceRecordCounts: {
           soundings: 1,
           hazards: 1,
@@ -970,10 +977,10 @@ describe('HarbourMesh API', () => {
         },
       },
     });
-    expect(acceptedOverlay.json().features).toEqual(
+    expect(acceptedOverlayBody.features).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          id: 'sounding:sounding-1',
+          id: expect.stringMatching(/^sounding:snd_[a-f0-9]{16}$/),
           geometry: {
             type: 'Point',
             coordinates: [-66.06, 45.27],
@@ -982,20 +989,30 @@ describe('HarbourMesh API', () => {
             kind: 'sounding',
             depthMeters: 12.5,
             officialChartDataIncluded: false,
+            rawRecordIdsIncluded: false,
+            vesselIdsIncluded: false,
+            sourceDeviceIdsIncluded: false,
           }),
         }),
         expect.objectContaining({
-          id: 'hazard:hazard-1',
+          id: expect.stringMatching(/^hazard:hz_[a-f0-9]{16}$/),
           properties: expect.objectContaining({
             kind: 'hazard',
             severity: 'medium',
             sharingState: 'shareable_blurred',
             reviewStatus: 'accepted',
             reviewedAt: '2026-05-06T12:10:00.000Z',
+            rawRecordIdsIncluded: false,
+            vesselIdsIncluded: false,
+            sourceDeviceIdsIncluded: false,
           }),
         }),
       ])
     );
+    expect(JSON.stringify(acceptedOverlayBody)).not.toContain('sounding-1');
+    expect(JSON.stringify(acceptedOverlayBody)).not.toContain('hazard-1');
+    expect(JSON.stringify(acceptedOverlayBody)).not.toContain('vessel-1');
+    expect(JSON.stringify(acceptedOverlayBody)).not.toContain('boat-node-001');
   });
 
   it('serves privacy-preserving aggregate community GeoJSON cells', async () => {

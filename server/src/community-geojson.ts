@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import type { StoredCommunityHazard } from './community-hazard-repository.js';
 import type { StoredCommunitySounding } from './community-sounding-repository.js';
 
@@ -22,6 +23,9 @@ export type CommunityGeoJsonOverlay = {
     intendedUse: 'community_reference_overlay';
     officialChartDataIncluded: false;
     communityProductsAreReferenceOnly: true;
+    rawRecordIdsIncluded: false;
+    vesselIdsIncluded: false;
+    sourceDeviceIdsIncluded: false;
     sourceRecordCounts: {
       soundings: number;
       hazards: number;
@@ -33,19 +37,23 @@ export type CommunityGeoJsonOverlay = {
   };
 };
 
+function publicRecordId(prefix: 'snd' | 'hz', rawId: string): string {
+  return `${prefix}_${createHash('sha256').update(rawId).digest('hex').slice(0, 16)}`;
+}
+
 function toSoundingFeature(sounding: StoredCommunitySounding): CommunityFeature {
+  const publicId = publicRecordId('snd', sounding.id);
+
   return {
     type: 'Feature',
-    id: `sounding:${sounding.id}`,
+    id: `sounding:${publicId}`,
     geometry: {
       type: 'Point',
       coordinates: [sounding.longitude, sounding.latitude],
     },
     properties: {
       kind: 'sounding',
-      id: sounding.id,
-      vesselId: sounding.vesselId,
-      sourceDeviceId: sounding.sourceDeviceId,
+      publicId,
       region: sounding.region,
       depthMeters: sounding.depthMeters,
       depthReference: sounding.depthReference,
@@ -57,25 +65,27 @@ function toSoundingFeature(sounding: StoredCommunitySounding): CommunityFeature 
       tideCorrectionApplied: sounding.tideCorrectionApplied,
       waterLevelCorrectionApplied: sounding.waterLevelCorrectionApplied,
       officialChartDataIncluded: false,
+      rawRecordIdsIncluded: false,
+      vesselIdsIncluded: false,
+      sourceDeviceIdsIncluded: false,
     },
   };
 }
 
 function toHazardFeature(hazard: StoredCommunityHazard): CommunityFeature | null {
   if (!hazard.position) return null;
+  const publicId = publicRecordId('hz', hazard.id);
 
   return {
     type: 'Feature',
-    id: `hazard:${hazard.id}`,
+    id: `hazard:${publicId}`,
     geometry: {
       type: 'Point',
       coordinates: [hazard.position.longitude, hazard.position.latitude],
     },
     properties: {
       kind: 'hazard',
-      id: hazard.id,
-      vesselId: hazard.vesselId,
-      sourceDeviceId: hazard.sourceDeviceId ?? null,
+      publicId,
       region: hazard.region,
       hazardType: hazard.type,
       severity: hazard.severity,
@@ -87,6 +97,9 @@ function toHazardFeature(hazard: StoredCommunityHazard): CommunityFeature | null
       reviewedAt: hazard.reviewedAt ?? null,
       positionAccuracyMeters: hazard.position.accuracy ?? null,
       officialChartDataIncluded: false,
+      rawRecordIdsIncluded: false,
+      vesselIdsIncluded: false,
+      sourceDeviceIdsIncluded: false,
     },
   };
 }
@@ -118,6 +131,9 @@ export function buildCommunityGeoJsonOverlay(
       intendedUse: 'community_reference_overlay',
       officialChartDataIncluded: false,
       communityProductsAreReferenceOnly: true,
+      rawRecordIdsIncluded: false,
+      vesselIdsIncluded: false,
+      sourceDeviceIdsIncluded: false,
       sourceRecordCounts: {
         soundings: soundings.length,
         hazards: hazards.length,

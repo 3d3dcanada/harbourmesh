@@ -58,6 +58,9 @@ export type CommunityGeoJsonOverlay = {
     intendedUse: 'community_reference_overlay';
     officialChartDataIncluded: false;
     communityProductsAreReferenceOnly: true;
+    rawRecordIdsIncluded: false;
+    vesselIdsIncluded: false;
+    sourceDeviceIdsIncluded: false;
     sourceRecordCounts: {
       soundings: number;
       hazards: number;
@@ -265,13 +268,23 @@ function isCommunityOverlay(value: unknown): value is CommunityGeoJsonOverlay {
     overlay.metadata?.schemaVersion === 'harbourmesh.community-overlay.v1' &&
     overlay.metadata.officialChartDataIncluded === false &&
     overlay.metadata.communityProductsAreReferenceOnly === true &&
+    overlay.metadata.rawRecordIdsIncluded === false &&
+    overlay.metadata.vesselIdsIncluded === false &&
+    overlay.metadata.sourceDeviceIdsIncluded === false &&
     Array.isArray(overlay.features) &&
     overlay.features.every((feature) => (
       feature.type === 'Feature' &&
       typeof feature.id === 'string' &&
       feature.geometry?.type === 'Point' &&
       Array.isArray(feature.geometry.coordinates) &&
-      feature.geometry.coordinates.length === 2
+      feature.geometry.coordinates.length === 2 &&
+      feature.properties?.officialChartDataIncluded === false &&
+      feature.properties.rawRecordIdsIncluded === false &&
+      feature.properties.vesselIdsIncluded === false &&
+      feature.properties.sourceDeviceIdsIncluded === false &&
+      !('id' in feature.properties) &&
+      !('vesselId' in feature.properties) &&
+      !('sourceDeviceId' in feature.properties)
     ))
   );
 }
