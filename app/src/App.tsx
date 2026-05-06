@@ -1,53 +1,64 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
-import { Dashboard } from '@/sections/Dashboard';
-import { VesselView } from '@/sections/VesselView';
-import { BoatMap } from '@/sections/BoatMap';
-import { Inventory } from '@/sections/Inventory';
-import { Documents } from '@/sections/Documents';
-import { LogsTasks } from '@/sections/LogsTasks';
-import { Navigation } from '@/sections/Navigation';
-import { Community } from '@/sections/Community';
-import { AICompanion } from '@/sections/AICompanion';
-import { Settings } from '@/sections/Settings';
-import { Fleet } from '@/sections/Fleet';
-import { Onboarding } from '@/sections/Onboarding';
 import { useAppStore, useOnboardingStore } from '@/store';
 import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/utils';
 
+const Dashboard = lazy(() => import('@/sections/Dashboard').then((module) => ({ default: module.Dashboard })));
+const VesselView = lazy(() => import('@/sections/VesselView').then((module) => ({ default: module.VesselView })));
+const BoatMap = lazy(() => import('@/sections/BoatMap').then((module) => ({ default: module.BoatMap })));
+const Inventory = lazy(() => import('@/sections/Inventory').then((module) => ({ default: module.Inventory })));
+const Documents = lazy(() => import('@/sections/Documents').then((module) => ({ default: module.Documents })));
+const LogsTasks = lazy(() => import('@/sections/LogsTasks').then((module) => ({ default: module.LogsTasks })));
+const Navigation = lazy(() => import('@/sections/Navigation').then((module) => ({ default: module.Navigation })));
+const Community = lazy(() => import('@/sections/Community').then((module) => ({ default: module.Community })));
+const AICompanion = lazy(() => import('@/sections/AICompanion').then((module) => ({ default: module.AICompanion })));
+const Settings = lazy(() => import('@/sections/Settings').then((module) => ({ default: module.Settings })));
+const Fleet = lazy(() => import('@/sections/Fleet').then((module) => ({ default: module.Fleet })));
+const Onboarding = lazy(() => import('@/sections/Onboarding').then((module) => ({ default: module.Onboarding })));
+
+function ViewFallback() {
+  return <div className="min-h-[20rem]" role="status" aria-busy="true" aria-label="Loading view" />;
+}
+
 function ViewRenderer() {
   const { activeView } = useAppStore();
 
-  switch (activeView) {
-    case 'dashboard':
-      return <Dashboard />;
-    case 'vessel':
-      return <VesselView />;
-    case 'map':
-      return <BoatMap />;
-    case 'inventory':
-      return <Inventory />;
-    case 'documents':
-      return <Documents />;
-    case 'logs':
-    case 'tasks':
-      return <LogsTasks />;
-    case 'navigation':
-      return <Navigation />;
-    case 'community':
-      return <Community />;
-    case 'ai':
-      return <AICompanion />;
-    case 'settings':
-      return <Settings />;
-    case 'fleet':
-      return <Fleet />;
-    case 'onboarding':
-      return <Onboarding />;
-    default:
-      return <Dashboard />;
-  }
+  return (
+    <Suspense fallback={<ViewFallback />}>
+      {(() => {
+        switch (activeView) {
+          case 'dashboard':
+            return <Dashboard />;
+          case 'vessel':
+            return <VesselView />;
+          case 'map':
+            return <BoatMap />;
+          case 'inventory':
+            return <Inventory />;
+          case 'documents':
+            return <Documents />;
+          case 'logs':
+          case 'tasks':
+            return <LogsTasks />;
+          case 'navigation':
+            return <Navigation />;
+          case 'community':
+            return <Community />;
+          case 'ai':
+            return <AICompanion />;
+          case 'settings':
+            return <Settings />;
+          case 'fleet':
+            return <Fleet />;
+          case 'onboarding':
+            return <Onboarding />;
+          default:
+            return <Dashboard />;
+        }
+      })()}
+    </Suspense>
+  );
 }
 
 function App() {

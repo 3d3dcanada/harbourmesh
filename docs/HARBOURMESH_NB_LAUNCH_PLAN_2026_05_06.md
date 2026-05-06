@@ -50,6 +50,7 @@ Last light checks:
 - `npm run lint`: passing with 0 warnings.
 - `npm audit --json`: 0 vulnerabilities.
 - `npm run build`: passing for the web app.
+- `npm run build`: section-level code splitting is active; the initial app JS chunk is 278.93 kB / 88.63 kB gzip and the prior Vite oversized chunk warning is gone.
 - `npm run build` in `server`: passing.
 - `npm audit --json` in `server`: 0 vulnerabilities.
 - Local API smoke on port 3101: `/health`, `POST /api/community/soundings`, and `/api/community/soundings/summary` returned expected responses.
@@ -58,6 +59,7 @@ Last light checks:
 - Local API smoke on port 3104: `/health` and `/api/charts/nb/catalog` returned expected responses with 6 sources, 4 GeoNB WMS layers, and CHS official products marked not uploadable.
 - Local API smoke on port 3105: `/health`, community sounding upload, community hazard upload, and `/api/community/overlay.geojson` returned a 2-feature reference overlay with official chart data excluded.
 - Browser smoke on port 5175: Community map rendered at 1280x900 and 360x780 with seeded local sounding and hazard overlay markers.
+- Browser smoke on port 5176: Dashboard and Community lazy-loaded through sidebar navigation at 1280x900 and the Community view rendered at 360x780.
 - No live Signal K hardware test or real-vessel API load test was run for this snapshot.
 
 ## Implementation Progress On 2026-05-06
@@ -79,11 +81,12 @@ Completed in the active checkout:
 - Added a reference-only community GeoJSON overlay at `/api/community/overlay.geojson` that emits accepted soundings and positioned hazards while marking official chart data as excluded.
 - Added local community overlay feature generation and rendered local sounding and hazard markers on the NB community map.
 - Replaced mislabeled SHA-256 security helpers with PBKDF2-HMAC-SHA256 key derivation/password hashing, HMAC-SHA256 token signatures, AES-GCM IV/tag validation, and regression tests.
+- Split the frontend into lazy-loaded section chunks so the initial production bundle is smaller and the main app shell no longer trips Vite's oversized chunk warning.
 
 Still not done:
 
 - No production auth, PostGIS schema, moderation workflow, offline tile packaging, vector tile generation, or reviewed public aggregate tile product exists.
-- No browser/mobile visual verification has been run in this session.
+- No full route-by-route browser/mobile visual verification has been run in this session.
 - No real Signal K server, sonar, radar, AIS receiver, or Boat Node hardware has been tested.
 - Community hazards can now be queued and uploaded to the pilot backend, but moderation, review, public display, and aggregate map products are still not implemented.
 
