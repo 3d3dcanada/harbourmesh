@@ -19,6 +19,7 @@ import {
   createCommunityAggregateReleaseRepository,
   type CommunityAggregateReleaseRepository,
 } from './community-aggregate-release-repository.js';
+import { getCommunityAggregateReleaseArtifactManifest } from './community-aggregate-release-artifacts.js';
 import { buildCommunityGeoJsonOverlay } from './community-geojson.js';
 import { buildCommunityAggregateReleaseManifest } from './community-release-manifests.js';
 import { communityHazardBatchSchema, communityHazardReviewSchema } from './community-hazards.js';
@@ -180,6 +181,14 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     const cells = await aggregateReleaseRepository.listAggregateCells(release.id);
 
     return buildCommunityAggregateGeoJsonFromStoredRelease(release, cells);
+  });
+
+  app.get('/api/community/releases/aggregates/latest/artifacts', async () => {
+    const release = await getOrPublishLatestAggregateRelease();
+    const cells = await aggregateReleaseRepository.listAggregateCells(release.id);
+    const aggregate = buildCommunityAggregateGeoJsonFromStoredRelease(release, cells);
+
+    return getCommunityAggregateReleaseArtifactManifest(release, aggregate);
   });
 
   app.get('/api/community/releases/aggregates', async () => ({

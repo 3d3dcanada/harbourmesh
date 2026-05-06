@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  fetchCommunityAggregateReleaseArtifacts,
   fetchCommunityAggregateReleaseManifest,
   fetchCommunityAggregateReleaseHistory,
   fetchCommunityAggregates,
@@ -7,6 +8,7 @@ import {
   fetchLatestCommunityAggregateReleaseCells,
   getCommunityOverlayFeaturesByKind,
   publishCommunityAggregateRelease,
+  type CommunityAggregateReleaseArtifactManifest,
   type CommunityAggregateReleaseManifest,
   type CommunityAggregateGeoJson,
   type CommunityGeoJsonOverlay,
@@ -143,6 +145,67 @@ const aggregateRelease: CommunityAggregateReleaseManifest = {
   },
 };
 
+const aggregateReleaseArtifacts: CommunityAggregateReleaseArtifactManifest = {
+  id: `community-aggregate-release-artifacts:${aggregateRelease.id}`,
+  schemaVersion: 'harbourmesh.community-aggregate-release-artifacts.v1',
+  releaseId: aggregateRelease.id,
+  generatedAt: aggregateRelease.generatedAt,
+  artifacts: [
+    {
+      id: `artifact:${aggregateRelease.id}:geojson`,
+      releaseId: aggregateRelease.id,
+      region: 'NB_PILOT',
+      format: 'geojson',
+      mediaType: 'application/geo+json',
+      fileName: 'community-aggregates-2026-05-06.geojson',
+      byteLength: 1200,
+      sha256: 'b'.repeat(64),
+      generatedAt: aggregateRelease.generatedAt,
+      aggregateCells: 1,
+      officialChartDataIncluded: false,
+      rawRecordIdsIncluded: false,
+      vesselIdsIncluded: false,
+      warnings: [],
+      content: aggregate,
+    },
+    {
+      id: `artifact:${aggregateRelease.id}:pmtiles`,
+      releaseId: aggregateRelease.id,
+      region: 'NB_PILOT',
+      format: 'pmtiles',
+      mediaType: 'application/vnd.pmtiles',
+      fileName: 'community-aggregates-2026-05-06.pmtiles',
+      byteLength: 4096,
+      sha256: 'c'.repeat(64),
+      generatedAt: aggregateRelease.generatedAt,
+      aggregateCells: 1,
+      officialChartDataIncluded: false,
+      rawRecordIdsIncluded: false,
+      vesselIdsIncluded: false,
+      warnings: [],
+      tileSummary: {
+        layerName: 'harbourmesh_community_aggregate',
+        minZoom: 8,
+        maxZoom: 12,
+        tileCount: 5,
+        bounds: {
+          south: 45.27,
+          west: -66.06,
+          north: 45.28,
+          east: -66.05,
+        },
+      },
+    },
+  ],
+  rules: {
+    artifactsAreReferenceOnly: true,
+    officialChartDataExcluded: true,
+    rawRecordIdsExcluded: true,
+    vesselIdsExcluded: true,
+    vectorTileGenerationPending: false,
+  },
+};
+
 describe('community overlay client', () => {
   it('fetches and validates the community GeoJSON overlay', async () => {
     const fetchImpl = vi.fn(async () => new Response(JSON.stringify(overlay), { status: 200 }));
@@ -273,6 +336,33 @@ describe('community overlay client', () => {
     });
 
     expect(fetchImpl).toHaveBeenCalledWith('http://localhost:3001/api/community/releases/aggregates', expect.objectContaining({
+      method: 'GET',
+    }));
+  });
+
+  it('fetches persisted aggregate release artifacts', async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify(aggregateReleaseArtifacts), { status: 200 }));
+
+    await expect(fetchCommunityAggregateReleaseArtifacts({
+      apiBaseUrl: 'http://localhost:3001',
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    })).resolves.toMatchObject({
+      releaseId: aggregateRelease.id,
+      rules: {
+        vectorTileGenerationPending: false,
+      },
+      artifacts: expect.arrayContaining([
+        expect.objectContaining({
+          format: 'pmtiles',
+          mediaType: 'application/vnd.pmtiles',
+          tileSummary: expect.objectContaining({
+            layerName: 'harbourmesh_community_aggregate',
+          }),
+        }),
+      ]),
+    });
+
+    expect(fetchImpl).toHaveBeenCalledWith('http://localhost:3001/api/community/releases/aggregates/latest/artifacts', expect.objectContaining({
       method: 'GET',
     }));
   });

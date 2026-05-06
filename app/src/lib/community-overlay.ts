@@ -114,6 +114,51 @@ export type CommunityAggregateReleaseManifest = {
   };
 };
 
+export type CommunityAggregateReleaseArtifact = {
+  id: string;
+  releaseId: string;
+  region: 'NB_PILOT';
+  format: 'geojson' | 'mbtiles' | 'pmtiles';
+  mediaType: 'application/geo+json' | 'application/x-sqlite3' | 'application/vnd.pmtiles';
+  fileName: string;
+  byteLength: number;
+  sha256: string;
+  generatedAt: string;
+  aggregateCells: number;
+  officialChartDataIncluded: false;
+  rawRecordIdsIncluded: false;
+  vesselIdsIncluded: false;
+  warnings: string[];
+  content?: CommunityAggregateGeoJson;
+  tileSummary?: {
+    layerName: 'harbourmesh_community_aggregate';
+    minZoom: number;
+    maxZoom: number;
+    tileCount: number;
+    bounds: {
+      south: number;
+      west: number;
+      north: number;
+      east: number;
+    };
+  };
+};
+
+export type CommunityAggregateReleaseArtifactManifest = {
+  id: string;
+  schemaVersion: 'harbourmesh.community-aggregate-release-artifacts.v1';
+  releaseId: string;
+  generatedAt: string;
+  artifacts: CommunityAggregateReleaseArtifact[];
+  rules: {
+    artifactsAreReferenceOnly: true;
+    officialChartDataExcluded: true;
+    rawRecordIdsExcluded: true;
+    vesselIdsExcluded: true;
+    vectorTileGenerationPending: boolean;
+  };
+};
+
 export type FetchCommunityOverlayOptions = {
   apiBaseUrl?: string;
   fetchImpl?: typeof fetch;
@@ -204,6 +249,28 @@ function isCommunityAggregateReleaseHistory(value: unknown): value is CommunityA
 function isPublishAggregateReleaseResponse(value: unknown): value is { ok: true; release: CommunityAggregateReleaseManifest } {
   const receipt = value as Partial<{ ok: true; release: CommunityAggregateReleaseManifest }>;
   return receipt.ok === true && isCommunityAggregateRelease(receipt.release);
+}
+
+function isCommunityAggregateReleaseArtifactManifest(value: unknown): value is CommunityAggregateReleaseArtifactManifest {
+  const manifest = value as Partial<CommunityAggregateReleaseArtifactManifest>;
+  return (
+    manifest.schemaVersion === 'harbourmesh.community-aggregate-release-artifacts.v1' &&
+    typeof manifest.releaseId === 'string' &&
+    manifest.rules?.artifactsAreReferenceOnly === true &&
+    manifest.rules.officialChartDataExcluded === true &&
+    manifest.rules.rawRecordIdsExcluded === true &&
+    manifest.rules.vesselIdsExcluded === true &&
+    Array.isArray(manifest.artifacts) &&
+    manifest.artifacts.every((artifact) => (
+      typeof artifact.id === 'string' &&
+      artifact.releaseId === manifest.releaseId &&
+      ['geojson', 'mbtiles', 'pmtiles'].includes(artifact.format ?? '') &&
+      artifact.officialChartDataIncluded === false &&
+      artifact.rawRecordIdsIncluded === false &&
+      artifact.vesselIdsIncluded === false &&
+      /^[a-f0-9]{64}$/.test(artifact.sha256 ?? '')
+    ))
+  );
 }
 
 function buildJsonHeaders(apiKey?: string): Record<string, string> {
@@ -340,6 +407,31 @@ export async function fetchCommunityAggregateReleaseHistory(
 
   if (!isCommunityAggregateReleaseHistory(body)) {
     throw new Error('Community aggregate release history response was not valid');
+  }
+
+  return body;
+}
+
+export async function fetchCommunityAggregateReleaseArtifacts(
+  options: FetchCommunityOverlayOptions = {}
+): Promise<CommunityAggregateReleaseArtifactManifest> {
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const endpoint = resolveEndpoint('/api/community/releases/aggregates/latest/artifacts', options.apiBaseUrl ?? import.meta.env.VITE_API_BASE_URL);
+  const response = await fetchImpl(endpoint, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+    },
+  });
+  const body: unknown = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const error = body && typeof body === 'object' && 'error' in body ? String(body.error) : response.statusText;
+    throw new Error(error || `Community aggregate release artifacts request failed with HTTP ${response.status}`);
+  }
+
+  if (!isCommunityAggregateReleaseArtifactManifest(body)) {
+    throw new Error('Community aggregate release artifacts response was not valid');
   }
 
   return body;

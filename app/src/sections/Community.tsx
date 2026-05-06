@@ -38,11 +38,13 @@ import {
   type CommunityHazardReviewRecord,
 } from '@/lib/community-hazard-review';
 import {
+  fetchCommunityAggregateReleaseArtifacts,
   fetchCommunityAggregateReleaseHistory,
   fetchCommunityAggregateReleaseManifest,
   fetchCommunityAggregates,
   fetchLatestCommunityAggregateReleaseCells,
   publishCommunityAggregateRelease,
+  type CommunityAggregateReleaseArtifactManifest,
   type CommunityAggregateReleaseManifest,
   type CommunityAggregateFeature,
 } from '@/lib/community-overlay';
@@ -137,6 +139,7 @@ export function Community() {
   const [aggregateReleaseLoading, setAggregateReleaseLoading] = useState(false);
   const [aggregateReleasePublishing, setAggregateReleasePublishing] = useState(false);
   const [aggregateReleaseHistory, setAggregateReleaseHistory] = useState<CommunityAggregateReleaseManifest[]>([]);
+  const [aggregateReleaseArtifacts, setAggregateReleaseArtifacts] = useState<CommunityAggregateReleaseArtifactManifest | null>(null);
   const isOptedIn = consent?.shareTelemetryForCommunity || false;
   const shareableSoundings = getShareableSoundings();
   const queuedBatches = useMemo(() => uploadBatches.filter((batch) => batch.status === 'queued'), [uploadBatches]);
@@ -369,14 +372,16 @@ export function Community() {
     setAggregateError(null);
 
     try {
-      const [release, aggregate, history] = await Promise.all([
+      const [release, aggregate, history, artifacts] = await Promise.all([
         fetchCommunityAggregateReleaseManifest(),
         fetchLatestCommunityAggregateReleaseCells(),
         fetchCommunityAggregateReleaseHistory(),
+        fetchCommunityAggregateReleaseArtifacts(),
       ]);
       setAggregateRelease(release);
       setAggregateFeatures(aggregate.features);
       setAggregateReleaseHistory(history.releases.slice(0, 5));
+      setAggregateReleaseArtifacts(artifacts);
     } catch (error) {
       setAggregateError(error instanceof Error ? error.message : 'Community aggregate release load failed');
     } finally {
@@ -391,13 +396,15 @@ export function Community() {
     try {
       const generatedBy = resolvePilotOperatorId() ?? consent?.vesselId ?? boatNode.deviceId ?? 'local-operator';
       const release = await publishCommunityAggregateRelease({ generatedBy });
-      const [aggregate, history] = await Promise.all([
+      const [aggregate, history, artifacts] = await Promise.all([
         fetchLatestCommunityAggregateReleaseCells(),
         fetchCommunityAggregateReleaseHistory(),
+        fetchCommunityAggregateReleaseArtifacts(),
       ]);
       setAggregateRelease(release);
       setAggregateFeatures(aggregate.features);
       setAggregateReleaseHistory(history.releases.slice(0, 5));
+      setAggregateReleaseArtifacts(artifacts);
     } catch (error) {
       setAggregateError(error instanceof Error ? error.message : 'Community aggregate release publish failed');
     } finally {
@@ -670,6 +677,24 @@ export function Community() {
                         <span className="text-xs text-muted-foreground">
                           {release.product.aggregateCells} cells / {release.product.byteLength} bytes
                         </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {aggregateReleaseArtifacts && (
+                  <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                    {aggregateReleaseArtifacts.artifacts.map((artifact) => (
+                      <div key={artifact.id} className="rounded-lg border p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm font-medium uppercase">{artifact.format}</span>
+                          <span className="text-xs text-muted-foreground">{artifact.byteLength} bytes</span>
+                        </div>
+                        <p className="mt-2 font-mono text-xs">{artifact.sha256.slice(0, 12)}</p>
+                        {artifact.tileSummary && (
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            z{artifact.tileSummary.minZoom}-z{artifact.tileSummary.maxZoom} / {artifact.tileSummary.tileCount} tiles
+                          </p>
+                        )}
                       </div>
                     ))}
                   </div>

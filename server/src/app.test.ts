@@ -1084,6 +1084,35 @@ describe('HarbourMesh API', () => {
     });
     expect(releaseCells.json().features).toHaveLength(1);
     expect(JSON.stringify(releaseCells.json())).not.toContain('vessel-1');
+
+    const releaseArtifacts = await app.inject({
+      method: 'GET',
+      url: '/api/community/releases/aggregates/latest/artifacts',
+    });
+    expect(releaseArtifacts.statusCode).toBe(200);
+    expect(releaseArtifacts.json()).toMatchObject({
+      schemaVersion: 'harbourmesh.community-aggregate-release-artifacts.v1',
+      releaseId: response.json().id,
+      rules: {
+        officialChartDataExcluded: true,
+        rawRecordIdsExcluded: true,
+        vesselIdsExcluded: true,
+        vectorTileGenerationPending: false,
+      },
+    });
+    expect(releaseArtifacts.json().artifacts.map((artifact: { format: string }) => artifact.format)).toEqual([
+      'geojson',
+      'mbtiles',
+      'pmtiles',
+    ]);
+    expect(releaseArtifacts.json().artifacts.find((artifact: { format: string }) => artifact.format === 'pmtiles')).toMatchObject({
+      mediaType: 'application/vnd.pmtiles',
+      tileSummary: {
+        layerName: 'harbourmesh_community_aggregate',
+        tileCount: expect.any(Number),
+      },
+    });
+    expect(JSON.stringify(releaseArtifacts.json())).not.toContain('vessel-1');
   });
 
   it('publishes reviewed aggregate releases through the release endpoint', async () => {
