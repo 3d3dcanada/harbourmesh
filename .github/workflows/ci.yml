@@ -15,7 +15,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: app/package-lock.json
 
@@ -33,13 +33,7 @@ jobs:
 
       - name: Run tests
         working-directory: ./app
-        run: npm run test:coverage
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-        with:
-          directory: ./app/coverage
-          fail_ci_if_error: true
+        run: npm run test:run
 
   build:
     runs-on: ubuntu-latest
@@ -50,7 +44,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: app/package-lock.json
 
@@ -76,7 +70,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: server/package-lock.json
 
@@ -96,6 +90,10 @@ jobs:
         working-directory: ./server
         run: npm run build
 
+      - name: Audit server dependencies
+        working-directory: ./server
+        run: npm audit --omit=dev --audit-level=high
+
   security-audit:
     runs-on: ubuntu-latest
     steps:
@@ -105,7 +103,6 @@ jobs:
         working-directory: ./app
         run: npm audit --omit=dev --audit-level=high
 
-      - name: Run dependency review
-        uses: actions/dependency-review-action@v4
-        with:
-          directory: ./app
+      - name: Run server npm audit
+        working-directory: ./server
+        run: npm audit --omit=dev --audit-level=high

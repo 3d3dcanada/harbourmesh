@@ -112,6 +112,19 @@ npm run dev
 
 DZIP and platform-specific packages are planned but are not implemented in this checkout yet. See [New Brunswick Launch Plan](docs/HARBOURMESH_NB_LAUNCH_PLAN_2026_05_06.md) for the completion path.
 
+## Cloudflare Pages
+
+The web app is configured for Cloudflare Pages from `app/wrangler.toml`.
+
+```bash
+cd app
+npm ci
+npm run build
+npm run deploy:pages
+```
+
+The manual GitHub workflow `.github/workflows/cloudflare-pages.yml` expects `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets.
+
 ## Documentation
 
 - [Architecture Audit](docs/ARCHITECTURE_AUDIT.md)

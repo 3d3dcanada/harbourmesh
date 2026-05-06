@@ -9,6 +9,7 @@
     "type-check": "tsc -p tsconfig.app.json --noEmit",
     "lint": "eslint .",
     "preview": "vite preview",
+    "deploy:pages": "npx wrangler pages deploy ./dist --project-name=harbourmesh",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
