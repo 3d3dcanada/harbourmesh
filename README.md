@@ -125,6 +125,15 @@ npm run deploy:pages
 
 The manual GitHub workflow `.github/workflows/cloudflare-pages.yml` expects `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets.
 
+## API Container
+
+```bash
+docker build -t harbourmesh-api ./server
+docker run --rm -p 3001:3001 harbourmesh-api
+```
+
+Set `HARBOURMESH_WRITE_API_KEYS`, `HARBOURMESH_REVIEW_API_KEYS`, and `HARBOURMESH_DATA_DIR` for a real pilot deployment.
+
 ## Documentation
 
 - [Architecture Audit](docs/ARCHITECTURE_AUDIT.md)

@@ -37,6 +37,18 @@ Default API:
 
 Data is appended as JSONL under `./data` by default. Set `HARBOURMESH_DATA_DIR` to move it.
 
+## Container
+
+```bash
+docker build -t harbourmesh-api ./server
+docker run --rm -p 3001:3001 \
+  -e HARBOURMESH_WRITE_API_KEYS=change-me \
+  -e HARBOURMESH_REVIEW_API_KEYS=change-me-too \
+  harbourmesh-api
+```
+
+The container runs `node dist/index.js` as the non-root `node` user, stores pilot JSONL data under `/data`, and exposes `/health` for container health checks.
+
 NB reference chart package artifacts can be written to disk with `npm run charts:nb:artifacts -- <output-dir>`. The writer creates compact GeoJSON files plus `manifest.json`; generated files are reference-only and exclude official CHS chart data.
 
 The production persistence target starts in `db/migrations/0001_nb_pilot_community_mesh.sql`. The current server still uses JSONL, but the migration defines the PostGIS tables for devices, soundings, observations, hazards, reviews, aggregate cells, and release manifests.

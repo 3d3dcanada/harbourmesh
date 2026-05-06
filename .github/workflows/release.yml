@@ -67,3 +67,6 @@ jobs:
       - name: Build API
         working-directory: ./server
         run: npm run build
+
+      - name: Build API container
+        run: docker build -t harbourmesh-api:release ./server

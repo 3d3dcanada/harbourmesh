@@ -36,7 +36,7 @@ Observed state:
 - Backend: a Fastify API now exists for NB chart source catalog, NB chart package manifests, community sounding upload, governed community observation upload, community hazard upload, hazard review, community reference GeoJSON overlay, device registration, and summary endpoints with JSONL local persistence; a PostGIS migration now defines the production target schema, but runtime storage is still JSONL.
 - Community mesh: local raw sounding capture, local hazard reporting, consent-safe offline upload queues, backend upload endpoints, pending-by-default hazard moderation, an operator review surface, review-operator API key identity, queryable review history, a raw reference overlay, and privacy-preserving aggregate GeoJSON now exist; vector tile products are still not implemented.
 - Security: docs no longer claim production readiness; the weak SHA-256 placeholder key derivation, token signing, and password hashing helpers have been replaced with PBKDF2-HMAC-SHA256/HMAC-SHA256 regressions, the pilot API now has configurable scoped API-key gates for write/device plus review-operator keys that override client-supplied reviewer names, and the web app can save pilot credentials in a local secret store excluded from data exports. Full user auth, production secret management, and fleet/team identity are still not implemented.
-- CI/release: workflows have been adjusted to stop calling missing package scripts, use Node 22, run app/server checks, and provide a manual Cloudflare Pages deploy path for the web build when Cloudflare repository secrets are configured.
+- CI/release: workflows have been adjusted to stop calling missing package scripts, use Node 22, run app/server checks, build the API container, and provide a manual Cloudflare Pages deploy path for the web build when Cloudflare repository secrets are configured.
 - Testing: current tests now cover chart source metadata, Signal K mapping, community sounding extraction, local hazard reporting, device registration, store queue behavior, and crypto helper regressions; they still do not prove navigation safety, hardware ingest, production auth, browser layout, or security readiness.
 
 ## Current Verification Snapshot
@@ -54,6 +54,8 @@ Last light checks:
 - `npm run build` in `server`: passing.
 - `npm audit --json` in `server`: 0 vulnerabilities.
 - Cloudflare Pages config exists at `app/wrangler.toml` with `pages_build_output_dir = "./dist"` and a manual GitHub deploy workflow at `.github/workflows/cloudflare-pages.yml`; no live Cloudflare deployment was run in this snapshot.
+- API container packaging exists at `server/Dockerfile` with a non-root runner, `/health` healthcheck, and `/data` JSONL storage path; no live container registry push was run in this snapshot.
+- API container smoke: `docker build -t harbourmesh-api:codex-smoke ./server` succeeded, the container started on local port 3106 with scoped smoke API keys, `/health` returned `ok: true`, and the smoke container was stopped.
 - Server API auth tests cover missing keys, accepted header keys, accepted Bearer keys, scoped write/review key separation, review-operator key parsing, reviewer identity override for audit history, protected device registry reads, and fail-closed production-style config.
 - Server hazard review tests cover pending hazards being withheld from public GeoJSON until accepted, accepted hazards becoming overlay-eligible, review history listing, and unknown hazard review returning 404.
 - Server aggregate GeoJSON tests cover cell polygons, sounding depth averages, positioned observation counts, accepted-hazard counts, official chart exclusion, and raw vessel/source ID omission.
@@ -131,6 +133,7 @@ Completed in the active checkout:
 - Folded positioned governed observations into privacy-preserving aggregate GeoJSON cells and map popups without exposing raw record IDs, vessel IDs, or source device IDs.
 - Added `/api/community/releases/aggregates/latest` and a Community map release-manifest loader so aggregate products expose byte size, SHA-256 checksum, source counts, and legal/privacy rules separately from the raw GeoJSON payload.
 - Added Cloudflare Pages deployment configuration, environment examples, a manual deploy workflow, and a `npm run deploy:pages` script for the web app.
+- Added API container packaging and CI/release Docker build steps for the Fastify pilot backend.
 - Added an operator hazard moderation surface in Community with protected review-queue loading and accept/reject actions against the pilot API.
 - Split pilot API keys into backward-compatible legacy keys plus scoped write keys and review keys so intake/device access can be separated from hazard moderation.
 - Added `HARBOURMESH_REVIEW_OPERATOR_KEYS` support so review-scoped API keys can carry server-side operator IDs and override client-supplied reviewer names before moderation audit history is written.

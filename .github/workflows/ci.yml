@@ -90,6 +90,9 @@ jobs:
         working-directory: ./server
         run: npm run build
 
+      - name: Build API container
+        run: docker build -t harbourmesh-api:ci ./server
+
       - name: Audit server dependencies
         working-directory: ./server
         run: npm audit --omit=dev --audit-level=high
