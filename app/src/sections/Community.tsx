@@ -29,6 +29,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { prepareSoundingForCommunityUpload, type RawDepthSounding } from '@/lib/community-soundings';
 import { uploadCommunityHazardBatch, uploadCommunitySoundingBatch } from '@/lib/community-sync';
+import { buildLocalCommunityOverlayFeatures } from '@/lib/local-community-overlay';
 import { cn } from '@/lib/utils';
 import {
   useCommunityDataStore,
@@ -154,6 +155,10 @@ export function Community() {
   const todayPrefix = new Date().toISOString().slice(0, 10);
   const reportsToday = rawSoundings.filter((sounding) => sounding.receivedAt.startsWith(todayPrefix)).length +
     hazards.filter((hazard) => hazard.reportedAt.startsWith(todayPrefix)).length;
+  const communityOverlayFeatures = useMemo(
+    () => buildLocalCommunityOverlayFeatures(rawSoundings, hazards),
+    [hazards, rawSoundings]
+  );
 
   const handleOptIn = (enabled: boolean) => {
     if (!consent) return;
@@ -354,6 +359,7 @@ export function Community() {
                 } : null}
                 heading={latestMotion?.yaw ?? 0}
                 aisTargets={aisTargets}
+                communityFeatures={communityOverlayFeatures}
               />
             </CardContent>
           </Card>

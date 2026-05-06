@@ -1,9 +1,10 @@
 import L, { type LatLngExpression } from 'leaflet';
 import { CircleMarker, LayersControl, MapContainer, Pane, Popup, Polyline, TileLayer, WMSTileLayer, useMap } from 'react-leaflet';
 import { Fragment, useEffect, useMemo } from 'react';
-import { AlertTriangle, Database, FileLock2, Ship } from 'lucide-react';
+import { AlertTriangle, Database, Droplets, FileLock2, Ship } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn, formatCoordinate, formatHeading } from '@/lib/utils';
+import type { CommunityOverlayFeature } from '@/lib/community-overlay';
 import type { Route } from '@/types';
 import {
   GEONB_WMS_LAYERS,
@@ -28,6 +29,7 @@ type NBPilotChartProps = {
   aisTargets: AisTarget[];
   routes?: Route[];
   activeRouteId?: string | null;
+  communityFeatures?: CommunityOverlayFeature[];
   className?: string;
 };
 
@@ -54,6 +56,24 @@ function getHeadingLine(position: MapPosition, heading: number): [LatLngExpressi
       position.longitude + Math.sin(radians) * length,
     ],
   ];
+}
+
+function getFeaturePosition(feature: CommunityOverlayFeature): MapPosition {
+  const [longitude, latitude] = feature.geometry.coordinates;
+  return { latitude, longitude };
+}
+
+function getFeatureKind(feature: CommunityOverlayFeature): 'sounding' | 'hazard' | 'unknown' {
+  if (feature.properties.kind === 'sounding') return 'sounding';
+  if (feature.properties.kind === 'hazard') return 'hazard';
+  return 'unknown';
+}
+
+function getFeatureColor(feature: CommunityOverlayFeature): string {
+  if (getFeatureKind(feature) === 'sounding') return '#0891b2';
+  if (feature.properties.severity === 'high') return '#dc2626';
+  if (feature.properties.severity === 'medium') return '#d97706';
+  return '#2563eb';
 }
 
 function RecenterOnPosition({ center }: { center: MapPosition }) {
@@ -100,6 +120,7 @@ export function NBPilotChart({
   aisTargets,
   routes = [],
   activeRouteId = null,
+  communityFeatures = [],
   className,
 }: NBPilotChartProps) {
   const usablePosition = isWithinNBPilotBounds(position) ? position : null;
@@ -112,6 +133,10 @@ export function NBPilotChart({
   const visibleAisTargets = useMemo(
     () => aisTargets.filter((target) => isWithinNBPilotBounds(target.position)),
     [aisTargets],
+  );
+  const visibleCommunityFeatures = useMemo(
+    () => communityFeatures.filter((feature) => isWithinNBPilotBounds(getFeaturePosition(feature))),
+    [communityFeatures],
   );
 
   return (
@@ -193,6 +218,49 @@ export function NBPilotChart({
                   </CircleMarker>
                 ))}
               </Fragment>
+            );
+          })}
+        </Pane>
+
+        <Pane name="harbourmesh-community-overlay" style={{ zIndex: 635 }}>
+          {visibleCommunityFeatures.map((feature) => {
+            const position = getFeaturePosition(feature);
+            const kind = getFeatureKind(feature);
+            const color = getFeatureColor(feature);
+
+            return (
+              <CircleMarker
+                key={feature.id}
+                center={toLatLng(position)}
+                radius={kind === 'sounding' ? 4 : 7}
+                pathOptions={{
+                  color,
+                  fillColor: color,
+                  fillOpacity: kind === 'sounding' ? 0.55 : 0.8,
+                  weight: 2,
+                }}
+              >
+                <Popup>
+                  <div className="space-y-1 text-sm">
+                    <strong className="flex items-center gap-1">
+                      {kind === 'sounding' ? <Droplets className="h-3.5 w-3.5" /> : <AlertTriangle className="h-3.5 w-3.5" />}
+                      {kind === 'sounding' ? 'Community sounding' : 'Community hazard'}
+                    </strong>
+                    {kind === 'sounding' && typeof feature.properties.depthMeters === 'number' && (
+                      <div>{feature.properties.depthMeters.toFixed(1)} m</div>
+                    )}
+                    {kind === 'hazard' && typeof feature.properties.description === 'string' && (
+                      <div>{feature.properties.description}</div>
+                    )}
+                    {kind === 'hazard' && typeof feature.properties.severity === 'string' && (
+                      <div className="capitalize">{feature.properties.severity}</div>
+                    )}
+                    {typeof feature.properties.officialChartDataIncluded === 'boolean' && (
+                      <div>Official chart data: {feature.properties.officialChartDataIncluded ? 'included' : 'excluded'}</div>
+                    )}
+                  </div>
+                </Popup>
+              </CircleMarker>
             );
           })}
         </Pane>

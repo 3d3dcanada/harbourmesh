@@ -30,7 +30,7 @@ Active checkout:
 
 Observed state:
 
-- Frontend: React/Vite app exists, with the community section now wired to local telemetry, AIS targets, soundings, hazards, upload batches, and NB reference mapping instead of hard-coded demo community data.
+- Frontend: React/Vite app exists, with the community section now wired to local telemetry, AIS targets, soundings, hazards, upload batches, local map overlay features, and NB reference mapping instead of hard-coded demo community data.
 - Charts: NB pilot reference chart work has started with React Leaflet, OSM base tiles, and legal GeoNB WMS overlays; it is not a certified navigation chart system.
 - Telemetry: recorded Signal K replay and live Signal K WebSocket wiring now exist; live hardware ingest remains unverified.
 - Backend: a Fastify API now exists for NB chart source catalog, community sounding upload, community hazard upload, community reference GeoJSON overlay, device registration, and summary endpoints with JSONL local persistence; it is a pilot backend, not the final PostGIS/cloud mesh.
@@ -43,7 +43,7 @@ Observed state:
 
 Last light checks:
 
-- `npm run test:run`: passing, 86 web tests.
+- `npm run test:run`: passing, 88 web tests.
 - `npm test` in `server`: passing, 9 API tests.
 - `npm run type-check`: passing.
 - `npm run type-check` in `server`: passing.
@@ -57,7 +57,8 @@ Last light checks:
 - Local API smoke on port 3103: `/health`, `POST /api/community/hazards`, and `/api/community/hazards/summary` returned expected responses.
 - Local API smoke on port 3104: `/health` and `/api/charts/nb/catalog` returned expected responses with 6 sources, 4 GeoNB WMS layers, and CHS official products marked not uploadable.
 - Local API smoke on port 3105: `/health`, community sounding upload, community hazard upload, and `/api/community/overlay.geojson` returned a 2-feature reference overlay with official chart data excluded.
-- No browser test, live Signal K hardware test, or real-vessel API load test was run for this snapshot.
+- Browser smoke on port 5175: Community map rendered at 1280x900 and 360x780 with seeded local sounding and hazard overlay markers.
+- No live Signal K hardware test or real-vessel API load test was run for this snapshot.
 
 ## Implementation Progress On 2026-05-06
 
@@ -76,6 +77,7 @@ Completed in the active checkout:
 - Replaced the remaining demo community map, conditions, hazards, bathymetry stats, and contribution statistics with values derived from local telemetry, AIS targets, stored soundings, local hazards, and sync batches.
 - Added a Fastify community hazard API at `/api/community/hazards`, strict Zod validation, JSONL storage, summary endpoint, frontend hazard queueing, receipt validation, and hazard status tracking.
 - Added a reference-only community GeoJSON overlay at `/api/community/overlay.geojson` that emits accepted soundings and positioned hazards while marking official chart data as excluded.
+- Added local community overlay feature generation and rendered local sounding and hazard markers on the NB community map.
 
 Still not done:
 
