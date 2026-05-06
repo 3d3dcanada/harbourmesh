@@ -167,6 +167,43 @@ describe('HarbourMesh API', () => {
     });
   });
 
+  it('serves the NB pilot chart catalog with legal source policies', async () => {
+    const app = await createTestApp();
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/charts/nb/catalog',
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      id: 'nb-pilot-chart-catalog',
+      schemaVersion: 'harbourmesh.chart-catalog.v1',
+      rules: {
+        officialChartDataMustRemainLocal: true,
+        communityProductsAreReferenceOnly: true,
+      },
+    });
+    expect(response.json().sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'geonb-nbhn-watercourse',
+          kind: 'wms',
+          sharePolicy: expect.objectContaining({
+            mayCreateSharedTiles: true,
+          }),
+        }),
+        expect.objectContaining({
+          id: 'chs-official-digital-products',
+          kind: 'licence-boundary',
+          sharePolicy: expect.objectContaining({
+            mayUploadToCommunityMesh: false,
+            requiresSeparateLicence: true,
+          }),
+        }),
+      ])
+    );
+  });
+
   it('accepts and summarizes community hazard batches', async () => {
     const app = await createTestApp();
     const receipt = await app.inject({

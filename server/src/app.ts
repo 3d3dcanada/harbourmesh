@@ -1,6 +1,7 @@
 import cors from '@fastify/cors';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { ZodError } from 'zod';
+import { getNBPilotChartCatalog } from './chart-catalog.js';
 import { communityHazardBatchSchema } from './community-hazards.js';
 import {
   createCommunityHazardRepository,
@@ -63,6 +64,8 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   });
 
   app.get('/api/community/soundings/summary', async () => repository.getSummary());
+
+  app.get('/api/charts/nb/catalog', async () => getNBPilotChartCatalog());
 
   app.post('/api/community/hazards', async (request, reply) => {
     try {
