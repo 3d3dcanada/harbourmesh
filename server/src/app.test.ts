@@ -778,6 +778,63 @@ describe('HarbourMesh API', () => {
     expect(missingArtifact.statusCode).toBe(404);
   });
 
+  it('can include capped GeoNB source features in runtime chart artifact downloads', async () => {
+    const fetchCalls: string[] = [];
+    const app = await createTestApp({
+      chartPackageArtifactOptions: {
+        includeGeoNBFeatures: true,
+        maxGeoNBFeaturesPerSource: 1,
+        fetchImpl: (async (input) => {
+          fetchCalls.push(String(input));
+          return new Response(JSON.stringify({
+            type: 'FeatureCollection',
+            features: [
+              {
+                type: 'Feature',
+                id: 101,
+                geometry: {
+                  type: 'LineString',
+                  coordinates: [[-66.1, 45.2], [-66.05, 45.25]],
+                },
+                properties: {
+                  OBJECTID: 101,
+                },
+              },
+            ],
+          }), { status: 200 });
+        }) as typeof fetch,
+      },
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/charts/nb/package-artifacts',
+    });
+    const coastGeoJsonArtifact = response.json().artifacts.find((artifact: { packageId: string; format: string }) => (
+      artifact.packageId === 'nb-coast-reference' && artifact.format === 'geojson'
+    ));
+
+    expect(response.statusCode).toBe(200);
+    expect(fetchCalls.length).toBeGreaterThan(0);
+    expect(coastGeoJsonArtifact.sourceFeatureCount).toBeGreaterThan(0);
+    expect(coastGeoJsonArtifact.sourceFeatureSummaries[0]).toMatchObject({
+      maxFeatures: 1,
+      fetchedFeatureCount: 1,
+    });
+
+    const download = await app.inject({
+      method: 'GET',
+      url: coastGeoJsonArtifact.downloadPath,
+    });
+    const downloadedFeatureCollection = download.json();
+
+    expect(download.statusCode).toBe(200);
+    expect(download.headers['x-harbourmesh-sha256']).toBe(coastGeoJsonArtifact.sha256);
+    expect(downloadedFeatureCollection.features.length).toBe(coastGeoJsonArtifact.sourceFeatureCount + 1);
+    expect(JSON.stringify(downloadedFeatureCollection)).toContain('harbourmeshReferenceOnly');
+    expect(JSON.stringify(downloadedFeatureCollection)).not.toContain('"officialChartDataIncluded":true');
+  });
+
   it('accepts and summarizes community hazard batches', async () => {
     const app = await createTestApp();
     const receipt = await app.inject({

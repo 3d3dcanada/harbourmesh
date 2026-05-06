@@ -12,6 +12,7 @@ import {
   type OperatorApiKey,
 } from './api-auth.js';
 import {
+  type BuildNBPilotChartPackageArtifactsOptions,
   getNBPilotChartPackageArtifactDownload,
   getNBPilotChartPackageArtifactManifest,
   type ChartPackageArtifactFormat,
@@ -69,8 +70,17 @@ export type BuildAppOptions = {
   requireApiAuth?: boolean;
   databaseUrl?: string;
   runMigrations?: boolean;
+  chartPackageArtifactOptions?: BuildNBPilotChartPackageArtifactsOptions;
   logger?: boolean;
 };
+
+function chartArtifactOptionsFromEnvironment(): BuildNBPilotChartPackageArtifactsOptions {
+  const maxFeatures = Number(process.env.HARBOURMESH_GEONB_MAX_FEATURES_PER_SOURCE ?? 100);
+  return {
+    includeGeoNBFeatures: process.env.HARBOURMESH_FETCH_GEONB_FEATURES === 'true',
+    maxGeoNBFeaturesPerSource: Number.isFinite(maxFeatures) && maxFeatures > 0 ? maxFeatures : 100,
+  };
+}
 
 export async function buildApp(options: BuildAppOptions): Promise<FastifyInstance> {
   const app = Fastify({ logger: options.logger ?? false });
@@ -92,6 +102,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   const aggregateReleaseRepository = options.aggregateReleaseRepository
     ?? postgisRepositories?.aggregateReleases
     ?? createCommunityAggregateReleaseRepository(options.dataDir);
+  const chartPackageArtifactOptions = options.chartPackageArtifactOptions ?? chartArtifactOptionsFromEnvironment();
   const apiAuth = createApiAuthConfig({
     keys: options.apiKeys ?? parseApiKeys(process.env.HARBOURMESH_API_KEYS, process.env.HARBOURMESH_API_KEY),
     keySha256Hashes: options.apiKeySha256Hashes ?? parseApiKeySha256Hashes(process.env.HARBOURMESH_API_KEY_SHA256S, process.env.HARBOURMESH_API_KEY_SHA256),
@@ -258,7 +269,9 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
 
   app.get('/api/charts/nb/catalog', async () => getNBPilotChartCatalog());
   app.get('/api/charts/nb/packages', async () => getNBPilotChartPackageManifest());
-  app.get('/api/charts/nb/package-artifacts', async () => getNBPilotChartPackageArtifactManifest());
+  app.get('/api/charts/nb/package-artifacts', async () => (
+    getNBPilotChartPackageArtifactManifest(new Date().toISOString(), chartPackageArtifactOptions)
+  ));
   app.get('/api/charts/nb/package-artifacts/:packageId/:format', async (request, reply) => {
     const { packageId, format } = request.params as { packageId: string; format: string };
     if (format !== 'geojson' && format !== 'mbtiles' && format !== 'pmtiles') {
@@ -269,7 +282,8 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     const artifact = await getNBPilotChartPackageArtifactDownload(
       packageId,
       format as ChartPackageArtifactFormat,
-      query.generatedAt
+      query.generatedAt,
+      chartPackageArtifactOptions
     );
     if (!artifact) {
       return reply.code(404).send({ ok: false, error: 'chart_package_artifact_not_found' });

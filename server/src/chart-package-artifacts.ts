@@ -111,7 +111,7 @@ export type WriteNBPilotChartPackageArtifactsOptions = {
   fetchImpl?: typeof fetch;
 };
 
-type BuildNBPilotChartPackageArtifactsOptions = {
+export type BuildNBPilotChartPackageArtifactsOptions = {
   includeGeoNBFeatures?: boolean;
   maxGeoNBFeaturesPerSource?: number;
   fetchImpl?: typeof fetch;
