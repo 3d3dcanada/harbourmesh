@@ -6,7 +6,7 @@ Scope: New Brunswick pilot first, international architecture second
 
 ## Executive Status
 
-HarbourMesh is currently a demo-grade React/Vite frontend with strong product direction but no production backend, chart engine, hardware ingest, AI runtime, weather-routing engine, or community data network. The next goal is not a public launch. The next goal is a stable NB pilot foundation that is honest about what is implemented, legally clean around chart data, and ready for real vessel telemetry.
+HarbourMesh is currently a React/Vite NB pilot app with an early Fastify backend for device registration and community sounding upload. It still does not have a production chart engine, hardware ingest proof, AI runtime, weather-routing engine, moderation workflow, public aggregate data products, or production cloud mesh. The next goal is not a public launch. The next goal is a stable NB pilot foundation that is honest about what is implemented, legally clean around chart data, and ready for real vessel telemetry.
 
 The product ambition is correct: a boat-first operating layer where charts, vessel telemetry, sonar soundings, radar-derived observations, hazards, weather, maintenance, and community-contributed local knowledge can become useful together. The implementation has to be phased carefully because official navigation charts, user-generated bathymetry, privacy, liability, and sensor quality are separate problems that should not be mixed into one ungoverned data pool.
 
@@ -30,20 +30,20 @@ Active checkout:
 
 Observed state:
 
-- Frontend: React/Vite app exists.
+- Frontend: React/Vite app exists, with the community section now wired to local telemetry, AIS targets, soundings, hazards, upload batches, and NB reference mapping instead of hard-coded demo community data.
 - Charts: NB pilot reference chart work has started with React Leaflet, OSM base tiles, and legal GeoNB WMS overlays; it is not a certified navigation chart system.
 - Telemetry: recorded Signal K replay and live Signal K WebSocket wiring now exist; live hardware ingest remains unverified.
 - Backend: a Fastify API now exists for community sounding upload and summary endpoints with JSONL local persistence; it is a pilot backend, not the final PostGIS/cloud mesh.
-- Community mesh: local raw sounding capture, a consent-safe offline upload queue, and a backend upload endpoint now exist; moderation and public data products are still not implemented.
+- Community mesh: local raw sounding capture, local hazard reporting, a consent-safe offline upload queue, and a backend upload endpoint now exist; moderation and public data products are still not implemented.
 - Security: docs overclaim; source contains weak or mislabeled crypto helpers.
 - CI/release: workflows have been adjusted to stop calling missing package scripts.
-- Testing: current tests now cover chart source metadata, Signal K mapping, community sounding extraction, and store queue behavior; they still do not prove navigation safety, hardware ingest, browser layout, or security readiness.
+- Testing: current tests now cover chart source metadata, Signal K mapping, community sounding extraction, local hazard reporting, device registration, and store queue behavior; they still do not prove navigation safety, hardware ingest, browser layout, or security readiness.
 
 ## Current Verification Snapshot
 
 Last light checks:
 
-- `npm run test:run`: passing, 76 web tests.
+- `npm run test:run`: passing, 77 web tests.
 - `npm test` in `server`: passing, 5 API tests.
 - `npm run type-check`: passing.
 - `npm run type-check` in `server`: passing.
@@ -69,13 +69,14 @@ Completed in the active checkout:
 - Added community sounding upload payloads and local offline sync batches that explicitly exclude official chart data and raw local positions.
 - Added a Fastify community sounding API at `/api/community/soundings`, strict Zod validation, JSONL storage, summary endpoint, and frontend sync adapter.
 - Added Boat Node device identity settings and `/api/devices/register` so contributed data can carry registered source provenance.
+- Replaced the remaining demo community map, conditions, hazards, bathymetry stats, and contribution statistics with values derived from local telemetry, AIS targets, stored soundings, local hazards, and sync batches.
 
 Still not done:
 
 - No production auth, PostGIS schema, moderation workflow, or public aggregate tile product exists.
 - No browser/mobile visual verification has been run in this session.
 - No real Signal K server, sonar, radar, AIS receiver, or Boat Node hardware has been tested.
-- Community map, conditions, hazards, and statistics still contain demo data outside the new bathymetry path.
+- Community hazards are still local-only until the backend hazard API and moderation path are implemented.
 
 ## NB Data Strategy
 

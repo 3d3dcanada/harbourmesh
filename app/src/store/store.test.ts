@@ -539,6 +539,7 @@ describe('Community Data Store', () => {
     useCommunityDataStore.setState({
       rawSoundings: [],
       uploadBatches: [],
+      hazards: [],
     });
   });
 
@@ -719,6 +720,40 @@ describe('Community Data Store', () => {
       status: 'sent',
       updatedAt: '2026-05-06T12:03:00.000Z',
       attemptCount: 1,
+    });
+  });
+
+  it('stores local hazard reports with timestamp and position', () => {
+    const { result } = renderHook(() => useCommunityDataStore());
+    let hazardId = '';
+
+    act(() => {
+      const hazard = result.current.reportHazard({
+        vesselId: 'vessel-1',
+        sourceDeviceId: 'boat-node-001',
+        type: 'debris',
+        severity: 'medium',
+        description: 'Floating debris near track',
+        reportedAt: '2026-05-06T12:04:00.000Z',
+        position: {
+          latitude: 45.27,
+          longitude: -66.06,
+          source: 'gps',
+          timestamp: '2026-05-06T12:04:00.000Z',
+        },
+      });
+      hazardId = hazard.id;
+    });
+
+    expect(result.current.hazards[0]).toMatchObject({
+      id: hazardId,
+      type: 'debris',
+      severity: 'medium',
+      status: 'local',
+      position: {
+        latitude: 45.27,
+        longitude: -66.06,
+      },
     });
   });
 });

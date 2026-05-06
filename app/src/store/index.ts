@@ -739,7 +739,9 @@ export const useSettingsStore = create<SettingsStore>()(
 interface CommunityDataStore {
   rawSoundings: RawDepthSounding[];
   uploadBatches: CommunitySyncBatch[];
+  hazards: CommunityHazard[];
   addRawSoundings: (soundings: RawDepthSounding[]) => void;
+  reportHazard: (hazard: Omit<CommunityHazard, 'id' | 'reportedAt' | 'status'> & { id?: string; reportedAt?: string }) => CommunityHazard;
   getShareableSoundings: () => CommunitySoundingUpload[];
   queueShareableSoundingBatch: (options?: QueueCommunitySoundingBatchOptions) => CommunitySyncBatch | null;
   markUploadBatchStatus: (
@@ -771,6 +773,18 @@ export type QueueCommunitySoundingBatchOptions = {
   maxRecords?: number;
 };
 
+export type CommunityHazard = {
+  id: string;
+  vesselId: string;
+  sourceDeviceId?: string;
+  type: 'traffic' | 'weather' | 'obstruction' | 'shoal' | 'debris' | 'other';
+  severity: 'low' | 'medium' | 'high';
+  description: string;
+  position?: GeoPosition;
+  reportedAt: string;
+  status: 'local' | 'queued' | 'acknowledged';
+};
+
 const DEFAULT_COMMUNITY_SOUNDING_ENDPOINT = '/api/community/soundings';
 
 export const useCommunityDataStore = create<CommunityDataStore>()(
@@ -778,6 +792,7 @@ export const useCommunityDataStore = create<CommunityDataStore>()(
     (set, get) => ({
       rawSoundings: [],
       uploadBatches: [],
+      hazards: [],
       addRawSoundings: (soundings) =>
         set((state) => {
           const byId = new Map(state.rawSoundings.map((sounding) => [sounding.id, sounding]));
@@ -792,6 +807,20 @@ export const useCommunityDataStore = create<CommunityDataStore>()(
               .slice(0, 5000),
           };
         }),
+      reportHazard: (hazard) => {
+        const nextHazard: CommunityHazard = {
+          ...hazard,
+          id: hazard.id ?? crypto.randomUUID(),
+          reportedAt: hazard.reportedAt ?? new Date().toISOString(),
+          status: 'local',
+        };
+
+        set((state) => ({
+          hazards: [nextHazard, ...state.hazards].slice(0, 500),
+        }));
+
+        return nextHazard;
+      },
       getShareableSoundings: () =>
         get().rawSoundings.flatMap((sounding) => {
           const upload = prepareSoundingForCommunityUpload(sounding);
@@ -855,6 +884,7 @@ export const useCommunityDataStore = create<CommunityDataStore>()(
       partialize: (state) => ({
         rawSoundings: state.rawSoundings,
         uploadBatches: state.uploadBatches,
+        hazards: state.hazards,
       }),
     }
   )
