@@ -3,7 +3,7 @@
  * Real-time HUD with charts, AIS, and telemetry display
  */
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Navigation as NavigationIcon,
   MapPin,
@@ -18,6 +18,7 @@ import {
   Ship,
   AlertTriangle,
   Download,
+  Upload,
   Info,
   Clock,
   Zap,
@@ -40,6 +41,7 @@ import {
   getTelemetryHealth,
   type TelemetryHealthStatus,
 } from '@/lib/telemetry-health';
+import { parseGpxRoute, routeToGpx } from '@/lib/gpx-routes';
 
 // Compass rose component
 function CompassRose({ heading, course, size = 200 }: { heading: number; course?: number; size?: number }) {
@@ -221,11 +223,14 @@ export function Navigation() {
   const [chartArtifacts, setChartArtifacts] = useState<NBPilotChartPackageArtifactManifest | null>(null);
   const [chartArtifactsLoading, setChartArtifactsLoading] = useState(false);
   const [chartArtifactsError, setChartArtifactsError] = useState<string | null>(null);
+  const [routeImportError, setRouteImportError] = useState<string | null>(null);
+  const gpxInputRef = useRef<HTMLInputElement>(null);
   const telemetryMessages = useTelemetryStore((state) => state.messages);
   const telemetryHealth = getTelemetryHealth(telemetryMessages);
   const {
     routes,
     activeRouteId,
+    addRoute,
     setActiveRoute,
     seedNBPilotReferenceRoute,
   } = useNavigationPlanStore();
@@ -249,6 +254,36 @@ export function Navigation() {
       setChartArtifactsError(error instanceof Error ? error.message : 'Chart package artifact load failed');
     } finally {
       setChartArtifactsLoading(false);
+    }
+  };
+
+  const handleExportActiveRouteGpx = () => {
+    if (!activeRoute) return;
+
+    const blob = new Blob([routeToGpx(activeRoute)], { type: 'application/gpx+xml' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${activeRoute.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'route'}.gpx`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportRouteGpx = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.currentTarget.files?.[0];
+    if (!file) return;
+
+    try {
+      const importedRoute = parseGpxRoute(await file.text(), {
+        id: `gpx-${crypto.randomUUID()}`,
+        vesselId: 'local-vessel',
+      });
+      addRoute(importedRoute);
+      setRouteImportError(null);
+    } catch (error) {
+      setRouteImportError(error instanceof Error ? error.message : 'GPX import failed');
+    } finally {
+      event.currentTarget.value = '';
     }
   };
 
@@ -578,15 +613,42 @@ export function Navigation() {
             <div className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <MapPin className="h-5 w-5" />
-                    Routes
-                  </CardTitle>
-                  <CardDescription>
-                    Local planning routes render as reference overlays on the NB pilot chart.
-                  </CardDescription>
+                  <div className="flex flex-col gap-3 sm:flex-row xl:flex-col sm:items-start sm:justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <MapPin className="h-5 w-5" />
+                        Routes
+                      </CardTitle>
+                      <CardDescription>
+                        Local planning routes render as reference overlays on the NB pilot chart.
+                      </CardDescription>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <input
+                        ref={gpxInputRef}
+                        type="file"
+                        accept=".gpx,application/gpx+xml,application/xml,text/xml"
+                        className="hidden"
+                        onChange={(event) => void handleImportRouteGpx(event)}
+                      />
+                      <Button size="sm" variant="outline" onClick={() => gpxInputRef.current?.click()}>
+                        <Upload className="h-4 w-4" />
+                        Import GPX
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={handleExportActiveRouteGpx} disabled={!activeRoute}>
+                        <Download className="h-4 w-4" />
+                        Export GPX
+                      </Button>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
+                  {routeImportError && (
+                    <div className="mb-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-200">
+                      {routeImportError}
+                    </div>
+                  )}
+
                   {routes.length === 0 ? (
                     <div className="rounded-lg border border-dashed p-6 text-center">
                       <p className="text-sm text-muted-foreground">No local routes saved.</p>

@@ -43,14 +43,14 @@ Observed state:
 
 Last light checks:
 
-- `npm run test:run`: passing, 147 web tests.
+- `npm run test:run`: passing, 151 web tests.
 - `npm test` in `server`: passing, 42 server tests.
 - `npm run type-check`: passing.
 - `npm run type-check` in `server`: passing.
 - `npm run lint`: passing with 0 warnings.
 - `npm audit --json`: 0 vulnerabilities.
 - `npm run build`: passing for the web app.
-- `npm run build`: section-level code splitting is active; the initial app JS chunk is 286.92 kB / 90.40 kB gzip, the Navigation section chunk is 30.75 kB / 7.21 kB gzip, the Settings section chunk is 45.71 kB / 9.36 kB gzip, the Community section chunk is 84.94 kB / 13.37 kB gzip, the pilot API credential chunk is 7.14 kB / 2.87 kB gzip, the checkbox chunk is 4.24 kB / 1.82 kB gzip, and the prior Vite oversized chunk warning is gone.
+- `npm run build`: section-level code splitting is active; the initial app JS chunk is 286.94 kB / 90.41 kB gzip, the Navigation section chunk is 34.45 kB / 8.49 kB gzip, the Settings section chunk is 45.71 kB / 9.36 kB gzip, the Community section chunk is 84.94 kB / 13.36 kB gzip, the pilot API credential chunk is 7.14 kB / 2.87 kB gzip, the checkbox chunk is 4.24 kB / 1.82 kB gzip, and the prior Vite oversized chunk warning is gone.
 - `npm run build` in `server`: passing.
 - `npm audit --json` in `server`: 0 vulnerabilities.
 - Cloudflare Pages config exists at `app/wrangler.toml` with `pages_build_output_dir = "./dist"` and a manual GitHub deploy workflow at `.github/workflows/cloudflare-pages.yml`; no live Cloudflare deployment was run in this snapshot.
@@ -92,6 +92,7 @@ Last light checks:
 - Web sounding review tests cover protected queue/history loading, review decisions, short-lived Bearer sessions, malformed responses, and API error handling.
 - Web aggregate overlay tests cover aggregate GeoJSON fetching, positioned observation counts, aggregate release manifest/history/cell/artifact fetching, release publishing, privacy metadata validation, and rejection when raw IDs or official chart data are exposed.
 - Web chart artifact tests cover `/api/charts/nb/package-artifacts` client validation, GeoJSON, MBTiles, and PMTiles artifact manifest loading, generated-format media types, and rejection of artifacts that include official chart data.
+- Web GPX route tests cover local route export as GPX 1.1 route points, GPX route import, GPX track fallback import, and malformed/undersized GPX rejection.
 - Local API smoke on port 3101: `/health`, `POST /api/community/soundings`, and `/api/community/soundings/summary` returned expected responses.
 - Local API smoke on port 3102: `POST /api/devices/register` and `GET /api/devices` returned expected responses.
 - Local API smoke on port 3103: `/health`, `POST /api/community/hazards`, and `/api/community/hazards/summary` returned expected responses.
@@ -125,6 +126,7 @@ Last light checks:
 - Browser smoke on port 5182 with a temporary API on port 3130: Community Map rendered the approval checklist at 1280x900 and 360x800, checked `Attach approval`, clicked `Publish Release`, and rendered 1 aggregate cell, the approved aggregate release card, `nb-release-approver` as the server-side approver, GeoJSON/MBTiles/PMTiles `Download` links, and 0 console errors or warnings.
 - Browser smoke on port 5183 with a temporary API on port 3131: Community Hazards loaded accepted hazard products at 1280x900 and 360x800, rendered Public Hazards 1, Vector Tiles Ready, GeoJSON/MBTiles/PMTiles `Download` links, and 0 console errors or warnings.
 - Browser smoke on port 5185 with a temporary API on port 3133: a seeded community sounding loaded in the Sounding Quality Review panel, rejecting it returned `POST /api/community/soundings/sounding-ui-1/review => 202`, the UI moved it to rejected, console stayed at 0 errors/warnings, and `/api/community/aggregates.geojson` reported `acceptedSoundings: 0`, `rejectedSoundings: 1`, `aggregateCells: 0`.
+- Browser smoke on port 5186: Navigation Chart View rendered the Routes card with `Import GPX`, `Export GPX`, the NB Pilot Reference Route, and 0 console errors or warnings.
 - No live Signal K hardware test or real-vessel API load test was run for this snapshot.
 
 ## Implementation Progress On 2026-05-06
@@ -142,6 +144,7 @@ Completed in the active checkout:
 - Replaced the navigation canvas demo with an NB pilot map component.
 - Added Signal K URL building, delta mapping, recorded replay data, and telemetry mode settings.
 - Added a persisted navigation planning store, route distance/course calculations, and an NB pilot reference route overlay.
+- Added GPX route import/export in Navigation so pilots can move planned local routes between HarbourMesh and common marine planning tools.
 - Added local raw depth sounding capture from telemetry with consent, position precision, quality flags, and transducer offsets.
 - Added community sounding upload payloads and local offline sync batches that explicitly exclude official chart data and raw local positions.
 - Added a Fastify community sounding API at `/api/community/soundings`, strict Zod validation, JSONL fallback storage, PostGIS runtime storage, summary endpoint, and frontend sync adapter.
