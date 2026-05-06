@@ -1,6 +1,6 @@
 import cors from '@fastify/cors';
 import Fastify, { type FastifyInstance } from 'fastify';
-import { ZodError } from 'zod';
+import { z, ZodError } from 'zod';
 import {
   createApiAuthConfig,
   getRequestApiKeyIdentity,
@@ -14,6 +14,11 @@ import {
 import { getNBPilotChartPackageArtifactManifest } from './chart-package-artifacts.js';
 import { getNBPilotChartCatalog, getNBPilotChartPackageManifest } from './chart-catalog.js';
 import { buildCommunityAggregateGeoJson } from './community-aggregates.js';
+import {
+  buildCommunityAggregateGeoJsonFromStoredRelease,
+  createCommunityAggregateReleaseRepository,
+  type CommunityAggregateReleaseRepository,
+} from './community-aggregate-release-repository.js';
 import { buildCommunityGeoJsonOverlay } from './community-geojson.js';
 import { buildCommunityAggregateReleaseManifest } from './community-release-manifests.js';
 import { communityHazardBatchSchema, communityHazardReviewSchema } from './community-hazards.js';
@@ -44,6 +49,7 @@ export type BuildAppOptions = {
   hazardRepository?: CommunityHazardRepository;
   observationRepository?: CommunityObservationRepository;
   deviceRepository?: DeviceRepository;
+  aggregateReleaseRepository?: CommunityAggregateReleaseRepository;
   apiKeys?: readonly string[];
   apiKeySha256Hashes?: readonly string[];
   writeApiKeys?: readonly string[];
@@ -75,6 +81,9 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   const hazardRepository = options.hazardRepository ?? postgisRepositories?.hazards ?? createCommunityHazardRepository(options.dataDir);
   const observationRepository = options.observationRepository ?? postgisRepositories?.observations ?? createCommunityObservationRepository(options.dataDir);
   const deviceRepository = options.deviceRepository ?? postgisRepositories?.devices ?? createDeviceRepository(options.dataDir);
+  const aggregateReleaseRepository = options.aggregateReleaseRepository
+    ?? postgisRepositories?.aggregateReleases
+    ?? createCommunityAggregateReleaseRepository(options.dataDir);
   const apiAuth = createApiAuthConfig({
     keys: options.apiKeys ?? parseApiKeys(process.env.HARBOURMESH_API_KEYS, process.env.HARBOURMESH_API_KEY),
     keySha256Hashes: options.apiKeySha256Hashes ?? parseApiKeySha256Hashes(process.env.HARBOURMESH_API_KEY_SHA256S, process.env.HARBOURMESH_API_KEY_SHA256),
@@ -90,6 +99,27 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   await app.register(cors, {
     origin: true,
   });
+
+  const aggregateReleasePublishSchema = z.object({
+    generatedBy: z.string().trim().min(2).max(120).optional(),
+  });
+
+  async function publishAggregateRelease(generatedBy = 'system:auto') {
+    const [soundings, hazards, observations] = await Promise.all([
+      repository.listRecords(),
+      hazardRepository.listRecords(),
+      observationRepository.listRecords(),
+    ]);
+    const generatedAt = new Date().toISOString();
+    const aggregate = buildCommunityAggregateGeoJson(soundings, hazards, observations, generatedAt);
+    const manifest = buildCommunityAggregateReleaseManifest(aggregate);
+
+    return aggregateReleaseRepository.publishAggregateRelease({ aggregate, manifest, generatedBy });
+  }
+
+  async function getOrPublishLatestAggregateRelease() {
+    return (await aggregateReleaseRepository.getLatestAggregateRelease()) ?? publishAggregateRelease();
+  }
 
   app.get('/health', async () => ({
     ok: true,
@@ -142,14 +172,46 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   });
 
   app.get('/api/community/releases/aggregates/latest', async () => {
-    const [soundings, hazards, observations] = await Promise.all([
-      repository.listRecords(),
-      hazardRepository.listRecords(),
-      observationRepository.listRecords(),
-    ]);
-    const aggregate = buildCommunityAggregateGeoJson(soundings, hazards, observations);
+    return getOrPublishLatestAggregateRelease();
+  });
 
-    return buildCommunityAggregateReleaseManifest(aggregate);
+  app.get('/api/community/releases/aggregates/latest/cells.geojson', async () => {
+    const release = await getOrPublishLatestAggregateRelease();
+    const cells = await aggregateReleaseRepository.listAggregateCells(release.id);
+
+    return buildCommunityAggregateGeoJsonFromStoredRelease(release, cells);
+  });
+
+  app.get('/api/community/releases/aggregates', async () => ({
+    releases: await aggregateReleaseRepository.listAggregateReleases(),
+  }));
+
+  app.post('/api/community/releases/aggregates', async (request, reply) => {
+    if (!(await requireApiAccess(request, reply, apiAuth, 'review'))) return reply;
+
+    try {
+      const reviewIdentity = getRequestApiKeyIdentity(apiAuth, request, 'review');
+      const requestBody = aggregateReleasePublishSchema.parse(request.body ?? {});
+      const release = await publishAggregateRelease(reviewIdentity?.operatorId ?? requestBody.generatedBy ?? 'review-operator');
+
+      return reply.code(201).send({
+        ok: true,
+        release,
+      });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return reply.code(400).send({
+          ok: false,
+          error: 'invalid_community_aggregate_release_request',
+          issues: error.issues.map((issue) => ({
+            path: issue.path.join('.'),
+            message: issue.message,
+          })),
+        });
+      }
+
+      throw error;
+    }
   });
 
   app.get('/api/charts/nb/catalog', async () => getNBPilotChartCatalog());

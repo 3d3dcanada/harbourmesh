@@ -38,8 +38,11 @@ import {
   type CommunityHazardReviewRecord,
 } from '@/lib/community-hazard-review';
 import {
+  fetchCommunityAggregateReleaseHistory,
   fetchCommunityAggregateReleaseManifest,
   fetchCommunityAggregates,
+  fetchLatestCommunityAggregateReleaseCells,
+  publishCommunityAggregateRelease,
   type CommunityAggregateReleaseManifest,
   type CommunityAggregateFeature,
 } from '@/lib/community-overlay';
@@ -132,6 +135,8 @@ export function Community() {
   const [aggregateError, setAggregateError] = useState<string | null>(null);
   const [aggregateRelease, setAggregateRelease] = useState<CommunityAggregateReleaseManifest | null>(null);
   const [aggregateReleaseLoading, setAggregateReleaseLoading] = useState(false);
+  const [aggregateReleasePublishing, setAggregateReleasePublishing] = useState(false);
+  const [aggregateReleaseHistory, setAggregateReleaseHistory] = useState<CommunityAggregateReleaseManifest[]>([]);
   const isOptedIn = consent?.shareTelemetryForCommunity || false;
   const shareableSoundings = getShareableSoundings();
   const queuedBatches = useMemo(() => uploadBatches.filter((batch) => batch.status === 'queued'), [uploadBatches]);
@@ -364,12 +369,39 @@ export function Community() {
     setAggregateError(null);
 
     try {
-      const release = await fetchCommunityAggregateReleaseManifest();
+      const [release, aggregate, history] = await Promise.all([
+        fetchCommunityAggregateReleaseManifest(),
+        fetchLatestCommunityAggregateReleaseCells(),
+        fetchCommunityAggregateReleaseHistory(),
+      ]);
       setAggregateRelease(release);
+      setAggregateFeatures(aggregate.features);
+      setAggregateReleaseHistory(history.releases.slice(0, 5));
     } catch (error) {
       setAggregateError(error instanceof Error ? error.message : 'Community aggregate release load failed');
     } finally {
       setAggregateReleaseLoading(false);
+    }
+  };
+
+  const handlePublishAggregateRelease = async () => {
+    setAggregateReleasePublishing(true);
+    setAggregateError(null);
+
+    try {
+      const generatedBy = resolvePilotOperatorId() ?? consent?.vesselId ?? boatNode.deviceId ?? 'local-operator';
+      const release = await publishCommunityAggregateRelease({ generatedBy });
+      const [aggregate, history] = await Promise.all([
+        fetchLatestCommunityAggregateReleaseCells(),
+        fetchCommunityAggregateReleaseHistory(),
+      ]);
+      setAggregateRelease(release);
+      setAggregateFeatures(aggregate.features);
+      setAggregateReleaseHistory(history.releases.slice(0, 5));
+    } catch (error) {
+      setAggregateError(error instanceof Error ? error.message : 'Community aggregate release publish failed');
+    } finally {
+      setAggregateReleasePublishing(false);
     }
   };
 
@@ -574,6 +606,15 @@ export function Community() {
                     <Database className={cn('mr-2 h-4 w-4', aggregateReleaseLoading && 'animate-spin')} />
                     {aggregateReleaseLoading ? 'Loading' : 'Load Release'}
                   </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handlePublishAggregateRelease}
+                    disabled={aggregateReleasePublishing}
+                  >
+                    <CheckCircle2 className={cn('mr-2 h-4 w-4', aggregateReleasePublishing && 'animate-spin')} />
+                    {aggregateReleasePublishing ? 'Publishing' : 'Publish Release'}
+                  </Button>
                 </div>
               </div>
             </CardHeader>
@@ -603,7 +644,7 @@ export function Community() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-3 sm:grid-cols-3">
+                <div className="grid gap-3 sm:grid-cols-4">
                   <div className="rounded-lg bg-muted p-3">
                     <p className="text-xs text-muted-foreground">Cells</p>
                     <p className="text-xl font-bold">{aggregateRelease.product.aggregateCells}</p>
@@ -616,7 +657,23 @@ export function Community() {
                     <p className="text-xs text-muted-foreground">SHA-256</p>
                     <p className="font-mono text-sm">{aggregateRelease.product.sha256.slice(0, 12)}</p>
                   </div>
+                  <div className="rounded-lg bg-muted p-3">
+                    <p className="text-xs text-muted-foreground">Generated</p>
+                    <p className="text-sm font-medium">{new Date(aggregateRelease.generatedAt).toLocaleString()}</p>
+                  </div>
                 </div>
+                {aggregateReleaseHistory.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    {aggregateReleaseHistory.map((release) => (
+                      <div key={release.id} className="flex flex-col gap-1 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between">
+                        <span className="font-mono text-xs">{release.id}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {release.product.aggregateCells} cells / {release.product.byteLength} bytes
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}

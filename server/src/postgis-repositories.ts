@@ -3,9 +3,15 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Pool, type PoolClient, type QueryResultRow } from 'pg';
 import type { CommunityHazardBatch, CommunityHazardReview, CommunityHazardSummary } from './community-hazards.js';
+import type {
+  CommunityAggregateReleaseRepository,
+  StoredCommunityAggregateCell,
+} from './community-aggregate-release-repository.js';
 import type { CommunityHazardRepository, StoredCommunityHazard, StoredHazardReview } from './community-hazard-repository.js';
 import type { CommunityObservationBatch, CommunityObservationSummary } from './community-observations.js';
 import type { CommunityObservationRepository, StoredCommunityObservation } from './community-observation-repository.js';
+import type { CommunityAggregateGeoJson } from './community-aggregates.js';
+import type { CommunityAggregateReleaseManifest } from './community-release-manifests.js';
 import type { CommunitySoundingBatch, CommunitySoundingSummary } from './community-soundings.js';
 import type { CommunitySoundingRepository, StoredCommunitySounding } from './community-sounding-repository.js';
 import type { DeviceRepository } from './device-repository.js';
@@ -38,6 +44,11 @@ function toOptionalIsoString(value: unknown): string | undefined {
 
 function toNumber(value: unknown): number {
   return typeof value === 'number' ? value : Number(value);
+}
+
+function toNullableNumber(value: unknown): number | null {
+  if (value === null || value === undefined) return null;
+  return toNumber(value);
 }
 
 function toJsonObject<T>(value: unknown, fallback: T): T {
@@ -76,6 +87,23 @@ function mapHazardPosition(row: PositionRow): StoredCommunityHazard['position'] 
   };
 }
 
+function mapReleaseManifest(value: unknown): CommunityAggregateReleaseManifest {
+  return toJsonObject<CommunityAggregateReleaseManifest>(value, value as CommunityAggregateReleaseManifest);
+}
+
+function mapAggregateGeometry(value: unknown): CommunityAggregateGeoJson['features'][number]['geometry'] {
+  return toJsonObject<CommunityAggregateGeoJson['features'][number]['geometry']>(
+    value,
+    { type: 'Polygon', coordinates: [[
+      [0, 0],
+      [0, 0],
+      [0, 0],
+      [0, 0],
+      [0, 0],
+    ]] }
+  );
+}
+
 async function withTransaction<T>(pool: Pool, work: (client: PoolClient) => Promise<T>): Promise<T> {
   const client = await pool.connect();
   try {
@@ -100,6 +128,7 @@ export type PostgisRepositorySet = {
   observations: CommunityObservationRepository;
   hazards: CommunityHazardRepository;
   devices: DeviceRepository;
+  aggregateReleases: CommunityAggregateReleaseRepository;
   runMigrations: () => Promise<void>;
   close: () => Promise<void>;
 };
@@ -112,6 +141,7 @@ export function createPostgisRepositories(databaseUrl: string): PostgisRepositor
     observations: createPostgisObservationRepository(pool),
     hazards: createPostgisHazardRepository(pool),
     devices: createPostgisDeviceRepository(pool),
+    aggregateReleases: createPostgisAggregateReleaseRepository(pool),
     async runMigrations() {
       await pool.query(await loadMigrationSql());
     },
@@ -769,6 +799,211 @@ function createPostgisHazardRepository(pool: Pool): CommunityHazardRepository {
         reviewedBy: row.reviewed_by,
         reviewedAt: toIsoString(row.reviewed_at),
         note: row.note ?? undefined,
+      }));
+    },
+  };
+}
+
+function createPostgisAggregateReleaseRepository(pool: Pool): CommunityAggregateReleaseRepository {
+  async function listAggregateReleases(): Promise<CommunityAggregateReleaseManifest[]> {
+    const result = await pool.query<{ manifest: unknown }>(
+      `SELECT manifest
+      FROM dataset_release_manifests
+      WHERE region = 'NB_PILOT' AND product_kind = 'aggregate_geojson'
+      ORDER BY generated_at DESC, release_id DESC`
+    );
+
+    return result.rows.map((row) => mapReleaseManifest(row.manifest));
+  }
+
+  return {
+    async publishAggregateRelease(input) {
+      return withTransaction(pool, async (client) => {
+        const generatedBy = input.generatedBy?.trim() || 'system:auto';
+        await client.query(
+          `INSERT INTO dataset_release_manifests (
+            release_id, region, product_kind, official_chart_data_included,
+            raw_record_ids_included, vessel_ids_included, generated_by, generated_at, manifest
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb)
+          ON CONFLICT (release_id) DO UPDATE SET
+            region = EXCLUDED.region,
+            product_kind = EXCLUDED.product_kind,
+            official_chart_data_included = EXCLUDED.official_chart_data_included,
+            raw_record_ids_included = EXCLUDED.raw_record_ids_included,
+            vessel_ids_included = EXCLUDED.vessel_ids_included,
+            generated_by = EXCLUDED.generated_by,
+            generated_at = EXCLUDED.generated_at,
+            manifest = EXCLUDED.manifest`,
+          [
+            input.manifest.id,
+            input.manifest.region,
+            input.manifest.productKind,
+            input.manifest.rules.officialChartDataIncluded,
+            input.manifest.rules.rawRecordIdsIncluded,
+            input.manifest.rules.vesselIdsIncluded,
+            generatedBy,
+            input.manifest.generatedAt,
+            JSON.stringify(input.manifest),
+          ]
+        );
+
+        for (const feature of input.aggregate.features) {
+          const { properties } = feature;
+          await client.query(
+            `INSERT INTO community_aggregate_cells (
+              cell_id, region, cell_size_degrees, geom, sounding_count, observation_count,
+              weather_observation_count, condition_observation_count, ais_target_observation_count,
+              radar_contact_observation_count, health_observation_count, hazard_count,
+              high_hazard_count, medium_hazard_count, low_hazard_count, min_depth_meters,
+              max_depth_meters, average_depth_meters, average_confidence, raw_record_ids_included,
+              vessel_ids_included, official_chart_data_included, generated_at
+            ) VALUES (
+              $1, $2, $3, ST_SetSRID(ST_GeomFromGeoJSON($4), 4326), $5, $6, $7, $8, $9, $10,
+              $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23
+            )
+            ON CONFLICT (cell_id, cell_size_degrees, generated_at) DO UPDATE SET
+              region = EXCLUDED.region,
+              geom = EXCLUDED.geom,
+              sounding_count = EXCLUDED.sounding_count,
+              observation_count = EXCLUDED.observation_count,
+              weather_observation_count = EXCLUDED.weather_observation_count,
+              condition_observation_count = EXCLUDED.condition_observation_count,
+              ais_target_observation_count = EXCLUDED.ais_target_observation_count,
+              radar_contact_observation_count = EXCLUDED.radar_contact_observation_count,
+              health_observation_count = EXCLUDED.health_observation_count,
+              hazard_count = EXCLUDED.hazard_count,
+              high_hazard_count = EXCLUDED.high_hazard_count,
+              medium_hazard_count = EXCLUDED.medium_hazard_count,
+              low_hazard_count = EXCLUDED.low_hazard_count,
+              min_depth_meters = EXCLUDED.min_depth_meters,
+              max_depth_meters = EXCLUDED.max_depth_meters,
+              average_depth_meters = EXCLUDED.average_depth_meters,
+              average_confidence = EXCLUDED.average_confidence,
+              raw_record_ids_included = EXCLUDED.raw_record_ids_included,
+              vessel_ids_included = EXCLUDED.vessel_ids_included,
+              official_chart_data_included = EXCLUDED.official_chart_data_included`,
+            [
+              properties.cellId,
+              properties.region,
+              properties.cellSizeDegrees,
+              JSON.stringify(feature.geometry),
+              properties.soundingCount,
+              properties.observationCount,
+              properties.weatherObservationCount,
+              properties.conditionObservationCount,
+              properties.aisTargetObservationCount,
+              properties.radarContactObservationCount,
+              properties.healthObservationCount,
+              properties.hazardCount,
+              properties.highHazardCount,
+              properties.mediumHazardCount,
+              properties.lowHazardCount,
+              properties.minDepthMeters,
+              properties.maxDepthMeters,
+              properties.averageDepthMeters,
+              properties.averageConfidence,
+              false,
+              false,
+              false,
+              input.manifest.generatedAt,
+            ]
+          );
+        }
+
+        return input.manifest;
+      });
+    },
+
+    async getLatestAggregateRelease() {
+      return (await listAggregateReleases()).at(0) ?? null;
+    },
+
+    listAggregateReleases,
+
+    async listAggregateCells(releaseId) {
+      const release = await pool.query<{ generated_at: unknown }>(
+        `SELECT generated_at
+        FROM dataset_release_manifests
+        WHERE release_id = $1 AND region = 'NB_PILOT' AND product_kind = 'aggregate_geojson'`,
+        [releaseId]
+      );
+      const generatedAt = release.rows[0]?.generated_at;
+      if (!generatedAt) return [];
+
+      const result = await pool.query<{
+        cell_id: string;
+        region: string;
+        cell_size_degrees: string | number;
+        geometry: unknown;
+        sounding_count: string | number;
+        observation_count: string | number;
+        weather_observation_count: string | number;
+        condition_observation_count: string | number;
+        ais_target_observation_count: string | number;
+        radar_contact_observation_count: string | number;
+        health_observation_count: string | number;
+        hazard_count: string | number;
+        high_hazard_count: string | number;
+        medium_hazard_count: string | number;
+        low_hazard_count: string | number;
+        min_depth_meters: string | number | null;
+        max_depth_meters: string | number | null;
+        average_depth_meters: string | number | null;
+        average_confidence: string | number | null;
+        generated_at: unknown;
+      }>(
+        `SELECT
+          cell_id,
+          region,
+          cell_size_degrees,
+          ST_AsGeoJSON(geom) AS geometry,
+          sounding_count,
+          observation_count,
+          weather_observation_count,
+          condition_observation_count,
+          ais_target_observation_count,
+          radar_contact_observation_count,
+          health_observation_count,
+          hazard_count,
+          high_hazard_count,
+          medium_hazard_count,
+          low_hazard_count,
+          min_depth_meters,
+          max_depth_meters,
+          average_depth_meters,
+          average_confidence,
+          generated_at
+        FROM community_aggregate_cells
+        WHERE generated_at = $1::timestamptz
+        ORDER BY cell_id ASC`,
+        [generatedAt]
+      );
+
+      return result.rows.map((row): StoredCommunityAggregateCell => ({
+        releaseId,
+        generatedAt: toIsoString(row.generated_at),
+        cellId: row.cell_id,
+        region: row.region,
+        cellSizeDegrees: toNumber(row.cell_size_degrees),
+        geometry: mapAggregateGeometry(row.geometry),
+        soundingCount: toNumber(row.sounding_count),
+        observationCount: toNumber(row.observation_count),
+        weatherObservationCount: toNumber(row.weather_observation_count),
+        conditionObservationCount: toNumber(row.condition_observation_count),
+        aisTargetObservationCount: toNumber(row.ais_target_observation_count),
+        radarContactObservationCount: toNumber(row.radar_contact_observation_count),
+        healthObservationCount: toNumber(row.health_observation_count),
+        hazardCount: toNumber(row.hazard_count),
+        highHazardCount: toNumber(row.high_hazard_count),
+        mediumHazardCount: toNumber(row.medium_hazard_count),
+        lowHazardCount: toNumber(row.low_hazard_count),
+        minDepthMeters: toNullableNumber(row.min_depth_meters),
+        maxDepthMeters: toNullableNumber(row.max_depth_meters),
+        averageDepthMeters: toNullableNumber(row.average_depth_meters),
+        averageConfidence: toNullableNumber(row.average_confidence),
+        rawRecordIdsIncluded: false,
+        vesselIdsIncluded: false,
+        officialChartDataIncluded: false,
       }));
     },
   };

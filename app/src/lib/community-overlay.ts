@@ -1,3 +1,5 @@
+import { resolvePilotApiKey } from './pilot-api-credentials';
+
 export type CommunityOverlayFeature = {
   type: 'Feature';
   id: string;
@@ -117,6 +119,18 @@ export type FetchCommunityOverlayOptions = {
   fetchImpl?: typeof fetch;
 };
 
+export type CommunityAggregateReleaseHistory = {
+  releases: CommunityAggregateReleaseManifest[];
+};
+
+export type PublishCommunityAggregateReleaseInput = {
+  generatedBy?: string;
+};
+
+export type CommunityAggregateReleaseMutationOptions = FetchCommunityOverlayOptions & {
+  apiKey?: string;
+};
+
 function resolveEndpoint(endpoint: string, apiBaseUrl?: string): string {
   if (/^https?:\/\//i.test(endpoint)) return endpoint;
   if (!apiBaseUrl) return endpoint;
@@ -180,6 +194,23 @@ function isCommunityAggregateRelease(value: unknown): value is CommunityAggregat
     typeof release.product?.byteLength === 'number' &&
     /^[a-f0-9]{64}$/.test(release.product.sha256 ?? '')
   );
+}
+
+function isCommunityAggregateReleaseHistory(value: unknown): value is CommunityAggregateReleaseHistory {
+  const history = value as Partial<CommunityAggregateReleaseHistory>;
+  return Array.isArray(history.releases) && history.releases.every(isCommunityAggregateRelease);
+}
+
+function isPublishAggregateReleaseResponse(value: unknown): value is { ok: true; release: CommunityAggregateReleaseManifest } {
+  const receipt = value as Partial<{ ok: true; release: CommunityAggregateReleaseManifest }>;
+  return receipt.ok === true && isCommunityAggregateRelease(receipt.release);
+}
+
+function buildJsonHeaders(apiKey?: string): Record<string, string> {
+  return {
+    'Content-Type': 'application/json',
+    ...(apiKey ? { 'X-HarbourMesh-API-Key': apiKey } : {}),
+  };
 }
 
 export function getCommunityOverlayFeaturesByKind(
@@ -262,4 +293,81 @@ export async function fetchCommunityAggregateReleaseManifest(
   }
 
   return body;
+}
+
+export async function fetchLatestCommunityAggregateReleaseCells(
+  options: FetchCommunityOverlayOptions = {}
+): Promise<CommunityAggregateGeoJson> {
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const endpoint = resolveEndpoint('/api/community/releases/aggregates/latest/cells.geojson', options.apiBaseUrl ?? import.meta.env.VITE_API_BASE_URL);
+  const response = await fetchImpl(endpoint, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/geo+json, application/json',
+    },
+  });
+  const body: unknown = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const error = body && typeof body === 'object' && 'error' in body ? String(body.error) : response.statusText;
+    throw new Error(error || `Community aggregate release cells request failed with HTTP ${response.status}`);
+  }
+
+  if (!isCommunityAggregate(body)) {
+    throw new Error('Community aggregate release cells response was not a HarbourMesh aggregate overlay');
+  }
+
+  return body;
+}
+
+export async function fetchCommunityAggregateReleaseHistory(
+  options: FetchCommunityOverlayOptions = {}
+): Promise<CommunityAggregateReleaseHistory> {
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const endpoint = resolveEndpoint('/api/community/releases/aggregates', options.apiBaseUrl ?? import.meta.env.VITE_API_BASE_URL);
+  const response = await fetchImpl(endpoint, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+    },
+  });
+  const body: unknown = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const error = body && typeof body === 'object' && 'error' in body ? String(body.error) : response.statusText;
+    throw new Error(error || `Community aggregate release history request failed with HTTP ${response.status}`);
+  }
+
+  if (!isCommunityAggregateReleaseHistory(body)) {
+    throw new Error('Community aggregate release history response was not valid');
+  }
+
+  return body;
+}
+
+export async function publishCommunityAggregateRelease(
+  input: PublishCommunityAggregateReleaseInput = {},
+  options: CommunityAggregateReleaseMutationOptions = {}
+): Promise<CommunityAggregateReleaseManifest> {
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const endpoint = resolveEndpoint('/api/community/releases/aggregates', options.apiBaseUrl ?? import.meta.env.VITE_API_BASE_URL);
+  const response = await fetchImpl(endpoint, {
+    method: 'POST',
+    headers: buildJsonHeaders(resolvePilotApiKey(options.apiKey)),
+    body: JSON.stringify({
+      ...(input.generatedBy?.trim() ? { generatedBy: input.generatedBy.trim() } : {}),
+    }),
+  });
+  const body: unknown = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const error = body && typeof body === 'object' && 'error' in body ? String(body.error) : response.statusText;
+    throw new Error(error || `Community aggregate release publish failed with HTTP ${response.status}`);
+  }
+
+  if (!isPublishAggregateReleaseResponse(body)) {
+    throw new Error('Community aggregate release publish returned an invalid receipt');
+  }
+
+  return body.release;
 }

@@ -1057,6 +1057,95 @@ describe('HarbourMesh API', () => {
     expect(response.json().product.byteLength).toBeGreaterThan(0);
     expect(JSON.stringify(response.json())).not.toContain('"features"');
     expect(JSON.stringify(response.json())).not.toContain('vessel-1');
+
+    const releaseHistory = await app.inject({
+      method: 'GET',
+      url: '/api/community/releases/aggregates',
+    });
+    expect(releaseHistory.statusCode).toBe(200);
+    expect(releaseHistory.json().releases).toHaveLength(1);
+    expect(releaseHistory.json().releases[0].id).toBe(response.json().id);
+
+    const releaseCells = await app.inject({
+      method: 'GET',
+      url: '/api/community/releases/aggregates/latest/cells.geojson',
+    });
+    expect(releaseCells.statusCode).toBe(200);
+    expect(releaseCells.json()).toMatchObject({
+      type: 'FeatureCollection',
+      metadata: {
+        generatedAt: response.json().generatedAt,
+        rawRecordIdsIncluded: false,
+        vesselIdsIncluded: false,
+        sourceRecordCounts: {
+          aggregateCells: 1,
+        },
+      },
+    });
+    expect(releaseCells.json().features).toHaveLength(1);
+    expect(JSON.stringify(releaseCells.json())).not.toContain('vessel-1');
+  });
+
+  it('publishes reviewed aggregate releases through the release endpoint', async () => {
+    const app = await createTestApp({
+      apiKeys: [TEST_API_KEY],
+      requireApiAuth: true,
+    });
+
+    await app.inject({
+      method: 'POST',
+      url: '/api/community/soundings',
+      headers: {
+        'x-harbourmesh-api-key': TEST_API_KEY,
+      },
+      payload: sampleBatch,
+    });
+    await app.inject({
+      method: 'POST',
+      url: '/api/community/observations',
+      headers: {
+        'x-harbourmesh-api-key': TEST_API_KEY,
+      },
+      payload: sampleObservationBatch,
+    });
+
+    const missingKey = await app.inject({
+      method: 'POST',
+      url: '/api/community/releases/aggregates',
+      payload: {
+        generatedBy: 'nb-pilot-reviewer',
+      },
+    });
+    expect(missingKey.statusCode).toBe(401);
+
+    const published = await app.inject({
+      method: 'POST',
+      url: '/api/community/releases/aggregates',
+      headers: {
+        'x-harbourmesh-api-key': TEST_API_KEY,
+      },
+      payload: {
+        generatedBy: 'nb-pilot-reviewer',
+      },
+    });
+    expect(published.statusCode).toBe(201);
+    expect(published.json()).toMatchObject({
+      ok: true,
+      release: {
+        schemaVersion: 'harbourmesh.community-aggregate-release.v1',
+        product: {
+          aggregateCells: 1,
+          sha256: expect.stringMatching(/^[a-f0-9]{64}$/),
+        },
+      },
+    });
+
+    const latest = await app.inject({
+      method: 'GET',
+      url: '/api/community/releases/aggregates/latest',
+    });
+    expect(latest.statusCode).toBe(200);
+    expect(latest.json().id).toBe(published.json().release.id);
   });
 
   it('returns not found for reviews of unknown hazards', async () => {

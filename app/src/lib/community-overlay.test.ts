@@ -1,9 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   fetchCommunityAggregateReleaseManifest,
+  fetchCommunityAggregateReleaseHistory,
   fetchCommunityAggregates,
   fetchCommunityOverlay,
+  fetchLatestCommunityAggregateReleaseCells,
   getCommunityOverlayFeaturesByKind,
+  publishCommunityAggregateRelease,
   type CommunityAggregateReleaseManifest,
   type CommunityAggregateGeoJson,
   type CommunityGeoJsonOverlay,
@@ -228,6 +231,77 @@ describe('community overlay client', () => {
 
     expect(fetchImpl).toHaveBeenCalledWith('http://localhost:3001/api/community/releases/aggregates/latest', expect.objectContaining({
       method: 'GET',
+    }));
+  });
+
+  it('fetches aggregate release cells from the persisted release product', async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify(aggregate), { status: 200 }));
+
+    await expect(fetchLatestCommunityAggregateReleaseCells({
+      apiBaseUrl: 'http://localhost:3001',
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    })).resolves.toMatchObject({
+      metadata: {
+        schemaVersion: 'harbourmesh.community-aggregates.v1',
+      },
+      features: expect.arrayContaining([
+        expect.objectContaining({
+          id: 'aggregate:45.2700:-66.0600',
+        }),
+      ]),
+    });
+
+    expect(fetchImpl).toHaveBeenCalledWith('http://localhost:3001/api/community/releases/aggregates/latest/cells.geojson', expect.objectContaining({
+      method: 'GET',
+    }));
+  });
+
+  it('fetches persisted aggregate release history', async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
+      releases: [aggregateRelease],
+    }), { status: 200 }));
+
+    await expect(fetchCommunityAggregateReleaseHistory({
+      apiBaseUrl: 'http://localhost:3001',
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    })).resolves.toMatchObject({
+      releases: [
+        {
+          id: aggregateRelease.id,
+        },
+      ],
+    });
+
+    expect(fetchImpl).toHaveBeenCalledWith('http://localhost:3001/api/community/releases/aggregates', expect.objectContaining({
+      method: 'GET',
+    }));
+  });
+
+  it('publishes aggregate releases with a pilot API key', async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
+      ok: true,
+      release: aggregateRelease,
+    }), { status: 201 }));
+
+    await expect(publishCommunityAggregateRelease(
+      { generatedBy: 'nb-pilot-reviewer' },
+      {
+        apiBaseUrl: 'http://localhost:3001',
+        apiKey: 'review-key',
+        fetchImpl: fetchImpl as unknown as typeof fetch,
+      }
+    )).resolves.toMatchObject({
+      id: aggregateRelease.id,
+    });
+
+    expect(fetchImpl).toHaveBeenCalledWith('http://localhost:3001/api/community/releases/aggregates', expect.objectContaining({
+      method: 'POST',
+      headers: expect.objectContaining({
+        'X-HarbourMesh-API-Key': 'review-key',
+      }),
+      body: JSON.stringify({
+        generatedBy: 'nb-pilot-reviewer',
+      }),
     }));
   });
 });
