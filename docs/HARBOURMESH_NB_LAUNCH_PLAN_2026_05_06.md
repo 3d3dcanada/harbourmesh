@@ -92,6 +92,7 @@ Last light checks:
 - Browser smoke on port 5176: Community Map rendered the Load Aggregates control at 1280x900 and 360x780, with the map card contained at both sizes.
 - Browser smoke on port 5173 with API on port 3001: Navigation Chart View rendered the Chart Packages panel, Load Artifacts returned `GET /api/charts/nb/package-artifacts => 200 OK`, two reference-only GeoJSON artifacts rendered, and the pass had no console errors after adding the app favicon.
 - Browser smoke on port 5173: Navigation Chart View and the loaded Chart Packages panel were checked at 1280x900 and 360x800.
+- Browser smoke on port 5173 with API on port 3001: Community Map loaded the latest aggregate release manifest and rendered checksum/file details at 1280x900; Community Conditions at 360x800 rendered observation queue controls with body width equal to viewport width.
 - No live Signal K hardware test or real-vessel API load test was run for this snapshot.
 
 ## Implementation Progress On 2026-05-06
