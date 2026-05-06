@@ -250,6 +250,7 @@ function buildTileMetadata(
           region: 'String',
           soundingCount: 'Number',
           observationCount: 'Number',
+          trackPointObservationCount: 'Number',
           hazardCount: 'Number',
           averageDepthMeters: 'Number',
           averageConfidence: 'Number',

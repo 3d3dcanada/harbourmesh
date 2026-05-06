@@ -13,6 +13,7 @@ export type StoredCommunityAggregateCell = {
   observationCount: number;
   weatherObservationCount: number;
   conditionObservationCount: number;
+  trackPointObservationCount: number;
   aisTargetObservationCount: number;
   radarContactObservationCount: number;
   healthObservationCount: number;
@@ -74,6 +75,7 @@ function featureToStoredCell(
     observationCount: feature.properties.observationCount,
     weatherObservationCount: feature.properties.weatherObservationCount,
     conditionObservationCount: feature.properties.conditionObservationCount,
+    trackPointObservationCount: feature.properties.trackPointObservationCount,
     aisTargetObservationCount: feature.properties.aisTargetObservationCount,
     radarContactObservationCount: feature.properties.radarContactObservationCount,
     healthObservationCount: feature.properties.healthObservationCount,
@@ -105,6 +107,7 @@ function cellToFeature(cell: StoredCommunityAggregateCell): CommunityAggregateGe
       observationCount: cell.observationCount,
       weatherObservationCount: cell.weatherObservationCount,
       conditionObservationCount: cell.conditionObservationCount,
+      trackPointObservationCount: cell.trackPointObservationCount ?? 0,
       aisTargetObservationCount: cell.aisTargetObservationCount,
       radarContactObservationCount: cell.radarContactObservationCount,
       healthObservationCount: cell.healthObservationCount,

@@ -86,6 +86,7 @@ const aggregate: CommunityAggregateGeoJson = {
         observationCount: 1,
         weatherObservationCount: 0,
         conditionObservationCount: 0,
+        trackPointObservationCount: 0,
         aisTargetObservationCount: 0,
         radarContactObservationCount: 1,
         healthObservationCount: 0,

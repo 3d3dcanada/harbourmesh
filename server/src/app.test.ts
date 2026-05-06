@@ -165,6 +165,49 @@ const sampleObservationBatch: CommunityObservationBatch = {
   },
 };
 
+const sampleTrackObservationBatch: CommunityObservationBatch = {
+  id: 'track-observation-batch-1',
+  schemaVersion: 'harbourmesh.community-observations.v1',
+  createdAt: '2026-05-06T12:06:30.000Z',
+  region: 'NB_PILOT',
+  recordCount: 1,
+  observations: [
+    {
+      id: 'track-point-1',
+      vesselId: 'vessel-1',
+      sourceDeviceId: 'boat-node-001',
+      sourceProtocol: 'signalk',
+      observationType: 'track_point',
+      observedAt: '2026-05-06T12:06:20.000Z',
+      receivedAt: '2026-05-06T12:06:22.000Z',
+      position: {
+        latitude: 45.272,
+        longitude: -66.058,
+        accuracy: 1000,
+        source: 'gps',
+        timestamp: '2026-05-06T12:06:20.000Z',
+      },
+      sharingState: 'shareable_blurred',
+      consentCapturedAt: '2026-05-06T11:59:00.000Z',
+      metrics: {
+        cogDegrees: 73,
+        sogKnots: 7.5,
+      },
+      quality: { confidence: 0.9, rejected: false, flags: [] },
+      rawPayloadIncluded: false,
+      officialChartDataIncluded: false,
+    },
+  ],
+  policy: {
+    intendedUse: 'community_reference_overlay',
+    officialChartDataIncluded: false,
+    containsFullSharedPositions: false,
+    rawLocalPositionsIncluded: false,
+    rawSensorPayloadsIncluded: false,
+    uploadEndpoint: '/api/community/observations',
+  },
+};
+
 async function createTestApp(options: Partial<Omit<BuildAppOptions, 'dataDir'>> = {}) {
   const testRoot = join(process.cwd(), 'tmp');
   await mkdir(testRoot, { recursive: true });
@@ -1156,6 +1199,11 @@ describe('HarbourMesh API', () => {
       url: '/api/community/observations',
       payload: sampleObservationBatch,
     });
+    await app.inject({
+      method: 'POST',
+      url: '/api/community/observations',
+      payload: sampleTrackObservationBatch,
+    });
 
     const pendingAggregates = await app.inject({
       method: 'GET',
@@ -1175,8 +1223,8 @@ describe('HarbourMesh API', () => {
           soundings: 1,
           acceptedSoundings: 1,
           rejectedSoundings: 0,
-          observations: 2,
-          positionedObservations: 1,
+          observations: 3,
+          positionedObservations: 2,
           hazards: 1,
           publicHazards: 0,
           aggregateCells: 1,
@@ -1191,8 +1239,9 @@ describe('HarbourMesh API', () => {
       properties: {
         kind: 'aggregate_cell',
         soundingCount: 1,
-        observationCount: 1,
+        observationCount: 2,
         radarContactObservationCount: 1,
+        trackPointObservationCount: 1,
         weatherObservationCount: 0,
         hazardCount: 0,
         averageDepthMeters: 12.5,
@@ -1230,7 +1279,8 @@ describe('HarbourMesh API', () => {
     });
     expect(aggregateFeature.properties).toMatchObject({
       soundingCount: 1,
-      observationCount: 1,
+      observationCount: 2,
+      trackPointObservationCount: 1,
       hazardCount: 1,
       mediumHazardCount: 1,
     });

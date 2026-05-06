@@ -32,6 +32,7 @@ export type CommunityAggregateFeature = {
     observationCount: number;
     weatherObservationCount: number;
     conditionObservationCount: number;
+    trackPointObservationCount: number;
     aisTargetObservationCount: number;
     radarContactObservationCount: number;
     healthObservationCount: number;
@@ -307,6 +308,7 @@ function isCommunityAggregate(value: unknown): value is CommunityAggregateGeoJso
       feature.geometry.coordinates[0].length >= 4 &&
       feature.properties?.kind === 'aggregate_cell' &&
       typeof feature.properties.observationCount === 'number' &&
+      typeof feature.properties.trackPointObservationCount === 'number' &&
       feature.properties.officialChartDataIncluded === false &&
       feature.properties.rawRecordIdsIncluded === false &&
       feature.properties.vesselIdsIncluded === false

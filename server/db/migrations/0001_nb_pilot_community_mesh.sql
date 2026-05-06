@@ -226,6 +226,7 @@ CREATE TABLE IF NOT EXISTS community_aggregate_cells (
   weather_observation_count integer NOT NULL DEFAULT 0 CHECK (weather_observation_count >= 0),
   condition_observation_count integer NOT NULL DEFAULT 0 CHECK (condition_observation_count >= 0),
   ais_target_observation_count integer NOT NULL DEFAULT 0 CHECK (ais_target_observation_count >= 0),
+  track_point_observation_count integer NOT NULL DEFAULT 0 CHECK (track_point_observation_count >= 0),
   radar_contact_observation_count integer NOT NULL DEFAULT 0 CHECK (radar_contact_observation_count >= 0),
   health_observation_count integer NOT NULL DEFAULT 0 CHECK (health_observation_count >= 0),
   hazard_count integer NOT NULL DEFAULT 0 CHECK (hazard_count >= 0),
@@ -242,6 +243,9 @@ CREATE TABLE IF NOT EXISTS community_aggregate_cells (
   generated_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE (cell_id, cell_size_degrees, generated_at)
 );
+
+ALTER TABLE community_aggregate_cells
+  ADD COLUMN IF NOT EXISTS track_point_observation_count integer NOT NULL DEFAULT 0 CHECK (track_point_observation_count >= 0);
 
 CREATE INDEX IF NOT EXISTS idx_aggregate_cells_geom ON community_aggregate_cells USING gist(geom);
 CREATE INDEX IF NOT EXISTS idx_aggregate_cells_region_generated ON community_aggregate_cells(region, generated_at);

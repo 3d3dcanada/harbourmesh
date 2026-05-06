@@ -853,13 +853,13 @@ function createPostgisAggregateReleaseRepository(pool: Pool): CommunityAggregate
             `INSERT INTO community_aggregate_cells (
               cell_id, region, cell_size_degrees, geom, sounding_count, observation_count,
               weather_observation_count, condition_observation_count, ais_target_observation_count,
-              radar_contact_observation_count, health_observation_count, hazard_count,
+              track_point_observation_count, radar_contact_observation_count, health_observation_count, hazard_count,
               high_hazard_count, medium_hazard_count, low_hazard_count, min_depth_meters,
               max_depth_meters, average_depth_meters, average_confidence, raw_record_ids_included,
               vessel_ids_included, official_chart_data_included, generated_at
             ) VALUES (
               $1, $2, $3, ST_SetSRID(ST_GeomFromGeoJSON($4), 4326), $5, $6, $7, $8, $9, $10,
-              $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23
+              $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24
             )
             ON CONFLICT (cell_id, cell_size_degrees, generated_at) DO UPDATE SET
               region = EXCLUDED.region,
@@ -869,6 +869,7 @@ function createPostgisAggregateReleaseRepository(pool: Pool): CommunityAggregate
               weather_observation_count = EXCLUDED.weather_observation_count,
               condition_observation_count = EXCLUDED.condition_observation_count,
               ais_target_observation_count = EXCLUDED.ais_target_observation_count,
+              track_point_observation_count = EXCLUDED.track_point_observation_count,
               radar_contact_observation_count = EXCLUDED.radar_contact_observation_count,
               health_observation_count = EXCLUDED.health_observation_count,
               hazard_count = EXCLUDED.hazard_count,
@@ -892,6 +893,7 @@ function createPostgisAggregateReleaseRepository(pool: Pool): CommunityAggregate
               properties.weatherObservationCount,
               properties.conditionObservationCount,
               properties.aisTargetObservationCount,
+              properties.trackPointObservationCount,
               properties.radarContactObservationCount,
               properties.healthObservationCount,
               properties.hazardCount,
@@ -940,6 +942,7 @@ function createPostgisAggregateReleaseRepository(pool: Pool): CommunityAggregate
         weather_observation_count: string | number;
         condition_observation_count: string | number;
         ais_target_observation_count: string | number;
+        track_point_observation_count: string | number;
         radar_contact_observation_count: string | number;
         health_observation_count: string | number;
         hazard_count: string | number;
@@ -962,6 +965,7 @@ function createPostgisAggregateReleaseRepository(pool: Pool): CommunityAggregate
           weather_observation_count,
           condition_observation_count,
           ais_target_observation_count,
+          track_point_observation_count,
           radar_contact_observation_count,
           health_observation_count,
           hazard_count,
@@ -991,6 +995,7 @@ function createPostgisAggregateReleaseRepository(pool: Pool): CommunityAggregate
         weatherObservationCount: toNumber(row.weather_observation_count),
         conditionObservationCount: toNumber(row.condition_observation_count),
         aisTargetObservationCount: toNumber(row.ais_target_observation_count),
+        trackPointObservationCount: toNumber(row.track_point_observation_count),
         radarContactObservationCount: toNumber(row.radar_contact_observation_count),
         healthObservationCount: toNumber(row.health_observation_count),
         hazardCount: toNumber(row.hazard_count),

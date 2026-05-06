@@ -26,6 +26,7 @@ type CommunityAggregateFeature = {
     observationCount: number;
     weatherObservationCount: number;
     conditionObservationCount: number;
+    trackPointObservationCount: number;
     aisTargetObservationCount: number;
     radarContactObservationCount: number;
     healthObservationCount: number;
@@ -83,6 +84,7 @@ type AggregateCell = {
   observationCount: number;
   weatherObservationCount: number;
   conditionObservationCount: number;
+  trackPointObservationCount: number;
   aisTargetObservationCount: number;
   radarContactObservationCount: number;
   healthObservationCount: number;
@@ -127,6 +129,7 @@ function getOrCreateCell(
     observationCount: 0,
     weatherObservationCount: 0,
     conditionObservationCount: 0,
+    trackPointObservationCount: 0,
     aisTargetObservationCount: 0,
     radarContactObservationCount: 0,
     healthObservationCount: 0,
@@ -170,6 +173,7 @@ function addObservation(cell: AggregateCell, observation: StoredCommunityObserva
   cell.observationCount += 1;
   if (observation.observationType === 'weather') cell.weatherObservationCount += 1;
   if (observation.observationType === 'condition') cell.conditionObservationCount += 1;
+  if (observation.observationType === 'track_point') cell.trackPointObservationCount += 1;
   if (observation.observationType === 'ais_target') cell.aisTargetObservationCount += 1;
   if (observation.observationType === 'radar_contact') cell.radarContactObservationCount += 1;
   if (observation.observationType === 'system_health') cell.healthObservationCount += 1;
@@ -199,6 +203,7 @@ function cellToFeature(cell: AggregateCell, cellSizeDegrees: number): CommunityA
       observationCount: cell.observationCount,
       weatherObservationCount: cell.weatherObservationCount,
       conditionObservationCount: cell.conditionObservationCount,
+      trackPointObservationCount: cell.trackPointObservationCount,
       aisTargetObservationCount: cell.aisTargetObservationCount,
       radarContactObservationCount: cell.radarContactObservationCount,
       healthObservationCount: cell.healthObservationCount,

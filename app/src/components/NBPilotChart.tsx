@@ -279,6 +279,7 @@ export function NBPilotChart({
                       <div>{feature.properties.averageDepthMeters.toFixed(1)} m avg depth</div>
                     )}
                     <div>{feature.properties.observationCount} observations</div>
+                    <div>{feature.properties.trackPointObservationCount} track points</div>
                     <div>{feature.properties.hazardCount} accepted hazards</div>
                     <div>Raw vessel IDs: excluded</div>
                     <div>Official chart data: excluded</div>
