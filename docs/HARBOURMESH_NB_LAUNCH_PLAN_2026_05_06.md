@@ -95,8 +95,8 @@ Last light checks:
 - Browser smoke on port 5176: Community Moderation rendered the Load Review Queue control at 1280x900 and the tab list stayed inside the 360x780 viewport.
 - Browser smoke on port 5176: Community Moderation rendered the Review History card and Load History control at 1280x900 and 360x780.
 - Browser smoke on port 5176: Community Map rendered the Load Aggregates control at 1280x900 and 360x780, with the map card contained at both sizes.
-- Browser smoke on port 5173 with API on port 3001: Navigation Chart View rendered the Chart Packages panel, Load Artifacts returned `GET /api/charts/nb/package-artifacts => 200 OK`, two reference-only GeoJSON artifacts rendered, and the pass had no console errors after adding the app favicon.
-- Browser smoke on port 5173: Navigation Chart View and the loaded Chart Packages panel were checked at 1280x900 and 360x800.
+- Browser smoke on port 5173 with API on port 3001: Navigation Chart View rendered the Chart Packages panel, Load Artifacts returned `GET /api/charts/nb/package-artifacts => 200 OK`, two reference-only GeoJSON artifacts and two starter MBTiles artifacts rendered, PMTiles remained marked pending, and the pass had no console errors after adding the app favicon.
+- Browser smoke on port 5173 after restarting the local API from current source: Navigation Chart View and the loaded Chart Packages panel were checked at 1280x900 and 360x800; both sizes showed `2 GeoJSON`, `2 MBTiles`, `PMTiles pending`, and z6-z8 MBTiles summaries, with body/document width equal to the viewport width and zero fresh console errors or warnings.
 - Browser smoke on port 5173 with API on port 3001: Community Map loaded the latest aggregate release manifest and rendered checksum/file details at 1280x900; Community Conditions at 360x800 rendered observation queue controls with body width equal to viewport width.
 - No live Signal K hardware test or real-vessel API load test was run for this snapshot.
 
