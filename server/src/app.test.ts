@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { parseOperatorApiKeys } from './api-auth.js';
 import { buildApp, type BuildAppOptions } from './app.js';
 import type { CommunityHazardBatch } from './community-hazards.js';
+import type { CommunityObservationBatch } from './community-observations.js';
 import type { CommunitySoundingBatch } from './community-soundings.js';
 
 const TEST_API_KEY = 'hm_test_api_key_1234567890';
@@ -98,6 +99,69 @@ const sampleHazardBatch: CommunityHazardBatch = {
     containsFullSharedPositions: false,
     rawLocalPositionsIncluded: false,
     uploadEndpoint: '/api/community/hazards',
+  },
+};
+
+const sampleObservationBatch: CommunityObservationBatch = {
+  id: 'observation-batch-1',
+  schemaVersion: 'harbourmesh.community-observations.v1',
+  createdAt: '2026-05-06T12:06:00.000Z',
+  region: 'NB_PILOT',
+  recordCount: 2,
+  observations: [
+    {
+      id: 'radar-contact-1',
+      vesselId: 'vessel-1',
+      sourceDeviceId: 'boat-node-001',
+      sourceProtocol: 'signalk',
+      observationType: 'radar_contact',
+      observedAt: '2026-05-06T12:05:20.000Z',
+      receivedAt: '2026-05-06T12:05:22.000Z',
+      position: {
+        latitude: 45.271,
+        longitude: -66.061,
+        accuracy: 150,
+        source: 'radar',
+        timestamp: '2026-05-06T12:05:20.000Z',
+      },
+      sharingState: 'shareable_blurred',
+      consentCapturedAt: '2026-05-06T11:59:00.000Z',
+      metrics: {
+        rangeMeters: 420,
+        bearingDegrees: 74,
+        classification: 'unknown_contact',
+      },
+      quality: { confidence: 0.72, rejected: false, flags: ['unverified_contact'] },
+      rawPayloadIncluded: false,
+      officialChartDataIncluded: false,
+    },
+    {
+      id: 'weather-1',
+      vesselId: 'vessel-1',
+      sourceDeviceId: 'boat-node-001',
+      sourceProtocol: 'signalk',
+      observationType: 'weather',
+      observedAt: '2026-05-06T12:05:40.000Z',
+      receivedAt: '2026-05-06T12:05:45.000Z',
+      sharingState: 'shareable_no_position',
+      consentCapturedAt: '2026-05-06T11:59:00.000Z',
+      metrics: {
+        windSpeedKnots: 13.4,
+        windDirectionDegrees: 210,
+        pressureHPa: 1012.8,
+      },
+      quality: { confidence: 0.84, rejected: false, flags: [] },
+      rawPayloadIncluded: false,
+      officialChartDataIncluded: false,
+    },
+  ],
+  policy: {
+    intendedUse: 'community_reference_overlay',
+    officialChartDataIncluded: false,
+    containsFullSharedPositions: false,
+    rawLocalPositionsIncluded: false,
+    rawSensorPayloadsIncluded: false,
+    uploadEndpoint: '/api/community/observations',
   },
 };
 
@@ -204,6 +268,26 @@ describe('HarbourMesh API', () => {
       payload: sampleBatch,
     });
     expect(writeUpload.statusCode).toBe(202);
+
+    const reviewOnlyObservationUpload = await app.inject({
+      method: 'POST',
+      url: '/api/community/observations',
+      headers: {
+        'x-harbourmesh-api-key': TEST_REVIEW_API_KEY,
+      },
+      payload: sampleObservationBatch,
+    });
+    expect(reviewOnlyObservationUpload.statusCode).toBe(403);
+
+    const writeObservationUpload = await app.inject({
+      method: 'POST',
+      url: '/api/community/observations',
+      headers: {
+        'x-harbourmesh-api-key': TEST_WRITE_API_KEY,
+      },
+      payload: sampleObservationBatch,
+    });
+    expect(writeObservationUpload.statusCode).toBe(202);
 
     await app.inject({
       method: 'POST',
@@ -348,6 +432,98 @@ describe('HarbourMesh API', () => {
         NB_PILOT: 1,
       },
       latestTimestamp: '2026-05-06T12:00:00.000Z',
+    });
+  });
+
+  it('accepts and summarizes governed community observation batches', async () => {
+    const app = await createTestApp();
+    const receipt = await app.inject({
+      method: 'POST',
+      url: '/api/community/observations',
+      payload: sampleObservationBatch,
+    });
+
+    expect(receipt.statusCode).toBe(202);
+    expect(receipt.json()).toMatchObject({
+      ok: true,
+      batchId: 'observation-batch-1',
+      acceptedCount: 2,
+      duplicateCount: 0,
+    });
+
+    const duplicate = await app.inject({
+      method: 'POST',
+      url: '/api/community/observations',
+      payload: sampleObservationBatch,
+    });
+    expect(duplicate.statusCode).toBe(202);
+    expect(duplicate.json()).toMatchObject({
+      acceptedCount: 0,
+      duplicateCount: 2,
+    });
+
+    const summary = await app.inject({
+      method: 'GET',
+      url: '/api/community/observations/summary',
+    });
+
+    expect(summary.statusCode).toBe(200);
+    expect(summary.json()).toMatchObject({
+      totalRecords: 2,
+      batchCount: 2,
+      regions: {
+        NB_PILOT: 2,
+      },
+      byType: {
+        radar_contact: 1,
+        weather: 1,
+      },
+      positionedRecords: 1,
+      latestObservedAt: '2026-05-06T12:05:40.000Z',
+    });
+  });
+
+  it('rejects community observations that leak raw payloads or position policy', async () => {
+    const app = await createTestApp();
+    const rawPayloadResponse = await app.inject({
+      method: 'POST',
+      url: '/api/community/observations',
+      payload: {
+        ...sampleObservationBatch,
+        observations: [
+          {
+            ...sampleObservationBatch.observations[0],
+            rawPayloadIncluded: true,
+          },
+        ],
+      },
+    });
+
+    expect(rawPayloadResponse.statusCode).toBe(400);
+    expect(rawPayloadResponse.json()).toMatchObject({
+      ok: false,
+      error: 'invalid_community_observation_batch',
+    });
+
+    const positionPolicyResponse = await app.inject({
+      method: 'POST',
+      url: '/api/community/observations',
+      payload: {
+        ...sampleObservationBatch,
+        recordCount: 1,
+        observations: [
+          {
+            ...sampleObservationBatch.observations[0],
+            sharingState: 'shareable_no_position',
+          },
+        ],
+      },
+    });
+
+    expect(positionPolicyResponse.statusCode).toBe(400);
+    expect(positionPolicyResponse.json()).toMatchObject({
+      ok: false,
+      error: 'invalid_community_observation_batch',
     });
   });
 

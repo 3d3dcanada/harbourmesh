@@ -22,6 +22,8 @@ describe('NB pilot PostGIS schema migration', () => {
       'devices',
       'community_sounding_batches',
       'community_soundings',
+      'community_observation_batches',
+      'community_observations',
       'community_hazard_batches',
       'community_hazards',
       'community_hazard_reviews',
@@ -36,9 +38,11 @@ describe('NB pilot PostGIS schema migration', () => {
     const sql = await readMigration();
 
     expect(sql).toMatch(/community_soundings[\s\S]+geom geometry\(Point, 4326\) NOT NULL/);
+    expect(sql).toMatch(/community_observations[\s\S]+geom geometry\(Point, 4326\)/);
     expect(sql).toMatch(/community_hazards[\s\S]+geom geometry\(Point, 4326\)/);
     expect(sql).toMatch(/community_aggregate_cells[\s\S]+geom geometry\(Polygon, 4326\) NOT NULL/);
     expect(sql).toContain('idx_community_soundings_geom ON community_soundings USING gist(geom)');
+    expect(sql).toContain('idx_community_observations_geom ON community_observations USING gist(geom)');
     expect(sql).toContain('idx_community_hazards_geom ON community_hazards USING gist(geom)');
     expect(sql).toContain('idx_aggregate_cells_geom ON community_aggregate_cells USING gist(geom)');
   });

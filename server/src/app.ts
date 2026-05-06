@@ -18,6 +18,11 @@ import {
   createCommunityHazardRepository,
   type CommunityHazardRepository,
 } from './community-hazard-repository.js';
+import { communityObservationBatchSchema } from './community-observations.js';
+import {
+  createCommunityObservationRepository,
+  type CommunityObservationRepository,
+} from './community-observation-repository.js';
 import { communitySoundingBatchSchema } from './community-soundings.js';
 import {
   createCommunitySoundingRepository,
@@ -33,6 +38,7 @@ export type BuildAppOptions = {
   dataDir: string;
   repository?: CommunitySoundingRepository;
   hazardRepository?: CommunityHazardRepository;
+  observationRepository?: CommunityObservationRepository;
   deviceRepository?: DeviceRepository;
   apiKeys?: readonly string[];
   writeApiKeys?: readonly string[];
@@ -46,6 +52,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   const app = Fastify({ logger: options.logger ?? false });
   const repository = options.repository ?? createCommunitySoundingRepository(options.dataDir);
   const hazardRepository = options.hazardRepository ?? createCommunityHazardRepository(options.dataDir);
+  const observationRepository = options.observationRepository ?? createCommunityObservationRepository(options.dataDir);
   const deviceRepository = options.deviceRepository ?? createDeviceRepository(options.dataDir);
   const apiAuth = createApiAuthConfig({
     keys: options.apiKeys ?? parseApiKeys(process.env.HARBOURMESH_API_KEYS, process.env.HARBOURMESH_API_KEY),
@@ -111,6 +118,31 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   app.get('/api/charts/nb/catalog', async () => getNBPilotChartCatalog());
   app.get('/api/charts/nb/packages', async () => getNBPilotChartPackageManifest());
   app.get('/api/charts/nb/package-artifacts', async () => getNBPilotChartPackageArtifactManifest());
+
+  app.post('/api/community/observations', async (request, reply) => {
+    if (!(await requireApiAccess(request, reply, apiAuth))) return reply;
+
+    try {
+      const batch = communityObservationBatchSchema.parse(request.body);
+      const receipt = await observationRepository.acceptBatch(batch);
+      return reply.code(202).send(receipt);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return reply.code(400).send({
+          ok: false,
+          error: 'invalid_community_observation_batch',
+          issues: error.issues.map((issue) => ({
+            path: issue.path.join('.'),
+            message: issue.message,
+          })),
+        });
+      }
+
+      throw error;
+    }
+  });
+
+  app.get('/api/community/observations/summary', async () => observationRepository.getSummary());
 
   app.post('/api/community/hazards', async (request, reply) => {
     if (!(await requireApiAccess(request, reply, apiAuth))) return reply;

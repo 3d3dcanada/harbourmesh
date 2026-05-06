@@ -90,6 +90,57 @@ CREATE INDEX IF NOT EXISTS idx_community_soundings_observed_at ON community_soun
 CREATE INDEX IF NOT EXISTS idx_community_soundings_source_device ON community_soundings(source_device_id);
 CREATE INDEX IF NOT EXISTS idx_community_soundings_shareable ON community_soundings(quality_rejected, sharing_state);
 
+CREATE TABLE IF NOT EXISTS community_observation_batches (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  external_batch_id text UNIQUE NOT NULL,
+  schema_version text NOT NULL CHECK (schema_version = 'harbourmesh.community-observations.v1'),
+  region text NOT NULL,
+  record_count integer NOT NULL CHECK (record_count > 0),
+  accepted_count integer NOT NULL DEFAULT 0 CHECK (accepted_count >= 0),
+  duplicate_count integer NOT NULL DEFAULT 0 CHECK (duplicate_count >= 0),
+  intended_use text NOT NULL CHECK (intended_use = 'community_reference_overlay'),
+  official_chart_data_included boolean NOT NULL DEFAULT false CHECK (official_chart_data_included = false),
+  contains_full_shared_positions boolean NOT NULL DEFAULT false,
+  raw_local_positions_included boolean NOT NULL DEFAULT false CHECK (raw_local_positions_included = false),
+  raw_sensor_payloads_included boolean NOT NULL DEFAULT false CHECK (raw_sensor_payloads_included = false),
+  created_at timestamptz NOT NULL,
+  stored_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_observation_batches_region ON community_observation_batches(region);
+CREATE INDEX IF NOT EXISTS idx_observation_batches_created_at ON community_observation_batches(created_at);
+
+CREATE TABLE IF NOT EXISTS community_observations (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  external_record_id text UNIQUE NOT NULL,
+  batch_id uuid NOT NULL REFERENCES community_observation_batches(id) ON DELETE CASCADE,
+  vessel_id uuid REFERENCES vessels(id) ON DELETE SET NULL,
+  external_vessel_id text NOT NULL,
+  source_device_id text NOT NULL,
+  source_protocol text NOT NULL CHECK (source_protocol IN ('signalk', 'nmea0183', 'nmea2000', 'manual', 'replay', 'simulated')),
+  observation_type text NOT NULL CHECK (observation_type IN ('ais_target', 'radar_contact', 'weather', 'condition', 'track_point', 'system_health', 'other')),
+  observed_at timestamptz NOT NULL,
+  received_at timestamptz NOT NULL,
+  consent_captured_at timestamptz NOT NULL,
+  sharing_state text NOT NULL CHECK (sharing_state IN ('shareable_no_position', 'shareable_blurred', 'shareable_full')),
+  geom geometry(Point, 4326),
+  position_source text CHECK (position_source IN ('gps', 'ais', 'radar', 'manual', 'estimated')),
+  position_accuracy_meters numeric(10, 3) CHECK (position_accuracy_meters >= 0),
+  metrics jsonb NOT NULL DEFAULT '{}'::jsonb,
+  quality jsonb NOT NULL DEFAULT '{}'::jsonb,
+  quality_confidence numeric(4, 3) NOT NULL CHECK (quality_confidence >= 0 AND quality_confidence <= 1),
+  quality_rejected boolean NOT NULL DEFAULT false CHECK (quality_rejected = false),
+  raw_payload_included boolean NOT NULL DEFAULT false CHECK (raw_payload_included = false),
+  official_chart_data_included boolean NOT NULL DEFAULT false CHECK (official_chart_data_included = false),
+  stored_at timestamptz NOT NULL DEFAULT now(),
+  CHECK ((sharing_state = 'shareable_no_position' AND geom IS NULL) OR (sharing_state <> 'shareable_no_position' AND geom IS NOT NULL))
+);
+
+CREATE INDEX IF NOT EXISTS idx_community_observations_geom ON community_observations USING gist(geom);
+CREATE INDEX IF NOT EXISTS idx_community_observations_observed_at ON community_observations(observed_at);
+CREATE INDEX IF NOT EXISTS idx_community_observations_type ON community_observations(observation_type);
+CREATE INDEX IF NOT EXISTS idx_community_observations_source_device ON community_observations(source_device_id);
+
 CREATE TABLE IF NOT EXISTS community_hazard_batches (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   external_batch_id text UNIQUE NOT NULL,
