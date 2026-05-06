@@ -702,7 +702,7 @@ describe('HarbourMesh API', () => {
         artifactsAreReferenceOnly: true,
         officialChartDataExcluded: true,
         pmtilesGenerationPending: true,
-        mbtilesGenerationPending: true,
+        mbtilesGenerationPending: false,
       },
     });
     expect(response.json().artifacts).toEqual(
@@ -720,6 +720,19 @@ describe('HarbourMesh API', () => {
             metadata: expect.objectContaining({
               officialChartDataIncluded: false,
             }),
+          }),
+        }),
+        expect.objectContaining({
+          packageId: 'nb-coast-reference',
+          format: 'mbtiles',
+          mediaType: 'application/x-sqlite3',
+          officialChartDataIncluded: false,
+          excludedSourceIds: expect.arrayContaining(['chs-official-digital-products']),
+          byteLength: expect.any(Number),
+          sha256: expect.stringMatching(/^[a-f0-9]{64}$/),
+          tileSummary: expect.objectContaining({
+            layerName: 'harbourmesh_reference',
+            tileCount: expect.any(Number),
           }),
         }),
       ])

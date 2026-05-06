@@ -141,12 +141,39 @@ const artifactManifest: NBPilotChartPackageArtifactManifest = {
         },
       },
     },
+    {
+      id: 'artifact:nb-coast-reference:mbtiles',
+      packageId: 'nb-coast-reference',
+      region: 'NB_PILOT',
+      format: 'mbtiles',
+      mediaType: 'application/x-sqlite3',
+      fileName: 'nb-coast-reference.mbtiles',
+      byteLength: 4096,
+      sha256: 'b'.repeat(64),
+      generatedAt: '2026-05-06T12:16:00.000Z',
+      officialChartDataIncluded: false,
+      sourceIds: ['geonb-nbhn-watercourse'],
+      excludedSourceIds: ['chs-official-digital-products'],
+      warnings: ['PMTiles pending'],
+      tileSummary: {
+        layerName: 'harbourmesh_reference',
+        minZoom: 6,
+        maxZoom: 8,
+        tileCount: 7,
+        bounds: {
+          south: 44.47,
+          west: -67.15,
+          north: 47.25,
+          east: -63.66,
+        },
+      },
+    },
   ],
   rules: {
     artifactsAreReferenceOnly: true,
     officialChartDataExcluded: true,
     pmtilesGenerationPending: true,
-    mbtilesGenerationPending: true,
+    mbtilesGenerationPending: false,
   },
 };
 
@@ -203,6 +230,7 @@ describe('NB pilot chart catalog client', () => {
       rules: {
         officialChartDataExcluded: true,
         pmtilesGenerationPending: true,
+        mbtilesGenerationPending: false,
       },
     });
 

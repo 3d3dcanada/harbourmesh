@@ -6,7 +6,7 @@ Scope: New Brunswick pilot first, international architecture second
 
 ## Executive Status
 
-HarbourMesh is currently a React/Vite NB pilot app with an early Fastify backend for device registration, chart source catalog, chart package manifests, generated GeoJSON package artifacts, community sounding upload, governed community observation upload, community hazard upload, hazard review/history, review-operator API key identity, privacy-preserving aggregate GeoJSON, and aggregate release manifests. It still does not have a production chart engine, hardware ingest proof, AI runtime, weather-routing engine, vector tile products, or production cloud mesh. The next goal is not a public launch. The next goal is a stable NB pilot foundation that is honest about what is implemented, legally clean around chart data, and ready for real vessel telemetry.
+HarbourMesh is currently a React/Vite NB pilot app with an early Fastify backend for device registration, chart source catalog, chart package manifests, generated GeoJSON package artifacts, starter MBTiles vector-tile artifacts, community sounding upload, governed community observation upload, community hazard upload, hazard review/history, review-operator API key identity, privacy-preserving aggregate GeoJSON, and aggregate release manifests. It still does not have a production chart engine, hardware ingest proof, AI runtime, weather-routing engine, full hydrography vector tile products, or production cloud mesh. The next goal is not a public launch. The next goal is a stable NB pilot foundation that is honest about what is implemented, legally clean around chart data, and ready for real vessel telemetry.
 
 The product ambition is correct: a boat-first operating layer where charts, vessel telemetry, sonar soundings, radar-derived observations, hazards, weather, maintenance, and community-contributed local knowledge can become useful together. The implementation has to be phased carefully because official navigation charts, user-generated bathymetry, privacy, liability, and sensor quality are separate problems that should not be mixed into one ungoverned data pool.
 
@@ -31,7 +31,7 @@ Active checkout:
 Observed state:
 
 - Frontend: React/Vite app exists, with the community section now wired to local telemetry, AIS targets, soundings, governed observations, hazards, upload batches, local map overlay features, and NB reference mapping instead of hard-coded demo community data.
-- Charts: NB pilot reference chart work has started with React Leaflet, OSM base tiles, legal GeoNB WMS overlays, a chart source catalog, NB offline package manifests, generated reference-only GeoJSON package artifacts, a disk artifact writer, and a Navigation chart package panel; it is not a certified navigation chart system and PMTiles/MBTiles products are not generated yet.
+- Charts: NB pilot reference chart work has started with React Leaflet, OSM base tiles, legal GeoNB WMS overlays, a chart source catalog, NB offline package manifests, generated reference-only GeoJSON package artifacts, starter MBTiles vector-tile artifacts for package boundaries/source policy, a disk artifact writer, and a Navigation chart package panel; it is not a certified navigation chart system, PMTiles are still pending, and full hydrography vector tiles are not generated yet.
 - Telemetry: recorded Signal K replay and live Signal K WebSocket wiring now exist; live hardware ingest remains unverified.
 - Backend: a Fastify API now exists for NB chart source catalog, NB chart package manifests, community sounding upload, governed community observation upload, community hazard upload, hazard review, community reference GeoJSON overlay, device registration, and summary endpoints. JSONL remains the local fallback, and `HARBOURMESH_DATABASE_URL` now activates PostGIS runtime repositories for devices, soundings, observations, hazards, and review history.
 - Community mesh: local raw sounding capture, local hazard reporting, consent-safe offline upload queues, backend upload endpoints, pending-by-default hazard moderation, an operator review surface, review-operator API key identity, queryable review history, a raw reference overlay, and privacy-preserving aggregate GeoJSON now exist; vector tile products are still not implemented.
@@ -50,20 +50,21 @@ Last light checks:
 - `npm run lint`: passing with 0 warnings.
 - `npm audit --json`: 0 vulnerabilities.
 - `npm run build`: passing for the web app.
-- `npm run build`: section-level code splitting is active; the initial app JS chunk is 286.85 kB / 90.35 kB gzip, the Navigation section chunk is 29.42 kB / 6.89 kB gzip, the Settings section chunk is 44.40 kB / 9.01 kB gzip, the Community section chunk is 60.00 kB / 10.41 kB gzip, and the prior Vite oversized chunk warning is gone.
+- `npm run build`: section-level code splitting is active; the initial app JS chunk is 286.85 kB / 90.35 kB gzip, the Navigation section chunk is 30.05 kB / 7.07 kB gzip, the Settings section chunk is 44.40 kB / 9.00 kB gzip, the Community section chunk is 60.00 kB / 10.40 kB gzip, and the prior Vite oversized chunk warning is gone.
 - `npm run build` in `server`: passing.
 - `npm audit --json` in `server`: 0 vulnerabilities.
 - Cloudflare Pages config exists at `app/wrangler.toml` with `pages_build_output_dir = "./dist"` and a manual GitHub deploy workflow at `.github/workflows/cloudflare-pages.yml`; no live Cloudflare deployment was run in this snapshot.
 - API container packaging exists at `server/Dockerfile` with a non-root runner, `/health` healthcheck, and `/data` JSONL storage path; no live container registry push was run in this snapshot.
 - API container smoke: `docker build -t harbourmesh-api:codex-smoke ./server` succeeded, the container started on local port 3106 with scoped SHA-256 smoke API key env values, `/health` returned `ok: true`, a protected sounding upload using the unhashed client key returned an accepted receipt, and the smoke container was stopped.
+- API container artifact smoke on port 3108: `/api/charts/nb/package-artifacts` returned 4 artifacts from the rebuilt container, 2 GeoJSON and 2 MBTiles; MBTiles pending was false, PMTiles pending was true, and the MBTiles summaries reported z6-z8 with 20 coast tiles and 33 inland-waterway tiles.
 - PostGIS container smoke: a throwaway `postgis/postgis:16-3.4-alpine` database plus `harbourmesh-api:codex-smoke` on port 3107 applied migrations with `HARBOURMESH_RUN_MIGRATIONS=true`; protected sounding, observation, hazard review, aggregate GeoJSON, and device registration flows all returned expected database-backed responses, then both containers and the smoke Docker network were stopped/removed.
 - Server API auth tests cover missing keys, accepted header keys, accepted Bearer keys, scoped write/review key separation, review-operator key parsing, reviewer identity override for audit history, protected device registry reads, and fail-closed production-style config.
 - Server API auth tests cover SHA-256 hash-backed write keys and review-operator keys while clients continue sending normal API keys.
 - Server hazard review tests cover pending hazards being withheld from public GeoJSON until accepted, accepted hazards becoming overlay-eligible, review history listing, and unknown hazard review returning 404.
 - Server aggregate GeoJSON tests cover cell polygons, sounding depth averages, positioned observation counts, accepted-hazard counts, official chart exclusion, and raw vessel/source ID omission.
 - Server aggregate release tests cover checksum manifests for latest aggregate GeoJSON products without embedded feature payloads, raw record IDs, vessel IDs, or official chart data.
-- Server chart package tests cover `/api/charts/nb/packages`, `/api/charts/nb/package-artifacts`, NB coast and inland-waterway package definitions, generated GeoJSON artifact checksums, pending PMTiles/MBTiles flags, community-overlay inclusion, and official CHS exclusion.
-- Server chart artifact writer tests cover compact GeoJSON file output, checksum-matching bytes, `manifest.json` writing, release manifest content omission, and official chart exclusion.
+- Server chart package tests cover `/api/charts/nb/packages`, `/api/charts/nb/package-artifacts`, NB coast and inland-waterway package definitions, generated GeoJSON and MBTiles artifact checksums, pending PMTiles flags, community-overlay inclusion, and official CHS exclusion.
+- Server chart artifact writer tests cover compact GeoJSON output, SQLite MBTiles output, checksum-matching bytes, `manifest.json` writing, release manifest content omission, tile-summary metadata, and official chart exclusion.
 - Server observation tests cover protected upload of governed radar/weather-style observations, duplicate receipts, summary counts by type/region, raw sensor payload exclusion, and position-sharing policy rejection.
 - Server PostGIS schema tests cover the NB pilot migration, spatial observation/hazard/aggregate columns, idempotent position-column/device-kind upgrades, position JSON round-trip storage, runtime device kind parity, GIST indexes, and schema-level exclusion of official chart data/raw identifiers from shared products.
 - Server startup tests cover the PostGIS runtime mode switch staying health-checkable before the first database-backed data route runs.
@@ -77,13 +78,13 @@ Last light checks:
 - Web observation tests cover consent-safe telemetry observation derivation, raw sensor payload exclusion, AIS identifier omission from metrics, upload batch policy, local queue de-duplication, status tracking, and upload receipt validation.
 - Web hazard moderation tests cover protected review-queue loading, review history loading, review receipt validation, API error handling, and invalid receipt rejection.
 - Web aggregate overlay tests cover aggregate GeoJSON fetching, positioned observation counts, aggregate release manifest validation, privacy metadata validation, and rejection when raw IDs or official chart data are exposed.
-- Web chart artifact tests cover `/api/charts/nb/package-artifacts` client validation, GeoJSON artifact manifest loading, pending PMTiles/MBTiles flags, and rejection of artifacts that include official chart data.
+- Web chart artifact tests cover `/api/charts/nb/package-artifacts` client validation, GeoJSON and MBTiles artifact manifest loading, pending PMTiles flags, and rejection of artifacts that include official chart data.
 - Local API smoke on port 3101: `/health`, `POST /api/community/soundings`, and `/api/community/soundings/summary` returned expected responses.
 - Local API smoke on port 3102: `POST /api/devices/register` and `GET /api/devices` returned expected responses.
 - Local API smoke on port 3103: `/health`, `POST /api/community/hazards`, and `/api/community/hazards/summary` returned expected responses.
 - Local API smoke on port 3104: `/health` and `/api/charts/nb/catalog` returned expected responses with 6 sources, 4 GeoNB WMS layers, and CHS official products marked not uploadable.
 - Local API smoke on port 3105: `/health`, community sounding upload, community hazard upload, and `/api/community/overlay.geojson` returned a 2-feature reference overlay with official chart data excluded.
-- Local chart artifact smoke: `npm run charts:nb:artifacts -- ./tmp/nb-chart-artifacts-smoke` wrote `manifest.json`, `nb-coast-reference.geojson` at 812 bytes, and `nb-inland-waterways-reference.geojson` at 871 bytes with official chart data excluded.
+- Local chart artifact smoke: `npm run charts:nb:artifacts -- ./tmp/nb-chart-artifacts-mbtiles-smoke` wrote `manifest.json`, two GeoJSON artifacts, and two MBTiles artifacts; `nb-coast-reference.mbtiles` was 28672 bytes with 20 tile rows, `nb-inland-waterways-reference.mbtiles` was 36864 bytes with 33 tile rows, both advertised `format=pbf`, z6-z8, and official chart data excluded.
 - Browser smoke on port 5175: Community map rendered at 1280x900 and 360x780 with seeded local sounding and hazard overlay markers.
 - Browser smoke on port 5176: Dashboard and Community lazy-loaded through sidebar navigation at 1280x900 and the Community view rendered at 360x780.
 - Browser smoke on port 5176: demo-data notices rendered on Inventory, Documents, Logs & Tasks, Vessel, and Boat Map after sidebar navigation.
@@ -106,8 +107,8 @@ Completed in the active checkout:
 - Added a New Brunswick pilot chart source registry with GeoNB overlays and CHS local-only boundaries.
 - Added a backend NB chart catalog endpoint at `/api/charts/nb/catalog` with GeoNB, CHS NONNA, and CHS official-product source policies.
 - Added a backend NB chart package manifest endpoint at `/api/charts/nb/packages` for planned reference-only coast and inland-waterway offline packages.
-- Added `/api/charts/nb/package-artifacts` to generate reference-only GeoJSON package artifacts with bounds, source policy, byte sizes, and SHA-256 checksums while excluding official CHS data.
-- Added `npm run charts:nb:artifacts` to write NB reference package GeoJSON artifacts and a release `manifest.json` to disk with checksum-matching compact bytes.
+- Added `/api/charts/nb/package-artifacts` to generate reference-only GeoJSON and starter MBTiles package artifacts with bounds, source policy, byte sizes, tile summaries, and SHA-256 checksums while excluding official CHS data.
+- Added `npm run charts:nb:artifacts` to write NB reference package GeoJSON artifacts, starter MBTiles vector-tile archives, and a release `manifest.json` to disk with checksum-matching compact bytes.
 - Replaced the navigation canvas demo with an NB pilot map component.
 - Added Signal K URL building, delta mapping, recorded replay data, and telemetry mode settings.
 - Added a persisted navigation planning store, route distance/course calculations, and an NB pilot reference route overlay.
@@ -147,13 +148,13 @@ Completed in the active checkout:
 - Hardened the first PostGIS migration so existing pilot databases can pick up position JSON columns and runtime device-kind parity without relying on a fresh schema.
 - Added review-scoped `/api/community/hazards/reviews` so hazard moderation decisions are queryable as audit history.
 - Wired hazard review history into the Community moderation tab with a protected history client and responsive review-history panel.
-- Wired generated NB chart package artifacts into the web chart catalog client and Navigation Chart View so pilots can load reference-only GeoJSON artifact manifests, byte sizes, checksums, excluded official source IDs, and pending PMTiles/MBTiles status.
+- Wired generated NB chart package artifacts into the web chart catalog client and Navigation Chart View so pilots can load reference-only GeoJSON and MBTiles artifact manifests, byte sizes, checksums, tile counts, excluded official source IDs, and pending PMTiles status.
 - Replaced the route overlay React fragment inside the Leaflet pane with a `LayerGroup`, clearing the chart-view React console warning during browser smoke.
 - Added an SVG favicon link so the browser smoke no longer carries a missing `/favicon.ico` error.
 
 Still not done:
 
-- No full production user auth, generated PMTiles/MBTiles artifacts, vector tile generation, persisted aggregate-cell/release processing, or reviewed aggregate tile release process exists.
+- No full production user auth, generated PMTiles artifacts, full hydrography vector tile generation, persisted aggregate-cell/release processing, or reviewed aggregate tile release process exists.
 - No full route-by-route browser/mobile visual verification has been run in this session.
 - No real Signal K server, sonar, radar, AIS receiver, or Boat Node hardware has been tested.
 - Community hazards can now be queued, uploaded to the pilot backend, reviewed through the API/UI with review-scoped keys or review-operator keys, listed through review history, included in the raw reference overlay only after acceptance, and counted in privacy-preserving aggregates; vector tile products are still not implemented.

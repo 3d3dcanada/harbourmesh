@@ -232,6 +232,10 @@ export function Navigation() {
   // Get first engine data
   const engineData = Object.entries(latestEngine)[0]?.[1];
   const activeRoute = routes.find((route) => route.id === activeRouteId) ?? null;
+  const chartArtifactCounts = chartArtifacts?.artifacts.reduce<Record<string, number>>((counts, artifact) => {
+    counts[artifact.format] = (counts[artifact.format] ?? 0) + 1;
+    return counts;
+  }, {}) ?? {};
 
   const handleLoadChartArtifacts = async () => {
     setChartArtifactsLoading(true);
@@ -279,7 +283,8 @@ export function Navigation() {
         ) : (
           <div className="space-y-3">
             <div className="flex flex-wrap gap-2">
-              <Badge variant="outline">{chartArtifacts.artifacts.length} GeoJSON</Badge>
+              <Badge variant="outline">{chartArtifactCounts.geojson ?? 0} GeoJSON</Badge>
+              <Badge variant="outline">{chartArtifactCounts.mbtiles ?? 0} MBTiles</Badge>
               {chartArtifacts.rules.pmtilesGenerationPending && <Badge variant="secondary">PMTiles pending</Badge>}
               {chartArtifacts.rules.mbtilesGenerationPending && <Badge variant="secondary">MBTiles pending</Badge>}
             </div>
@@ -293,6 +298,11 @@ export function Navigation() {
                   <p className="mt-1 text-xs text-muted-foreground">
                     {artifact.byteLength} bytes · {artifact.sha256.slice(0, 12)}
                   </p>
+                  {artifact.tileSummary && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      z{artifact.tileSummary.minZoom}-{artifact.tileSummary.maxZoom} · {artifact.tileSummary.tileCount} tiles
+                    </p>
+                  )}
                   <p className="mt-1 text-xs text-muted-foreground">
                     Excludes {artifact.excludedSourceIds.join(', ')}
                   </p>

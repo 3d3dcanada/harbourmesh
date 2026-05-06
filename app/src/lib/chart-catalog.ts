@@ -82,8 +82,8 @@ export type NBPilotChartPackageArtifact = {
   id: string;
   packageId: string;
   region: 'NB_PILOT';
-  format: 'geojson';
-  mediaType: 'application/geo+json';
+  format: 'geojson' | 'mbtiles';
+  mediaType: 'application/geo+json' | 'application/x-sqlite3';
   fileName: string;
   byteLength: number;
   sha256: string;
@@ -92,13 +92,20 @@ export type NBPilotChartPackageArtifact = {
   sourceIds: string[];
   excludedSourceIds: string[];
   warnings: string[];
-  content: {
+  content?: {
     type: 'FeatureCollection';
     metadata: {
       schemaVersion: 'harbourmesh.chart-package-artifact-content.v1';
       officialChartDataIncluded: false;
       referenceOnly: true;
     };
+  };
+  tileSummary?: {
+    layerName: 'harbourmesh_reference';
+    minZoom: number;
+    maxZoom: number;
+    tileCount: number;
+    bounds: NBPilotChartPackage['bounds'];
   };
 };
 
@@ -175,15 +182,23 @@ function isChartPackageArtifactManifest(value: unknown): value is NBPilotChartPa
     manifest.artifacts.every((artifact) => (
       typeof artifact.id === 'string' &&
       artifact.region === 'NB_PILOT' &&
-      artifact.format === 'geojson' &&
-      artifact.mediaType === 'application/geo+json' &&
+      (artifact.format === 'geojson' || artifact.format === 'mbtiles') &&
+      (
+        (artifact.format === 'geojson' && artifact.mediaType === 'application/geo+json') ||
+        (artifact.format === 'mbtiles' && artifact.mediaType === 'application/x-sqlite3')
+      ) &&
       artifact.officialChartDataIncluded === false &&
       typeof artifact.byteLength === 'number' &&
       /^[a-f0-9]{64}$/.test(artifact.sha256) &&
       Array.isArray(artifact.sourceIds) &&
       Array.isArray(artifact.excludedSourceIds) &&
-      artifact.content?.type === 'FeatureCollection' &&
-      artifact.content.metadata?.officialChartDataIncluded === false
+      (
+        artifact.format === 'geojson'
+          ? artifact.content?.type === 'FeatureCollection' &&
+            artifact.content.metadata?.officialChartDataIncluded === false
+          : artifact.tileSummary?.layerName === 'harbourmesh_reference' &&
+            typeof artifact.tileSummary.tileCount === 'number'
+      )
     ))
   );
 }
