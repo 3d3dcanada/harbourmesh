@@ -8,7 +8,7 @@
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?logo=typescript)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://react.dev/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
 [![Vitest](https://img.shields.io/badge/Vitest-Testing-yellowgreen)](https://vitest.dev/)
 
 **Zero-Tolerance QA** | **Offline-First** | **NMEA 0183/2000 Compatible**
@@ -19,15 +19,15 @@
 
 ## Overview
 
-HarbourMesh is an enterprise-grade marine IoT platform designed for comprehensive vessel management. Built with SOLID principles and defense-in-depth security, it provides:
+HarbourMesh is an active New Brunswick pilot build for vessel management, NB reference mapping, Signal K telemetry, and opt-in community bathymetry. Current implemented surfaces include:
 
 - **Vessel Digital Twin** — Real-time monitoring and state management
-- **Navigation Charts** — Offline-capable cartography (MBTiles/OpenLayers)
-- **Weather Routing** — GRIB-based route optimization (PredictWind-style)
-- **NMEA Integration** — Full support for 0183/2000 protocols
-- **AIS Tracking** — Real-time vessel collision avoidance
+- **NB Pilot Map** — React Leaflet map with legal GeoNB reference overlays
+- **Signal K Integration** — Recorded replay and live WebSocket client path
+- **Community Soundings** — Consent-safe local raw sounding capture and API sync
+- **AIS Tracking** — AIS targets from telemetry stream mapping
 - **Document Management** — Regulatory compliance and certifications
-- **AI Companion** — Context-aware vessel assistance
+- **AI Companion** — Local app assistant scaffold
 
 ## Architecture
 
@@ -39,7 +39,12 @@ HarbourMesh is an enterprise-grade marine IoT platform designed for comprehensiv
 │  ├── Components: shadcn/ui + Tailwind CSS                   │
 │  ├── State: Zustand with persistence                        │
 │  ├── Charts: Recharts + Custom Marine Charts                │
-│  └── Maps: OpenLayers + MBTiles Offline Support             │
+│  └── Maps: Leaflet + GeoNB WMS overlays                     │
+├─────────────────────────────────────────────────────────────┤
+│  Server (Fastify + TypeScript)                              │
+│  ├── Community sounding upload API                          │
+│  ├── Strict payload validation                              │
+│  └── JSONL local persistence for pilot data                  │
 ├─────────────────────────────────────────────────────────────┤
 │  Core Libraries                                              │
 │  ├── @harbourmesh/nmea — NMEA 0183/2000 Parser              │
@@ -72,26 +77,37 @@ HarbourMesh is an enterprise-grade marine IoT platform designed for comprehensiv
 git clone https://github.com/3d3dca/harbourmesh.git
 cd harbourmesh
 
-# Install dependencies
+# Install web dependencies
 cd app && npm install
 
-# Run development server
+# Run web development server
 npm run dev
 
-# Run tests
+# Run web tests
 npm test
 ```
 
 ### Current Build Commands
 
 ```bash
-# Check the app without starting a server
+# Check the web app
+cd app
 npm run lint
 npm run type-check
 npm run test:run
 
-# Build the current web app
+# Build the web app
 npm run build
+
+# Check the API
+cd ../server
+npm ci
+npm test
+npm run type-check
+npm run build
+
+# Run the API locally
+npm run dev
 ```
 
 DZIP and platform-specific packages are planned but are not implemented in this checkout yet. See [New Brunswick Launch Plan](docs/HARBOURMESH_NB_LAUNCH_PLAN_2026_05_06.md) for the completion path.
@@ -107,28 +123,24 @@ DZIP and platform-specific packages are planned but are not implemented in this 
 
 ## Testing
 
-HarbourMesh implements a comprehensive zero-tolerance QA system:
+HarbourMesh currently has focused unit and integration coverage for utilities, stores, NB chart sources, Signal K mapping, route planning, community sounding extraction, frontend sync, and the Fastify API.
 
 ```bash
-# Run all tests with coverage
-npm test -- --coverage
+# Web
+cd app
+npm run test:coverage
 
-# Run specific test suites
-npm test -- utils        # Utility functions
-npm test -- store        # State management
-npm test -- nmea         # NMEA parsing
-npm test -- security     # Security modules
+# API
+cd ../server
+npm test
 ```
-
-**Current Test Coverage:** 85%+ across all modules
 
 ## Security
 
-- **Encryption:** AES-256-GCM for data at rest
-- **Authentication:** JWT with 15-min expiry + refresh tokens
-- **Authorization:** RBAC with 6 roles, 25+ permissions
-- **Transport:** mTLS support for hardware connections
-- **Audit:** Complete logging of all security events
+- Official chart data is separated from community/reference data.
+- Community sounding uploads reject official chart data and raw local-only positions.
+- Payloads carry consent, source, confidence, and correction metadata.
+- Full production auth/RBAC/encryption hardening remains on the launch plan.
 
 See [Security Audit](docs/SECURITY_AUDIT.md) for details.
 

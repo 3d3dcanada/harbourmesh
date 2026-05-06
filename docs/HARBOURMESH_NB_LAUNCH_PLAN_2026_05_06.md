@@ -33,8 +33,8 @@ Observed state:
 - Frontend: React/Vite app exists.
 - Charts: NB pilot reference chart work has started with React Leaflet, OSM base tiles, and legal GeoNB WMS overlays; it is not a certified navigation chart system.
 - Telemetry: recorded Signal K replay and live Signal K WebSocket wiring now exist; live hardware ingest remains unverified.
-- Backend: API docs exist, but no production backend exists in this checkout.
-- Community mesh: local raw sounding capture and a consent-safe offline upload queue now exist; there is still no backend sync, moderation, or public data pipeline.
+- Backend: a Fastify API now exists for community sounding upload and summary endpoints with JSONL local persistence; it is a pilot backend, not the final PostGIS/cloud mesh.
+- Community mesh: local raw sounding capture, a consent-safe offline upload queue, and a backend upload endpoint now exist; moderation and public data products are still not implemented.
 - Security: docs overclaim; source contains weak or mislabeled crypto helpers.
 - CI/release: workflows have been adjusted to stop calling missing package scripts.
 - Testing: current tests now cover chart source metadata, Signal K mapping, community sounding extraction, and store queue behavior; they still do not prove navigation safety, hardware ingest, browser layout, or security readiness.
@@ -43,11 +43,17 @@ Observed state:
 
 Last light checks:
 
-- `npm run test:run`: passing, 72 tests.
+- `npm run test:run`: passing, 74 web tests.
+- `npm test` in `server`: passing, 3 API tests.
 - `npm run type-check`: passing.
+- `npm run type-check` in `server`: passing.
 - `npm run lint`: passing with 60 warnings.
 - `npm audit --json`: 0 vulnerabilities.
-- No dev server, browser test, production build, live Signal K hardware test, or git operation was run for this snapshot.
+- `npm run build`: passing for the web app.
+- `npm run build` in `server`: passing.
+- `npm audit --json` in `server`: 0 vulnerabilities.
+- Local API smoke on port 3101: `/health`, `POST /api/community/soundings`, and `/api/community/soundings/summary` returned expected responses.
+- No browser test, live Signal K hardware test, or real-vessel API load test was run for this snapshot.
 
 ## Implementation Progress On 2026-05-06
 
@@ -60,10 +66,11 @@ Completed in the active checkout:
 - Added a persisted navigation planning store, route distance/course calculations, and an NB pilot reference route overlay.
 - Added local raw depth sounding capture from telemetry with consent, position precision, quality flags, and transducer offsets.
 - Added community sounding upload payloads and local offline sync batches that explicitly exclude official chart data and raw local positions.
+- Added a Fastify community sounding API at `/api/community/soundings`, strict Zod validation, JSONL storage, summary endpoint, and frontend sync adapter.
 
 Still not done:
 
-- No production backend, auth, device registration, PostGIS schema, or upload endpoint exists.
+- No production auth, device registration, PostGIS schema, moderation workflow, or public aggregate tile product exists.
 - No browser/mobile visual verification has been run in this session.
 - No real Signal K server, sonar, radar, AIS receiver, or Boat Node hardware has been tested.
 - Community map, conditions, hazards, and statistics still contain demo data outside the new bathymetry path.

@@ -31,6 +31,7 @@ import { cn } from '@/lib/utils';
 import { useCommunityDataStore, useSettingsStore, useTelemetryStore, type CommunitySyncBatch } from '@/store';
 import { SharePositionLevel } from '@/types';
 import { prepareSoundingForCommunityUpload, type RawDepthSounding } from '@/lib/community-soundings';
+import { uploadCommunitySoundingBatch } from '@/lib/community-sync';
 
 // Demo community data
 const demoVessels = [
@@ -75,9 +76,11 @@ export function Community() {
     uploadBatches,
     getShareableSoundings,
     queueShareableSoundingBatch,
+    markUploadBatchStatus,
   } = useCommunityDataStore();
   const [activeTab, setActiveTab] = useState('map');
   const [isOptedIn, setIsOptedIn] = useState(consent?.shareTelemetryForCommunity || false);
+  const [syncingBatchId, setSyncingBatchId] = useState<string | null>(null);
   const shareableSoundings = getShareableSoundings();
   const queuedBatches = useMemo(() => uploadBatches.filter((batch) => batch.status === 'queued'), [uploadBatches]);
   const queuedRecordIds = useMemo(
@@ -116,6 +119,28 @@ export function Community() {
 
   const handleQueueSoundings = () => {
     queueShareableSoundingBatch();
+  };
+
+  const handleSyncNextBatch = async () => {
+    const batch = queuedBatches[0];
+    if (!batch) return;
+
+    setSyncingBatchId(batch.id);
+    markUploadBatchStatus(batch.id, 'sent');
+
+    try {
+      const receipt = await uploadCommunitySoundingBatch(batch);
+      markUploadBatchStatus(batch.id, 'acknowledged', {
+        acknowledgedId: receipt.receiptId,
+        updatedAt: receipt.storedAt,
+      });
+    } catch (error) {
+      markUploadBatchStatus(batch.id, 'failed', {
+        error: error instanceof Error ? error.message : 'Community sync failed',
+      });
+    } finally {
+      setSyncingBatchId(null);
+    }
   };
   
   return (
@@ -565,13 +590,21 @@ export function Community() {
 
 	          <Card className="mt-4">
 	            <CardHeader>
-	              <CardTitle className="flex items-center gap-2 text-base">
-	                <Database className="h-5 w-5" />
-	                Sync Queue
-	              </CardTitle>
-	              <CardDescription>
-	                Queued batches are stored locally until a community backend is available.
-	              </CardDescription>
+	              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+	                <div>
+	                  <CardTitle className="flex items-center gap-2 text-base">
+	                    <Database className="h-5 w-5" />
+	                    Sync Queue
+	                  </CardTitle>
+	                  <CardDescription>
+	                    Queued batches are stored locally, then uploaded to the community API when available.
+	                  </CardDescription>
+	                </div>
+	                <Button size="sm" variant="outline" onClick={handleSyncNextBatch} disabled={queuedBatches.length === 0 || syncingBatchId !== null}>
+	                  <Database className="mr-2 h-4 w-4" />
+	                  {syncingBatchId ? 'Syncing' : 'Sync Next'}
+	                </Button>
+	              </div>
 	            </CardHeader>
 	            <CardContent>
 	              {uploadBatches.length === 0 ? (
@@ -595,7 +628,9 @@ export function Community() {
 	                      </div>
 	                      <div className="text-sm md:text-right">
 	                        <p className="font-medium">Attempt {batch.attemptCount}</p>
-	                        <p className="text-xs text-muted-foreground">{batch.payload.schemaVersion}</p>
+	                        <p className="text-xs text-muted-foreground">
+	                          {batch.lastError ?? batch.acknowledgedId ?? batch.payload.schemaVersion}
+	                        </p>
 	                      </div>
 	                    </div>
 	                  ))}
