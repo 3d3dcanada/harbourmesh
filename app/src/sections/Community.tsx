@@ -31,8 +31,10 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
+  listCommunityHazardReviews,
   listCommunityHazardsForReview,
   reviewCommunityHazard,
+  type CommunityHazardReviewHistoryEntry,
   type CommunityHazardReviewRecord,
 } from '@/lib/community-hazard-review';
 import {
@@ -107,6 +109,8 @@ export function Community() {
   const [reviewingHazardId, setReviewingHazardId] = useState<string | null>(null);
   const [reviewError, setReviewError] = useState<string | null>(null);
   const [reviewLoadedAt, setReviewLoadedAt] = useState<string | null>(null);
+  const [reviewHistory, setReviewHistory] = useState<CommunityHazardReviewHistoryEntry[]>([]);
+  const [reviewHistoryLoading, setReviewHistoryLoading] = useState(false);
   const [aggregateFeatures, setAggregateFeatures] = useState<CommunityAggregateFeature[]>([]);
   const [aggregateLoading, setAggregateLoading] = useState(false);
   const [aggregateError, setAggregateError] = useState<string | null>(null);
@@ -296,6 +300,20 @@ export function Community() {
     }
   };
 
+  const handleLoadReviewHistory = async () => {
+    setReviewHistoryLoading(true);
+    setReviewError(null);
+
+    try {
+      const history = await listCommunityHazardReviews();
+      setReviewHistory(history.reviews.slice().reverse());
+    } catch (error) {
+      setReviewError(error instanceof Error ? error.message : 'Hazard review history failed');
+    } finally {
+      setReviewHistoryLoading(false);
+    }
+  };
+
   const handleReviewHazard = async (
     hazardId: string,
     status: 'accepted' | 'rejected'
@@ -322,6 +340,15 @@ export function Community() {
             }
           : hazard
       )));
+      setReviewHistory((currentHistory) => [
+        {
+          hazardId,
+          status: receipt.status,
+          reviewedBy,
+          reviewedAt: receipt.reviewedAt,
+        },
+        ...currentHistory,
+      ]);
     } catch (error) {
       setReviewError(error instanceof Error ? error.message : 'Hazard review failed');
     } finally {
@@ -726,6 +753,52 @@ export function Community() {
                           Reject
                         </Button>
                       </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="mt-4">
+            <CardHeader>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <ClipboardCheck className="h-5 w-5" />
+                    Review History
+                  </CardTitle>
+                  <CardDescription>
+                    Prior accepted and rejected hazard decisions from the pilot API.
+                  </CardDescription>
+                </div>
+                <Button size="sm" variant="outline" onClick={handleLoadReviewHistory} disabled={reviewHistoryLoading}>
+                  <RefreshCw className={cn('mr-2 h-4 w-4', reviewHistoryLoading && 'animate-spin')} />
+                  {reviewHistoryLoading ? 'Loading' : 'Load History'}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {reviewHistory.length === 0 ? (
+                <div className="rounded-lg border border-dashed p-6 text-center">
+                  <p className="text-sm text-muted-foreground">No review history loaded.</p>
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {reviewHistory.slice(0, 8).map((review) => (
+                    <div key={`${review.hazardId}:${review.reviewedAt}:${review.status}`} className="flex flex-col gap-2 py-3 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-medium">{review.hazardId}</p>
+                          <Badge variant="outline" className="capitalize text-xs">{review.status}</Badge>
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {new Date(review.reviewedAt).toLocaleString()} · {review.reviewedBy}
+                        </p>
+                      </div>
+                      {review.note && (
+                        <p className="max-w-md text-sm text-muted-foreground md:text-right">{review.note}</p>
+                      )}
                     </div>
                   ))}
                 </div>

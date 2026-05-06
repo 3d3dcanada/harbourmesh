@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  listCommunityHazardReviews,
   listCommunityHazardsForReview,
   reviewCommunityHazard,
 } from './community-hazard-review';
@@ -77,6 +78,45 @@ describe('community hazard review API client', () => {
         'X-HarbourMesh-API-Key': 'hm_test_api_key_1234567890',
       }),
     }));
+  });
+
+  it('loads hazard review history with a review API key', async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
+      reviews: [
+        {
+          hazardId: 'hazard-1',
+          status: 'rejected',
+          reviewedBy: 'nb-pilot-reviewer',
+          reviewedAt: '2026-05-06T12:20:00.000Z',
+          note: 'Duplicate report from same area.',
+        },
+      ],
+    }), { status: 200 }));
+
+    await expect(listCommunityHazardReviews({
+      apiBaseUrl: 'http://localhost:3001',
+      apiKey: 'hm_test_review_key_1234567890',
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    })).resolves.toMatchObject({
+      reviews: [{ hazardId: 'hazard-1', status: 'rejected' }],
+    });
+
+    expect(fetchImpl).toHaveBeenCalledWith('http://localhost:3001/api/community/hazards/reviews', expect.objectContaining({
+      method: 'GET',
+      headers: expect.objectContaining({
+        'X-HarbourMesh-API-Key': 'hm_test_review_key_1234567890',
+      }),
+    }));
+  });
+
+  it('rejects malformed hazard review history', async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
+      reviews: [{ hazardId: 'hazard-1', status: 'pending' }],
+    }), { status: 200 }));
+
+    await expect(listCommunityHazardReviews({
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    })).rejects.toThrow('Hazard review history returned an invalid response');
   });
 
   it('fails on API errors and invalid receipts', async () => {

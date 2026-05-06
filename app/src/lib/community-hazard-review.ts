@@ -36,6 +36,18 @@ export type CommunityHazardReviewQueue = {
   hazards: CommunityHazardReviewRecord[];
 };
 
+export type CommunityHazardReviewHistoryEntry = {
+  hazardId: string;
+  status: Exclude<CommunityHazardReviewStatus, 'pending'>;
+  reviewedBy: string;
+  reviewedAt: string;
+  note?: string;
+};
+
+export type CommunityHazardReviewHistory = {
+  reviews: CommunityHazardReviewHistoryEntry[];
+};
+
 export type CommunityHazardReviewReceipt = {
   ok: true;
   hazardId: string;
@@ -78,6 +90,19 @@ function buildJsonHeaders(apiKey?: string): Record<string, string> {
 function isReviewQueue(value: unknown): value is CommunityHazardReviewQueue {
   const queue = value as Partial<CommunityHazardReviewQueue>;
   return Array.isArray(queue.hazards);
+}
+
+function isReviewHistory(value: unknown): value is CommunityHazardReviewHistory {
+  const history = value as Partial<CommunityHazardReviewHistory>;
+  return (
+    Array.isArray(history.reviews) &&
+    history.reviews.every((review) => (
+      typeof review.hazardId === 'string' &&
+      (review.status === 'accepted' || review.status === 'rejected') &&
+      typeof review.reviewedBy === 'string' &&
+      typeof review.reviewedAt === 'string'
+    ))
+  );
 }
 
 function isReviewReceipt(value: unknown): value is CommunityHazardReviewReceipt {
@@ -123,6 +148,31 @@ export async function listCommunityHazardsForReview(
 
   if (!isReviewQueue(body)) {
     throw new Error('Hazard review queue returned an invalid response');
+  }
+
+  return body;
+}
+
+export async function listCommunityHazardReviews(
+  options: CommunityHazardReviewOptions = {}
+): Promise<CommunityHazardReviewHistory> {
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const endpoint = resolveEndpoint(
+    '/api/community/hazards/reviews',
+    options.apiBaseUrl ?? import.meta.env.VITE_API_BASE_URL
+  );
+  const response = await fetchImpl(endpoint, {
+    method: 'GET',
+    headers: buildJsonHeaders(resolveApiKey(options.apiKey)),
+  });
+  const body = await parseJsonResponse(response);
+
+  if (!response.ok) {
+    throw getApiError(body, response, 'Hazard review history failed');
+  }
+
+  if (!isReviewHistory(body)) {
+    throw new Error('Hazard review history returned an invalid response');
   }
 
   return body;
