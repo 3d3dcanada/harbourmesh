@@ -15,7 +15,7 @@ type StoredHazardBatch = {
   storedAt: string;
 };
 
-type StoredHazard = CommunityHazardUpload & {
+export type StoredCommunityHazard = CommunityHazardUpload & {
   batchId: string;
   storedAt: string;
   region: string;
@@ -24,6 +24,7 @@ type StoredHazard = CommunityHazardUpload & {
 export type CommunityHazardRepository = {
   acceptBatch: (batch: CommunityHazardBatch) => Promise<CommunityHazardReceipt>;
   getSummary: () => Promise<CommunityHazardSummary>;
+  listRecords: () => Promise<StoredCommunityHazard[]>;
 };
 
 export function createCommunityHazardRepository(dataDir: string): CommunityHazardRepository {
@@ -32,7 +33,7 @@ export function createCommunityHazardRepository(dataDir: string): CommunityHazar
 
   return {
     async acceptBatch(batch) {
-      const existingRecords = await readJsonLines<StoredHazard>(recordsFile);
+      const existingRecords = await readJsonLines<StoredCommunityHazard>(recordsFile);
       const existingIds = new Set(existingRecords.map((record) => record.id));
       const acceptedHazards = batch.hazards.filter((hazard) => !existingIds.has(hazard.id));
       const storedAt = new Date().toISOString();
@@ -68,7 +69,7 @@ export function createCommunityHazardRepository(dataDir: string): CommunityHazar
     },
 
     async getSummary() {
-      const hazards = await readJsonLines<StoredHazard>(recordsFile);
+      const hazards = await readJsonLines<StoredCommunityHazard>(recordsFile);
       const batches = await readJsonLines<StoredHazardBatch>(batchesFile);
       const regions = hazards.reduce<Record<string, number>>((counts, hazard) => {
         counts[hazard.region] = (counts[hazard.region] ?? 0) + 1;
@@ -95,6 +96,10 @@ export function createCommunityHazardRepository(dataDir: string): CommunityHazar
         bySeverity,
         latestReportedAt,
       };
+    },
+
+    async listRecords() {
+      return readJsonLines<StoredCommunityHazard>(recordsFile);
     },
   };
 }

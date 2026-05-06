@@ -15,9 +15,16 @@ type StoredBatch = {
   storedAt: string;
 };
 
+export type StoredCommunitySounding = CommunitySoundingUpload & {
+  batchId: string;
+  storedAt: string;
+  region: string;
+};
+
 export type CommunitySoundingRepository = {
   acceptBatch: (batch: CommunitySoundingBatch) => Promise<CommunitySoundingReceipt>;
   getSummary: () => Promise<CommunitySoundingSummary>;
+  listRecords: () => Promise<StoredCommunitySounding[]>;
 };
 
 export function createCommunitySoundingRepository(dataDir: string): CommunitySoundingRepository {
@@ -26,7 +33,7 @@ export function createCommunitySoundingRepository(dataDir: string): CommunitySou
 
   return {
     async acceptBatch(batch) {
-      const existingRecords = await readJsonLines<CommunitySoundingUpload>(recordsFile);
+      const existingRecords = await readJsonLines<StoredCommunitySounding>(recordsFile);
       const existingIds = new Set(existingRecords.map((record) => record.id));
       const acceptedRecords = batch.records.filter((record) => !existingIds.has(record.id));
       const storedAt = new Date().toISOString();
@@ -62,7 +69,7 @@ export function createCommunitySoundingRepository(dataDir: string): CommunitySou
     },
 
     async getSummary() {
-      const records = await readJsonLines<CommunitySoundingUpload & { region?: string }>(recordsFile);
+      const records = await readJsonLines<StoredCommunitySounding>(recordsFile);
       const batches = await readJsonLines<StoredBatch>(batchesFile);
       const regions = records.reduce<Record<string, number>>((counts, record) => {
         const region = record.region ?? 'unknown';
@@ -80,6 +87,10 @@ export function createCommunitySoundingRepository(dataDir: string): CommunitySou
         regions,
         latestTimestamp,
       };
+    },
+
+    async listRecords() {
+      return readJsonLines<StoredCommunitySounding>(recordsFile);
     },
   };
 }

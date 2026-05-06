@@ -2,6 +2,7 @@ import cors from '@fastify/cors';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { ZodError } from 'zod';
 import { getNBPilotChartCatalog } from './chart-catalog.js';
+import { buildCommunityGeoJsonOverlay } from './community-geojson.js';
 import { communityHazardBatchSchema } from './community-hazards.js';
 import {
   createCommunityHazardRepository,
@@ -64,6 +65,15 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   });
 
   app.get('/api/community/soundings/summary', async () => repository.getSummary());
+
+  app.get('/api/community/overlay.geojson', async () => {
+    const [soundings, hazards] = await Promise.all([
+      repository.listRecords(),
+      hazardRepository.listRecords(),
+    ]);
+
+    return buildCommunityGeoJsonOverlay(soundings, hazards);
+  });
 
   app.get('/api/charts/nb/catalog', async () => getNBPilotChartCatalog());
 

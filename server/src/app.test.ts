@@ -242,6 +242,66 @@ describe('HarbourMesh API', () => {
     });
   });
 
+  it('publishes accepted community data as reference-only GeoJSON', async () => {
+    const app = await createTestApp();
+
+    await app.inject({
+      method: 'POST',
+      url: '/api/community/soundings',
+      payload: sampleBatch,
+    });
+    await app.inject({
+      method: 'POST',
+      url: '/api/community/hazards',
+      payload: sampleHazardBatch,
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/community/overlay.geojson',
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      type: 'FeatureCollection',
+      metadata: {
+        schemaVersion: 'harbourmesh.community-overlay.v1',
+        intendedUse: 'community_reference_overlay',
+        officialChartDataIncluded: false,
+        communityProductsAreReferenceOnly: true,
+        sourceRecordCounts: {
+          soundings: 1,
+          hazards: 1,
+          omittedUnpositionedHazards: 0,
+        },
+      },
+    });
+    expect(response.json().features).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'sounding:sounding-1',
+          geometry: {
+            type: 'Point',
+            coordinates: [-66.06, 45.27],
+          },
+          properties: expect.objectContaining({
+            kind: 'sounding',
+            depthMeters: 12.5,
+            officialChartDataIncluded: false,
+          }),
+        }),
+        expect.objectContaining({
+          id: 'hazard:hazard-1',
+          properties: expect.objectContaining({
+            kind: 'hazard',
+            severity: 'medium',
+            sharingState: 'shareable_blurred',
+          }),
+        }),
+      ])
+    );
+  });
+
   it('rejects hazard batches that leak local-only positions', async () => {
     const app = await createTestApp();
     const response = await app.inject({
