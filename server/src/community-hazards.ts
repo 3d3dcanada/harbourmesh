@@ -75,8 +75,17 @@ export const communityHazardBatchSchema = z.object({
   }
 });
 
+export const communityHazardReviewSchema = z.object({
+  status: z.enum(['accepted', 'rejected']),
+  reviewedBy: z.string().trim().min(1).max(120),
+  reviewedAt: z.string().datetime().optional(),
+  note: z.string().trim().max(500).optional(),
+}).strict();
+
 export type CommunityHazardUpload = z.infer<typeof communityHazardUploadSchema>;
 export type CommunityHazardBatch = z.infer<typeof communityHazardBatchSchema>;
+export type CommunityHazardReview = z.infer<typeof communityHazardReviewSchema>;
+export type CommunityHazardReviewStatus = 'pending' | CommunityHazardReview['status'];
 
 export type CommunityHazardReceipt = {
   ok: true;
@@ -93,5 +102,16 @@ export type CommunityHazardSummary = {
   regions: Record<string, number>;
   byType: Record<string, number>;
   bySeverity: Record<string, number>;
+  byReviewStatus: Record<CommunityHazardReviewStatus, number>;
+  publicOverlayEligible: number;
+  pendingReviewCount: number;
   latestReportedAt?: string;
+};
+
+export type CommunityHazardReviewReceipt = {
+  ok: true;
+  hazardId: string;
+  status: CommunityHazardReview['status'];
+  publicOverlayEligible: boolean;
+  reviewedAt: string;
 };

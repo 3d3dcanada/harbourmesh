@@ -25,6 +25,9 @@ export type CommunityGeoJsonOverlay = {
     sourceRecordCounts: {
       soundings: number;
       hazards: number;
+      publicHazards: number;
+      pendingReviewHazards: number;
+      rejectedHazards: number;
       omittedUnpositionedHazards: number;
     };
   };
@@ -80,6 +83,8 @@ function toHazardFeature(hazard: StoredCommunityHazard): CommunityFeature | null
       reportedAt: hazard.reportedAt,
       storedAt: hazard.storedAt,
       sharingState: hazard.sharingState,
+      reviewStatus: hazard.reviewStatus,
+      reviewedAt: hazard.reviewedAt ?? null,
       positionAccuracyMeters: hazard.position.accuracy ?? null,
       officialChartDataIncluded: false,
     },
@@ -95,10 +100,14 @@ export function buildCommunityGeoJsonOverlay(
     .filter((sounding) => !sounding.quality.rejected)
     .map(toSoundingFeature);
   const hazardFeatures = hazards.flatMap((hazard) => {
+    if (!hazard.publicOverlayEligible) return [];
     const feature = toHazardFeature(hazard);
     return feature ? [feature] : [];
   });
-  const omittedUnpositionedHazards = hazards.length - hazardFeatures.length;
+  const pendingReviewHazards = hazards.filter((hazard) => hazard.reviewStatus === 'pending').length;
+  const rejectedHazards = hazards.filter((hazard) => hazard.reviewStatus === 'rejected').length;
+  const acceptedHazards = hazards.filter((hazard) => hazard.reviewStatus === 'accepted').length;
+  const omittedUnpositionedHazards = acceptedHazards - hazardFeatures.length;
 
   return {
     type: 'FeatureCollection',
@@ -112,6 +121,9 @@ export function buildCommunityGeoJsonOverlay(
       sourceRecordCounts: {
         soundings: soundings.length,
         hazards: hazards.length,
+        publicHazards: hazardFeatures.length,
+        pendingReviewHazards,
+        rejectedHazards,
         omittedUnpositionedHazards,
       },
     },

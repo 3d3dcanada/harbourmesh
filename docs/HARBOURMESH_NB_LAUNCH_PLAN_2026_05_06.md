@@ -33,8 +33,8 @@ Observed state:
 - Frontend: React/Vite app exists, with the community section now wired to local telemetry, AIS targets, soundings, hazards, upload batches, local map overlay features, and NB reference mapping instead of hard-coded demo community data.
 - Charts: NB pilot reference chart work has started with React Leaflet, OSM base tiles, and legal GeoNB WMS overlays; it is not a certified navigation chart system.
 - Telemetry: recorded Signal K replay and live Signal K WebSocket wiring now exist; live hardware ingest remains unverified.
-- Backend: a Fastify API now exists for NB chart source catalog, community sounding upload, community hazard upload, community reference GeoJSON overlay, device registration, and summary endpoints with JSONL local persistence; it is a pilot backend, not the final PostGIS/cloud mesh.
-- Community mesh: local raw sounding capture, local hazard reporting, consent-safe offline upload queues, backend upload endpoints, and a reference-only GeoJSON overlay now exist; moderation and public tile products are still not implemented.
+- Backend: a Fastify API now exists for NB chart source catalog, community sounding upload, community hazard upload, hazard review, community reference GeoJSON overlay, device registration, and summary endpoints with JSONL local persistence; it is a pilot backend, not the final PostGIS/cloud mesh.
+- Community mesh: local raw sounding capture, local hazard reporting, consent-safe offline upload queues, backend upload endpoints, pending-by-default hazard moderation, and a reference-only GeoJSON overlay now exist; full moderation operations and public tile products are still not implemented.
 - Security: docs no longer claim production readiness; the weak SHA-256 placeholder key derivation, token signing, and password hashing helpers have been replaced with PBKDF2-HMAC-SHA256/HMAC-SHA256 regressions, and the pilot API now has configurable API-key gates for write/device endpoints. Full user auth, role policy, and secret-management are still not implemented.
 - CI/release: workflows have been adjusted to stop calling missing package scripts.
 - Testing: current tests now cover chart source metadata, Signal K mapping, community sounding extraction, local hazard reporting, device registration, store queue behavior, and crypto helper regressions; they still do not prove navigation safety, hardware ingest, production auth, browser layout, or security readiness.
@@ -54,6 +54,7 @@ Last light checks:
 - `npm run build` in `server`: passing.
 - `npm audit --json` in `server`: 0 vulnerabilities.
 - Server API auth tests cover missing keys, accepted header keys, accepted Bearer keys, protected device registry reads, and fail-closed production-style config.
+- Server hazard review tests cover pending hazards being withheld from public GeoJSON until accepted, accepted hazards becoming overlay-eligible, and unknown hazard review returning 404.
 - Local API smoke on port 3101: `/health`, `POST /api/community/soundings`, and `/api/community/soundings/summary` returned expected responses.
 - Local API smoke on port 3102: `POST /api/devices/register` and `GET /api/devices` returned expected responses.
 - Local API smoke on port 3103: `/health`, `POST /api/community/hazards`, and `/api/community/hazards/summary` returned expected responses.
@@ -84,13 +85,14 @@ Completed in the active checkout:
 - Replaced mislabeled SHA-256 security helpers with PBKDF2-HMAC-SHA256 key derivation/password hashing, HMAC-SHA256 token signatures, AES-GCM IV/tag validation, and regression tests.
 - Split the frontend into lazy-loaded section chunks so the initial production bundle is smaller and the main app shell no longer trips Vite's oversized chunk warning.
 - Added configurable pilot API-key enforcement for community uploads and device registry endpoints, with public chart catalog, summaries, and reference overlay endpoints left readable.
+- Added pending-by-default hazard review for backend community hazards so public GeoJSON overlays only include accepted hazards.
 
 Still not done:
 
-- No full production user auth, PostGIS schema, moderation workflow, offline tile packaging, vector tile generation, or reviewed public aggregate tile product exists.
+- No full production user auth, PostGIS schema, moderation operations UI, offline tile packaging, vector tile generation, or reviewed public aggregate tile product exists.
 - No full route-by-route browser/mobile visual verification has been run in this session.
 - No real Signal K server, sonar, radar, AIS receiver, or Boat Node hardware has been tested.
-- Community hazards can now be queued and uploaded to the pilot backend, but moderation, review, public display, and aggregate map products are still not implemented.
+- Community hazards can now be queued, uploaded to the pilot backend, reviewed through the API, and included in the public reference overlay only after acceptance; moderation UI and aggregate map products are still not implemented.
 
 ## NB Data Strategy
 

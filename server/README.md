@@ -19,6 +19,8 @@ Default API:
 - `GET /api/community/soundings/summary`
 - `POST /api/community/hazards`
 - `GET /api/community/hazards/summary`
+- `GET /api/community/hazards/review`
+- `POST /api/community/hazards/:hazardId/review`
 - `GET /api/community/overlay.geojson`
 - `GET /api/charts/nb/catalog`
 - `POST /api/devices/register`
@@ -33,6 +35,8 @@ Protected endpoints:
 
 - `POST /api/community/soundings`
 - `POST /api/community/hazards`
+- `GET /api/community/hazards/review`
+- `POST /api/community/hazards/:hazardId/review`
 - `POST /api/devices/register`
 - `GET /api/devices`
 - `GET /api/devices/:deviceId`

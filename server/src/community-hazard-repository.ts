@@ -1,6 +1,9 @@
 import {
   type CommunityHazardBatch,
   type CommunityHazardReceipt,
+  type CommunityHazardReview,
+  type CommunityHazardReviewReceipt,
+  type CommunityHazardReviewStatus,
   type CommunityHazardSummary,
   type CommunityHazardUpload,
 } from './community-hazards.js';
@@ -19,10 +22,21 @@ export type StoredCommunityHazard = CommunityHazardUpload & {
   batchId: string;
   storedAt: string;
   region: string;
+  reviewStatus: CommunityHazardReviewStatus;
+  publicOverlayEligible: boolean;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  reviewNote?: string;
+};
+
+type StoredHazardReview = CommunityHazardReview & {
+  hazardId: string;
+  reviewedAt: string;
 };
 
 export type CommunityHazardRepository = {
   acceptBatch: (batch: CommunityHazardBatch) => Promise<CommunityHazardReceipt>;
+  reviewHazard: (hazardId: string, review: CommunityHazardReview) => Promise<CommunityHazardReviewReceipt | null>;
   getSummary: () => Promise<CommunityHazardSummary>;
   listRecords: () => Promise<StoredCommunityHazard[]>;
 };
@@ -30,10 +44,35 @@ export type CommunityHazardRepository = {
 export function createCommunityHazardRepository(dataDir: string): CommunityHazardRepository {
   const recordsFile = resolveDataFile(dataDir, 'community-hazards.jsonl');
   const batchesFile = resolveDataFile(dataDir, 'community-hazard-batches.jsonl');
+  const reviewsFile = resolveDataFile(dataDir, 'community-hazard-reviews.jsonl');
+
+  async function listRecords(): Promise<StoredCommunityHazard[]> {
+    const [records, reviews] = await Promise.all([
+      readJsonLines<StoredCommunityHazard>(recordsFile),
+      readJsonLines<StoredHazardReview>(reviewsFile),
+    ]);
+    const latestReviews = new Map<string, StoredHazardReview>();
+    for (const review of reviews) {
+      latestReviews.set(review.hazardId, review);
+    }
+
+    return records.map((record) => {
+      const review = latestReviews.get(record.id);
+      const reviewStatus = review?.status ?? record.reviewStatus ?? 'pending';
+      return {
+        ...record,
+        reviewStatus,
+        publicOverlayEligible: reviewStatus === 'accepted' && Boolean(record.position),
+        reviewedAt: review?.reviewedAt ?? record.reviewedAt,
+        reviewedBy: review?.reviewedBy ?? record.reviewedBy,
+        reviewNote: review?.note ?? record.reviewNote,
+      };
+    });
+  }
 
   return {
     async acceptBatch(batch) {
-      const existingRecords = await readJsonLines<StoredCommunityHazard>(recordsFile);
+      const existingRecords = await listRecords();
       const existingIds = new Set(existingRecords.map((record) => record.id));
       const acceptedHazards = batch.hazards.filter((hazard) => !existingIds.has(hazard.id));
       const storedAt = new Date().toISOString();
@@ -44,6 +83,8 @@ export function createCommunityHazardRepository(dataDir: string): CommunityHazar
           batchId: batch.id,
           storedAt,
           region: batch.region,
+          reviewStatus: 'pending',
+          publicOverlayEligible: false,
         });
       }
 
@@ -68,8 +109,29 @@ export function createCommunityHazardRepository(dataDir: string): CommunityHazar
       };
     },
 
+    async reviewHazard(hazardId, review) {
+      const records = await listRecords();
+      const hazard = records.find((record) => record.id === hazardId);
+      if (!hazard) return null;
+
+      const reviewedAt = review.reviewedAt ?? new Date().toISOString();
+      await appendJsonLine(reviewsFile, {
+        ...review,
+        hazardId,
+        reviewedAt,
+      });
+
+      return {
+        ok: true,
+        hazardId,
+        status: review.status,
+        publicOverlayEligible: review.status === 'accepted' && Boolean(hazard.position),
+        reviewedAt,
+      };
+    },
+
     async getSummary() {
-      const hazards = await readJsonLines<StoredCommunityHazard>(recordsFile);
+      const hazards = await listRecords();
       const batches = await readJsonLines<StoredHazardBatch>(batchesFile);
       const regions = hazards.reduce<Record<string, number>>((counts, hazard) => {
         counts[hazard.region] = (counts[hazard.region] ?? 0) + 1;
@@ -83,6 +145,10 @@ export function createCommunityHazardRepository(dataDir: string): CommunityHazar
         counts[hazard.severity] = (counts[hazard.severity] ?? 0) + 1;
         return counts;
       }, {});
+      const byReviewStatus = hazards.reduce<Record<CommunityHazardReviewStatus, number>>((counts, hazard) => {
+        counts[hazard.reviewStatus] = (counts[hazard.reviewStatus] ?? 0) + 1;
+        return counts;
+      }, { pending: 0, accepted: 0, rejected: 0 });
       const latestReportedAt = hazards
         .map((hazard) => hazard.reportedAt)
         .sort()
@@ -94,12 +160,15 @@ export function createCommunityHazardRepository(dataDir: string): CommunityHazar
         regions,
         byType,
         bySeverity,
+        byReviewStatus,
+        publicOverlayEligible: hazards.filter((hazard) => hazard.publicOverlayEligible).length,
+        pendingReviewCount: byReviewStatus.pending,
         latestReportedAt,
       };
     },
 
     async listRecords() {
-      return readJsonLines<StoredCommunityHazard>(recordsFile);
+      return listRecords();
     },
   };
 }

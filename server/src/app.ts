@@ -8,7 +8,7 @@ import {
 } from './api-auth.js';
 import { getNBPilotChartCatalog } from './chart-catalog.js';
 import { buildCommunityGeoJsonOverlay } from './community-geojson.js';
-import { communityHazardBatchSchema } from './community-hazards.js';
+import { communityHazardBatchSchema, communityHazardReviewSchema } from './community-hazards.js';
 import {
   createCommunityHazardRepository,
   type CommunityHazardRepository,
@@ -118,6 +118,42 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   });
 
   app.get('/api/community/hazards/summary', async () => hazardRepository.getSummary());
+
+  app.get('/api/community/hazards/review', async (request, reply) => {
+    if (!(await requireApiAccess(request, reply, apiAuth))) return reply;
+
+    return {
+      hazards: await hazardRepository.listRecords(),
+    };
+  });
+
+  app.post('/api/community/hazards/:hazardId/review', async (request, reply) => {
+    if (!(await requireApiAccess(request, reply, apiAuth))) return reply;
+
+    try {
+      const { hazardId } = request.params as { hazardId: string };
+      const review = communityHazardReviewSchema.parse(request.body);
+      const receipt = await hazardRepository.reviewHazard(hazardId, review);
+      if (!receipt) {
+        return reply.code(404).send({ ok: false, error: 'hazard_not_found' });
+      }
+
+      return reply.code(202).send(receipt);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return reply.code(400).send({
+          ok: false,
+          error: 'invalid_community_hazard_review',
+          issues: error.issues.map((issue) => ({
+            path: issue.path.join('.'),
+            message: issue.message,
+          })),
+        });
+      }
+
+      throw error;
+    }
+  });
 
   app.post('/api/devices/register', async (request, reply) => {
     if (!(await requireApiAccess(request, reply, apiAuth))) return reply;

@@ -293,11 +293,18 @@ describe('HarbourMesh API', () => {
       bySeverity: {
         medium: 1,
       },
+      byReviewStatus: {
+        pending: 1,
+        accepted: 0,
+        rejected: 0,
+      },
+      publicOverlayEligible: 0,
+      pendingReviewCount: 1,
       latestReportedAt: '2026-05-06T12:04:00.000Z',
     });
   });
 
-  it('publishes accepted community data as reference-only GeoJSON', async () => {
+  it('keeps pending hazards out of public GeoJSON until review accepts them', async () => {
     const app = await createTestApp();
 
     await app.inject({
@@ -311,13 +318,13 @@ describe('HarbourMesh API', () => {
       payload: sampleHazardBatch,
     });
 
-    const response = await app.inject({
+    const pendingOverlay = await app.inject({
       method: 'GET',
       url: '/api/community/overlay.geojson',
     });
 
-    expect(response.statusCode).toBe(200);
-    expect(response.json()).toMatchObject({
+    expect(pendingOverlay.statusCode).toBe(200);
+    expect(pendingOverlay.json()).toMatchObject({
       type: 'FeatureCollection',
       metadata: {
         schemaVersion: 'harbourmesh.community-overlay.v1',
@@ -327,11 +334,60 @@ describe('HarbourMesh API', () => {
         sourceRecordCounts: {
           soundings: 1,
           hazards: 1,
+          publicHazards: 0,
+          pendingReviewHazards: 1,
+          rejectedHazards: 0,
           omittedUnpositionedHazards: 0,
         },
       },
     });
-    expect(response.json().features).toEqual(
+    expect(pendingOverlay.json().features).toEqual(
+      expect.not.arrayContaining([
+        expect.objectContaining({
+          id: 'hazard:hazard-1',
+        }),
+      ])
+    );
+
+    const review = await app.inject({
+      method: 'POST',
+      url: '/api/community/hazards/hazard-1/review',
+      payload: {
+        status: 'accepted',
+        reviewedBy: 'nb-pilot-reviewer',
+        reviewedAt: '2026-05-06T12:10:00.000Z',
+        note: 'Visible debris report with blurred position is suitable for reference overlay.',
+      },
+    });
+
+    expect(review.statusCode).toBe(202);
+    expect(review.json()).toMatchObject({
+      ok: true,
+      hazardId: 'hazard-1',
+      status: 'accepted',
+      publicOverlayEligible: true,
+      reviewedAt: '2026-05-06T12:10:00.000Z',
+    });
+
+    const acceptedOverlay = await app.inject({
+      method: 'GET',
+      url: '/api/community/overlay.geojson',
+    });
+
+    expect(acceptedOverlay.statusCode).toBe(200);
+    expect(acceptedOverlay.json()).toMatchObject({
+      metadata: {
+        sourceRecordCounts: {
+          soundings: 1,
+          hazards: 1,
+          publicHazards: 1,
+          pendingReviewHazards: 0,
+          rejectedHazards: 0,
+          omittedUnpositionedHazards: 0,
+        },
+      },
+    });
+    expect(acceptedOverlay.json().features).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           id: 'sounding:sounding-1',
@@ -351,10 +407,30 @@ describe('HarbourMesh API', () => {
             kind: 'hazard',
             severity: 'medium',
             sharingState: 'shareable_blurred',
+            reviewStatus: 'accepted',
+            reviewedAt: '2026-05-06T12:10:00.000Z',
           }),
         }),
       ])
     );
+  });
+
+  it('returns not found for reviews of unknown hazards', async () => {
+    const app = await createTestApp();
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/community/hazards/missing-hazard/review',
+      payload: {
+        status: 'rejected',
+        reviewedBy: 'nb-pilot-reviewer',
+      },
+    });
+
+    expect(response.statusCode).toBe(404);
+    expect(response.json()).toMatchObject({
+      ok: false,
+      error: 'hazard_not_found',
+    });
   });
 
   it('rejects hazard batches that leak local-only positions', async () => {
