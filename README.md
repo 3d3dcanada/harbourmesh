@@ -132,7 +132,7 @@ docker build -t harbourmesh-api ./server
 docker run --rm -p 3001:3001 harbourmesh-api
 ```
 
-Set `HARBOURMESH_WRITE_API_KEYS`, `HARBOURMESH_REVIEW_API_KEYS`, and `HARBOURMESH_DATA_DIR` for a real pilot deployment.
+Set `HARBOURMESH_WRITE_API_KEYS`/`HARBOURMESH_REVIEW_API_KEYS`, or their `*_SHA256S` hash equivalents, plus `HARBOURMESH_DATA_DIR` for a real pilot deployment.
 
 ## Documentation
 

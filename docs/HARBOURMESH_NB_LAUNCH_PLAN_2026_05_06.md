@@ -35,7 +35,7 @@ Observed state:
 - Telemetry: recorded Signal K replay and live Signal K WebSocket wiring now exist; live hardware ingest remains unverified.
 - Backend: a Fastify API now exists for NB chart source catalog, NB chart package manifests, community sounding upload, governed community observation upload, community hazard upload, hazard review, community reference GeoJSON overlay, device registration, and summary endpoints with JSONL local persistence; a PostGIS migration now defines the production target schema, but runtime storage is still JSONL.
 - Community mesh: local raw sounding capture, local hazard reporting, consent-safe offline upload queues, backend upload endpoints, pending-by-default hazard moderation, an operator review surface, review-operator API key identity, queryable review history, a raw reference overlay, and privacy-preserving aggregate GeoJSON now exist; vector tile products are still not implemented.
-- Security: docs no longer claim production readiness; the weak SHA-256 placeholder key derivation, token signing, and password hashing helpers have been replaced with PBKDF2-HMAC-SHA256/HMAC-SHA256 regressions, the pilot API now has configurable scoped API-key gates for write/device plus review-operator keys that override client-supplied reviewer names, and the web app can save pilot credentials in a local secret store excluded from data exports. Full user auth, production secret management, and fleet/team identity are still not implemented.
+- Security: docs no longer claim production readiness; the weak SHA-256 placeholder key derivation, token signing, and password hashing helpers have been replaced with PBKDF2-HMAC-SHA256/HMAC-SHA256 regressions, the pilot API now has configurable scoped API-key gates for write/device plus review-operator keys that override client-supplied reviewer names, hash-based API key configuration for deployments that should not store plaintext keys, and the web app can save pilot credentials in a local secret store excluded from data exports. Full user auth, production secret management, and fleet/team identity are still not implemented.
 - CI/release: workflows have been adjusted to stop calling missing package scripts, use Node 22, run app/server checks, build the API container, and provide a manual Cloudflare Pages deploy path for the web build when Cloudflare repository secrets are configured.
 - Testing: current tests now cover chart source metadata, Signal K mapping, community sounding extraction, local hazard reporting, device registration, store queue behavior, and crypto helper regressions; they still do not prove navigation safety, hardware ingest, production auth, browser layout, or security readiness.
 
@@ -44,7 +44,7 @@ Observed state:
 Last light checks:
 
 - `npm run test:run`: passing, 131 web tests.
-- `npm test` in `server`: passing, 27 server tests.
+- `npm test` in `server`: passing, 29 server tests.
 - `npm run type-check`: passing.
 - `npm run type-check` in `server`: passing.
 - `npm run lint`: passing with 0 warnings.
@@ -55,8 +55,9 @@ Last light checks:
 - `npm audit --json` in `server`: 0 vulnerabilities.
 - Cloudflare Pages config exists at `app/wrangler.toml` with `pages_build_output_dir = "./dist"` and a manual GitHub deploy workflow at `.github/workflows/cloudflare-pages.yml`; no live Cloudflare deployment was run in this snapshot.
 - API container packaging exists at `server/Dockerfile` with a non-root runner, `/health` healthcheck, and `/data` JSONL storage path; no live container registry push was run in this snapshot.
-- API container smoke: `docker build -t harbourmesh-api:codex-smoke ./server` succeeded, the container started on local port 3106 with scoped smoke API keys, `/health` returned `ok: true`, and the smoke container was stopped.
+- API container smoke: `docker build -t harbourmesh-api:codex-smoke ./server` succeeded, the container started on local port 3106 with scoped SHA-256 smoke API key env values, `/health` returned `ok: true`, a protected sounding upload using the unhashed client key returned an accepted receipt, and the smoke container was stopped.
 - Server API auth tests cover missing keys, accepted header keys, accepted Bearer keys, scoped write/review key separation, review-operator key parsing, reviewer identity override for audit history, protected device registry reads, and fail-closed production-style config.
+- Server API auth tests cover SHA-256 hash-backed write keys and review-operator keys while clients continue sending normal API keys.
 - Server hazard review tests cover pending hazards being withheld from public GeoJSON until accepted, accepted hazards becoming overlay-eligible, review history listing, and unknown hazard review returning 404.
 - Server aggregate GeoJSON tests cover cell polygons, sounding depth averages, positioned observation counts, accepted-hazard counts, official chart exclusion, and raw vessel/source ID omission.
 - Server aggregate release tests cover checksum manifests for latest aggregate GeoJSON products without embedded feature payloads, raw record IDs, vessel IDs, or official chart data.
@@ -138,6 +139,7 @@ Completed in the active checkout:
 - Added an operator hazard moderation surface in Community with protected review-queue loading and accept/reject actions against the pilot API.
 - Split pilot API keys into backward-compatible legacy keys plus scoped write keys and review keys so intake/device access can be separated from hazard moderation.
 - Added `HARBOURMESH_REVIEW_OPERATOR_KEYS` support so review-scoped API keys can carry server-side operator IDs and override client-supplied reviewer names before moderation audit history is written.
+- Added SHA-256 hash-backed API key env support for legacy, write, review, and review-operator keys so production deployments can avoid storing plaintext shared keys.
 - Added the first PostGIS migration for vessels, devices, soundings, hazards, reviews, aggregate cells, and release manifests with spatial indexes and legal/privacy checks.
 - Added review-scoped `/api/community/hazards/reviews` so hazard moderation decisions are queryable as audit history.
 - Wired hazard review history into the Community moderation tab with a protected history client and responsive review-history panel.

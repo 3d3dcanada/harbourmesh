@@ -5,7 +5,9 @@ import {
   createApiAuthConfig,
   getRequestApiKeyIdentity,
   parseOperatorApiKeys,
+  parseOperatorApiKeySha256Hashes,
   parseApiKeys,
+  parseApiKeySha256Hashes,
   requireApiAccess,
   type OperatorApiKey,
 } from './api-auth.js';
@@ -42,9 +44,13 @@ export type BuildAppOptions = {
   observationRepository?: CommunityObservationRepository;
   deviceRepository?: DeviceRepository;
   apiKeys?: readonly string[];
+  apiKeySha256Hashes?: readonly string[];
   writeApiKeys?: readonly string[];
+  writeApiKeySha256Hashes?: readonly string[];
   reviewApiKeys?: readonly string[];
+  reviewApiKeySha256Hashes?: readonly string[];
   reviewOperatorKeys?: readonly OperatorApiKey[];
+  reviewOperatorKeySha256Hashes?: readonly OperatorApiKey[];
   requireApiAuth?: boolean;
   logger?: boolean;
 };
@@ -57,9 +63,13 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   const deviceRepository = options.deviceRepository ?? createDeviceRepository(options.dataDir);
   const apiAuth = createApiAuthConfig({
     keys: options.apiKeys ?? parseApiKeys(process.env.HARBOURMESH_API_KEYS, process.env.HARBOURMESH_API_KEY),
+    keySha256Hashes: options.apiKeySha256Hashes ?? parseApiKeySha256Hashes(process.env.HARBOURMESH_API_KEY_SHA256S, process.env.HARBOURMESH_API_KEY_SHA256),
     writeKeys: options.writeApiKeys ?? parseApiKeys(process.env.HARBOURMESH_WRITE_API_KEYS),
+    writeKeySha256Hashes: options.writeApiKeySha256Hashes ?? parseApiKeySha256Hashes(process.env.HARBOURMESH_WRITE_API_KEY_SHA256S),
     reviewKeys: options.reviewApiKeys ?? parseApiKeys(process.env.HARBOURMESH_REVIEW_API_KEYS),
+    reviewKeySha256Hashes: options.reviewApiKeySha256Hashes ?? parseApiKeySha256Hashes(process.env.HARBOURMESH_REVIEW_API_KEY_SHA256S),
     reviewOperatorKeys: options.reviewOperatorKeys ?? parseOperatorApiKeys(process.env.HARBOURMESH_REVIEW_OPERATOR_KEYS),
+    reviewOperatorKeySha256Hashes: options.reviewOperatorKeySha256Hashes ?? parseOperatorApiKeySha256Hashes(process.env.HARBOURMESH_REVIEW_OPERATOR_KEY_SHA256S),
     required: options.requireApiAuth ?? process.env.NODE_ENV === 'production',
   });
 

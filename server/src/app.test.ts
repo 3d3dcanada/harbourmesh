@@ -1,7 +1,7 @@
 import { mkdir, mkdtemp } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { parseOperatorApiKeys } from './api-auth.js';
+import { hashApiKeyForConfig, parseOperatorApiKeys, parseOperatorApiKeySha256Hashes } from './api-auth.js';
 import { buildApp, type BuildAppOptions } from './app.js';
 import type { CommunityHazardBatch } from './community-hazards.js';
 import type { CommunityObservationBatch } from './community-observations.js';
@@ -186,6 +186,17 @@ describe('HarbourMesh API', () => {
     ]);
   });
 
+  it('parses review operator SHA-256 key hashes from environment-style config', () => {
+    const hashedReviewKey = hashApiKeyForConfig(TEST_REVIEW_API_KEY);
+
+    expect(parseOperatorApiKeySha256Hashes(`nb-ops:${hashedReviewKey}, broken, invalid:not-a-hash `)).toEqual([
+      {
+        key: hashedReviewKey,
+        operatorId: 'nb-ops',
+      },
+    ]);
+  });
+
   it('accepts valid community sounding batches', async () => {
     const app = await createTestApp();
     const response = await app.inject({
@@ -365,6 +376,65 @@ describe('HarbourMesh API', () => {
           hazardId: 'hazard-1',
           status: 'accepted',
           reviewedBy: 'nb-ops-reviewer',
+        },
+      ],
+    });
+  });
+
+  it('accepts scoped pilot API keys stored as SHA-256 hashes', async () => {
+    const app = await createTestApp({
+      writeApiKeySha256Hashes: [hashApiKeyForConfig(TEST_WRITE_API_KEY)],
+      reviewOperatorKeySha256Hashes: [{
+        key: hashApiKeyForConfig(TEST_REVIEW_API_KEY),
+        operatorId: 'hashed-reviewer',
+      }],
+      requireApiAuth: true,
+    });
+
+    const writeUpload = await app.inject({
+      method: 'POST',
+      url: '/api/community/soundings',
+      headers: {
+        'x-harbourmesh-api-key': TEST_WRITE_API_KEY,
+      },
+      payload: sampleBatch,
+    });
+    expect(writeUpload.statusCode).toBe(202);
+
+    await app.inject({
+      method: 'POST',
+      url: '/api/community/hazards',
+      headers: {
+        'x-harbourmesh-api-key': TEST_WRITE_API_KEY,
+      },
+      payload: sampleHazardBatch,
+    });
+
+    const reviewDecision = await app.inject({
+      method: 'POST',
+      url: '/api/community/hazards/hazard-1/review',
+      headers: {
+        authorization: `Bearer ${TEST_REVIEW_API_KEY}`,
+      },
+      payload: {
+        status: 'accepted',
+        reviewedBy: 'client-supplied-reviewer',
+      },
+    });
+
+    expect(reviewDecision.statusCode).toBe(202);
+
+    const reviewHistory = await app.inject({
+      method: 'GET',
+      url: '/api/community/hazards/reviews',
+      headers: {
+        'x-harbourmesh-api-key': TEST_REVIEW_API_KEY,
+      },
+    });
+    expect(reviewHistory.json()).toMatchObject({
+      reviews: [
+        {
+          reviewedBy: 'hashed-reviewer',
         },
       ],
     });

@@ -1,4 +1,4 @@
-import { timingSafeEqual } from 'node:crypto';
+import { createHash, timingSafeEqual } from 'node:crypto';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 export const HARBOURMESH_API_KEY_HEADER = 'x-harbourmesh-api-key';
@@ -8,7 +8,8 @@ export type ApiAccessScope = 'write' | 'review';
 const ALL_API_SCOPES: ApiAccessScope[] = ['write', 'review'];
 
 export type ScopedApiKey = {
-  key: string;
+  key?: string;
+  keySha256?: string;
   scopes: ReadonlySet<ApiAccessScope>;
   operatorId?: string;
 };
@@ -34,6 +35,16 @@ export function parseApiKeys(...values: Array<string | undefined>): string[] {
   ];
 }
 
+export function hashApiKeyForConfig(apiKey: string): string {
+  return createHash('sha256').update(apiKey).digest('hex');
+}
+
+export function parseApiKeySha256Hashes(...values: Array<string | undefined>): string[] {
+  return parseApiKeys(...values)
+    .map((value) => value.toLowerCase())
+    .filter((value) => /^[a-f0-9]{64}$/.test(value));
+}
+
 export function parseOperatorApiKeys(...values: Array<string | undefined>): OperatorApiKey[] {
   const operators = new Map<string, OperatorApiKey>();
 
@@ -53,22 +64,46 @@ export function parseOperatorApiKeys(...values: Array<string | undefined>): Oper
   return [...operators.values()];
 }
 
+export function parseOperatorApiKeySha256Hashes(...values: Array<string | undefined>): OperatorApiKey[] {
+  return parseOperatorApiKeys(...values)
+    .map((operatorKey) => ({
+      ...operatorKey,
+      key: operatorKey.key.toLowerCase(),
+    }))
+    .filter((operatorKey) => /^[a-f0-9]{64}$/.test(operatorKey.key));
+}
+
 export function createApiAuthConfig(config: {
   keys?: readonly string[];
+  keySha256Hashes?: readonly string[];
   writeKeys?: readonly string[];
+  writeKeySha256Hashes?: readonly string[];
   reviewKeys?: readonly string[];
+  reviewKeySha256Hashes?: readonly string[];
   reviewOperatorKeys?: readonly OperatorApiKey[];
+  reviewOperatorKeySha256Hashes?: readonly OperatorApiKey[];
   required?: boolean;
 }): ApiAuthConfig {
-  const scopedKeys = new Map<string, { scopes: Set<ApiAccessScope>; operatorId?: string }>();
+  const scopedKeys = new Map<string, { key?: string; keySha256?: string; scopes: Set<ApiAccessScope>; operatorId?: string }>();
 
-  function addKey(key: string, scopes: readonly ApiAccessScope[], operatorId?: string) {
+  function addKey(
+    key: string,
+    scopes: readonly ApiAccessScope[],
+    operatorId?: string,
+    storageKind: 'plain' | 'sha256' = 'plain'
+  ) {
     const normalizedKey = key.trim();
     if (!normalizedKey) return;
-    const existing = scopedKeys.get(normalizedKey) ?? { scopes: new Set<ApiAccessScope>() };
+    const credentialId = `${storageKind}:${storageKind === 'sha256' ? normalizedKey.toLowerCase() : normalizedKey}`;
+    const existing = scopedKeys.get(credentialId) ?? { scopes: new Set<ApiAccessScope>() };
+    if (storageKind === 'sha256') {
+      existing.keySha256 = normalizedKey.toLowerCase();
+    } else {
+      existing.key = normalizedKey;
+    }
     for (const scope of scopes) existing.scopes.add(scope);
     if (operatorId) existing.operatorId = operatorId;
-    scopedKeys.set(normalizedKey, existing);
+    scopedKeys.set(credentialId, existing);
   }
 
   function addKeys(keys: readonly string[] | undefined, scopes: readonly ApiAccessScope[]) {
@@ -77,16 +112,29 @@ export function createApiAuthConfig(config: {
     }
   }
 
+  function addKeyHashes(keys: readonly string[] | undefined, scopes: readonly ApiAccessScope[]) {
+    for (const rawKey of keys ?? []) {
+      addKey(rawKey, scopes, undefined, 'sha256');
+    }
+  }
+
   addKeys(config.keys, ALL_API_SCOPES);
+  addKeyHashes(config.keySha256Hashes, ALL_API_SCOPES);
   addKeys(config.writeKeys, ['write']);
+  addKeyHashes(config.writeKeySha256Hashes, ['write']);
   addKeys(config.reviewKeys, ['review']);
+  addKeyHashes(config.reviewKeySha256Hashes, ['review']);
   for (const operatorKey of config.reviewOperatorKeys ?? []) {
     addKey(operatorKey.key, ['review'], operatorKey.operatorId);
   }
+  for (const operatorKey of config.reviewOperatorKeySha256Hashes ?? []) {
+    addKey(operatorKey.key, ['review'], operatorKey.operatorId, 'sha256');
+  }
 
   return {
-    keys: [...scopedKeys.entries()].map(([key, config]) => ({
-      key,
+    keys: [...scopedKeys.values()].map((config) => ({
+      key: config.key,
+      keySha256: config.keySha256,
       scopes: config.scopes,
       operatorId: config.operatorId,
     })),
@@ -115,6 +163,15 @@ function constantTimeEquals(left: string, right: string): boolean {
   return timingSafeEqual(leftBytes, rightBytes);
 }
 
+function isCredentialMatch(configuredKey: ScopedApiKey, apiKey: string): boolean {
+  if (configuredKey.key && constantTimeEquals(apiKey, configuredKey.key)) return true;
+  if (configuredKey.keySha256) {
+    return constantTimeEquals(hashApiKeyForConfig(apiKey), configuredKey.keySha256);
+  }
+
+  return false;
+}
+
 export function isApiKeyAccepted(
   config: ApiAuthConfig,
   apiKey: string | undefined,
@@ -125,7 +182,7 @@ export function isApiKeyAccepted(
   if (config.keys.length === 0 || !apiKey) return false;
 
   return config.keys.some((configuredKey) => (
-    configuredKey.scopes.has(scope) && constantTimeEquals(apiKey, configuredKey.key)
+    configuredKey.scopes.has(scope) && isCredentialMatch(configuredKey, apiKey)
   ));
 }
 
@@ -139,7 +196,7 @@ export function getAcceptedApiKey(
   if (config.keys.length === 0 || !apiKey) return null;
 
   return config.keys.find((configuredKey) => (
-    configuredKey.scopes.has(scope) && constantTimeEquals(apiKey, configuredKey.key)
+    configuredKey.scopes.has(scope) && isCredentialMatch(configuredKey, apiKey)
   )) ?? null;
 }
 
