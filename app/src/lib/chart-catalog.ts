@@ -78,6 +78,43 @@ export type NBPilotChartPackageManifest = {
   };
 };
 
+export type NBPilotChartPackageArtifact = {
+  id: string;
+  packageId: string;
+  region: 'NB_PILOT';
+  format: 'geojson';
+  mediaType: 'application/geo+json';
+  fileName: string;
+  byteLength: number;
+  sha256: string;
+  generatedAt: string;
+  officialChartDataIncluded: false;
+  sourceIds: string[];
+  excludedSourceIds: string[];
+  warnings: string[];
+  content: {
+    type: 'FeatureCollection';
+    metadata: {
+      schemaVersion: 'harbourmesh.chart-package-artifact-content.v1';
+      officialChartDataIncluded: false;
+      referenceOnly: true;
+    };
+  };
+};
+
+export type NBPilotChartPackageArtifactManifest = {
+  id: 'nb-pilot-chart-package-artifacts';
+  schemaVersion: 'harbourmesh.chart-package-artifacts.v1';
+  generatedAt: string;
+  artifacts: NBPilotChartPackageArtifact[];
+  rules: {
+    artifactsAreReferenceOnly: boolean;
+    officialChartDataExcluded: boolean;
+    pmtilesGenerationPending: boolean;
+    mbtilesGenerationPending: boolean;
+  };
+};
+
 export type FetchNBPilotChartCatalogOptions = {
   apiBaseUrl?: string;
   fetchImpl?: typeof fetch;
@@ -123,6 +160,30 @@ function isChartPackageManifest(value: unknown): value is NBPilotChartPackageMan
       Array.isArray(chartPackage.sourceIds) &&
       Array.isArray(chartPackage.excludedSourceIds) &&
       Array.isArray(chartPackage.formats)
+    ))
+  );
+}
+
+function isChartPackageArtifactManifest(value: unknown): value is NBPilotChartPackageArtifactManifest {
+  const manifest = value as Partial<NBPilotChartPackageArtifactManifest>;
+  return (
+    manifest.id === 'nb-pilot-chart-package-artifacts' &&
+    manifest.schemaVersion === 'harbourmesh.chart-package-artifacts.v1' &&
+    typeof manifest.generatedAt === 'string' &&
+    manifest.rules?.officialChartDataExcluded === true &&
+    Array.isArray(manifest.artifacts) &&
+    manifest.artifacts.every((artifact) => (
+      typeof artifact.id === 'string' &&
+      artifact.region === 'NB_PILOT' &&
+      artifact.format === 'geojson' &&
+      artifact.mediaType === 'application/geo+json' &&
+      artifact.officialChartDataIncluded === false &&
+      typeof artifact.byteLength === 'number' &&
+      /^[a-f0-9]{64}$/.test(artifact.sha256) &&
+      Array.isArray(artifact.sourceIds) &&
+      Array.isArray(artifact.excludedSourceIds) &&
+      artifact.content?.type === 'FeatureCollection' &&
+      artifact.content.metadata?.officialChartDataIncluded === false
     ))
   );
 }
@@ -184,6 +245,31 @@ export async function fetchNBPilotChartPackageManifest(
 
   if (!isChartPackageManifest(body)) {
     throw new Error('Chart package response was not a HarbourMesh NB package manifest');
+  }
+
+  return body;
+}
+
+export async function fetchNBPilotChartPackageArtifacts(
+  options: FetchNBPilotChartCatalogOptions = {}
+): Promise<NBPilotChartPackageArtifactManifest> {
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const endpoint = resolveEndpoint('/api/charts/nb/package-artifacts', options.apiBaseUrl ?? import.meta.env.VITE_API_BASE_URL);
+  const response = await fetchImpl(endpoint, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+    },
+  });
+  const body: unknown = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const error = body && typeof body === 'object' && 'error' in body ? String(body.error) : response.statusText;
+    throw new Error(error || `Chart package artifact request failed with HTTP ${response.status}`);
+  }
+
+  if (!isChartPackageArtifactManifest(body)) {
+    throw new Error('Chart package artifact response was not a HarbourMesh NB artifact manifest');
   }
 
   return body;

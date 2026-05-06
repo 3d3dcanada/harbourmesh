@@ -30,6 +30,10 @@ import { cn, formatCoordinate, formatHeading } from '@/lib/utils';
 import { useTelemetry } from '@/hooks/useTelemetry';
 import { NBPilotChart } from '@/components/NBPilotChart';
 import { useNavigationPlanStore } from '@/store';
+import {
+  fetchNBPilotChartPackageArtifacts,
+  type NBPilotChartPackageArtifactManifest,
+} from '@/lib/chart-catalog';
 
 // Compass rose component
 function CompassRose({ heading, course, size = 200 }: { heading: number; course?: number; size?: number }) {
@@ -202,6 +206,9 @@ export function Navigation() {
   
   const [activeView, setActiveView] = useState('hud');
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [chartArtifacts, setChartArtifacts] = useState<NBPilotChartPackageArtifactManifest | null>(null);
+  const [chartArtifactsLoading, setChartArtifactsLoading] = useState(false);
+  const [chartArtifactsError, setChartArtifactsError] = useState<string | null>(null);
   const {
     routes,
     activeRouteId,
@@ -212,6 +219,78 @@ export function Navigation() {
   // Get first engine data
   const engineData = Object.entries(latestEngine)[0]?.[1];
   const activeRoute = routes.find((route) => route.id === activeRouteId) ?? null;
+
+  const handleLoadChartArtifacts = async () => {
+    setChartArtifactsLoading(true);
+    setChartArtifactsError(null);
+
+    try {
+      const artifacts = await fetchNBPilotChartPackageArtifacts();
+      setChartArtifacts(artifacts);
+    } catch (error) {
+      setChartArtifactsError(error instanceof Error ? error.message : 'Chart package artifact load failed');
+    } finally {
+      setChartArtifactsLoading(false);
+    }
+  };
+
+  const chartPackageCard = (
+    <Card>
+      <CardHeader>
+        <div className="flex flex-col gap-3 sm:flex-row xl:flex-col sm:items-start sm:justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Layers className="h-5 w-5" />
+              Chart Packages
+            </CardTitle>
+            <CardDescription>
+              Generated NB reference artifacts exclude official CHS chart data.
+            </CardDescription>
+          </div>
+          <Button size="sm" variant="outline" onClick={handleLoadChartArtifacts} disabled={chartArtifactsLoading}>
+            {chartArtifactsLoading ? 'Loading' : 'Load Artifacts'}
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {chartArtifactsError && (
+          <div className="mb-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-200">
+            {chartArtifactsError}
+          </div>
+        )}
+
+        {!chartArtifacts ? (
+          <div className="rounded-lg border border-dashed p-6 text-center">
+            <p className="text-sm text-muted-foreground">No package artifacts loaded.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline">{chartArtifacts.artifacts.length} GeoJSON</Badge>
+              {chartArtifacts.rules.pmtilesGenerationPending && <Badge variant="secondary">PMTiles pending</Badge>}
+              {chartArtifacts.rules.mbtilesGenerationPending && <Badge variant="secondary">MBTiles pending</Badge>}
+            </div>
+            <div className="divide-y">
+              {chartArtifacts.artifacts.map((artifact) => (
+                <div key={artifact.id} className="py-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-medium">{artifact.fileName}</p>
+                    <Badge variant="outline" className="text-xs">{artifact.format}</Badge>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {artifact.byteLength} bytes · {artifact.sha256.slice(0, 12)}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Excludes {artifact.excludedSourceIds.join(', ')}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
   
   return (
     <div className={cn(
@@ -436,65 +515,69 @@ export function Navigation() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <MapPin className="h-5 w-5" />
-                  Routes
-                </CardTitle>
-                <CardDescription>
-                  Local planning routes render as reference overlays on the NB pilot chart.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {routes.length === 0 ? (
-                  <div className="rounded-lg border border-dashed p-6 text-center">
-                    <p className="text-sm text-muted-foreground">No local routes saved.</p>
-                    <Button size="sm" className="mt-3" onClick={seedNBPilotReferenceRoute}>
-                      Add NB Reference Route
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {routes.map((route) => (
-                      <button
-                        key={route.id}
-                        type="button"
-                        onClick={() => setActiveRoute(route.id)}
-                        className={cn(
-                          'w-full rounded-lg border p-3 text-left transition-colors hover:bg-muted',
-                          route.id === activeRouteId && 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20'
-                        )}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="font-medium">{route.name}</p>
-                            <p className="mt-1 text-xs text-muted-foreground">
-                              {route.waypoints.length} waypoints · {route.totalDistance.toFixed(1)} nm
-                            </p>
-                          </div>
-                          <Badge variant={route.id === activeRouteId ? 'default' : 'outline'}>
-                            {route.status}
-                          </Badge>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {activeRoute && (
-                  <div className="mt-4 rounded-lg bg-muted p-3 text-sm">
-                    <div className="flex items-center gap-2 font-medium">
-                      <Clock className="h-4 w-4" />
-                      {activeRoute.estimatedDuration} min
+            <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <MapPin className="h-5 w-5" />
+                    Routes
+                  </CardTitle>
+                  <CardDescription>
+                    Local planning routes render as reference overlays on the NB pilot chart.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {routes.length === 0 ? (
+                    <div className="rounded-lg border border-dashed p-6 text-center">
+                      <p className="text-sm text-muted-foreground">No local routes saved.</p>
+                      <Button size="sm" className="mt-3" onClick={seedNBPilotReferenceRoute}>
+                        Add NB Reference Route
+                      </Button>
                     </div>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Distance and duration are planning estimates only.
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                  ) : (
+                    <div className="space-y-3">
+                      {routes.map((route) => (
+                        <button
+                          key={route.id}
+                          type="button"
+                          onClick={() => setActiveRoute(route.id)}
+                          className={cn(
+                            'w-full rounded-lg border p-3 text-left transition-colors hover:bg-muted',
+                            route.id === activeRouteId && 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20'
+                          )}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="font-medium">{route.name}</p>
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {route.waypoints.length} waypoints · {route.totalDistance.toFixed(1)} nm
+                              </p>
+                            </div>
+                            <Badge variant={route.id === activeRouteId ? 'default' : 'outline'}>
+                              {route.status}
+                            </Badge>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {activeRoute && (
+                    <div className="mt-4 rounded-lg bg-muted p-3 text-sm">
+                      <div className="flex items-center gap-2 font-medium">
+                        <Clock className="h-4 w-4" />
+                        {activeRoute.estimatedDuration} min
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Distance and duration are planning estimates only.
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {chartPackageCard}
+            </div>
           </div>
         </TabsContent>
         

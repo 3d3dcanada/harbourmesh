@@ -1,10 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  fetchNBPilotChartPackageArtifacts,
   fetchNBPilotChartPackageManifest,
   fetchNBPilotChartCatalog,
   getCommunitySafeChartSources,
   getOfflineReadyChartPackages,
   getLocalOnlyOfficialChartSources,
+  type NBPilotChartPackageArtifactManifest,
   type NBPilotChartCatalog,
   type NBPilotChartPackageManifest,
 } from './chart-catalog';
@@ -111,6 +113,43 @@ const packageManifest: NBPilotChartPackageManifest = {
   },
 };
 
+const artifactManifest: NBPilotChartPackageArtifactManifest = {
+  id: 'nb-pilot-chart-package-artifacts',
+  schemaVersion: 'harbourmesh.chart-package-artifacts.v1',
+  generatedAt: '2026-05-06T12:16:00.000Z',
+  artifacts: [
+    {
+      id: 'artifact:nb-coast-reference:geojson',
+      packageId: 'nb-coast-reference',
+      region: 'NB_PILOT',
+      format: 'geojson',
+      mediaType: 'application/geo+json',
+      fileName: 'nb-coast-reference.geojson',
+      byteLength: 512,
+      sha256: 'a'.repeat(64),
+      generatedAt: '2026-05-06T12:16:00.000Z',
+      officialChartDataIncluded: false,
+      sourceIds: ['geonb-nbhn-watercourse'],
+      excludedSourceIds: ['chs-official-digital-products'],
+      warnings: ['PMTiles pending'],
+      content: {
+        type: 'FeatureCollection',
+        metadata: {
+          schemaVersion: 'harbourmesh.chart-package-artifact-content.v1',
+          officialChartDataIncluded: false,
+          referenceOnly: true,
+        },
+      },
+    },
+  ],
+  rules: {
+    artifactsAreReferenceOnly: true,
+    officialChartDataExcluded: true,
+    pmtilesGenerationPending: true,
+    mbtilesGenerationPending: true,
+  },
+};
+
 describe('NB pilot chart catalog client', () => {
   it('fetches and validates the chart catalog API response', async () => {
     const fetchImpl = vi.fn(async () => new Response(JSON.stringify(catalog), { status: 200 }));
@@ -153,6 +192,25 @@ describe('NB pilot chart catalog client', () => {
     }));
   });
 
+  it('fetches and validates generated NB chart package artifacts', async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify(artifactManifest), { status: 200 }));
+
+    await expect(fetchNBPilotChartPackageArtifacts({
+      apiBaseUrl: 'http://localhost:3001',
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    })).resolves.toMatchObject({
+      id: 'nb-pilot-chart-package-artifacts',
+      rules: {
+        officialChartDataExcluded: true,
+        pmtilesGenerationPending: true,
+      },
+    });
+
+    expect(fetchImpl).toHaveBeenCalledWith('http://localhost:3001/api/charts/nb/package-artifacts', expect.objectContaining({
+      method: 'GET',
+    }));
+  });
+
   it('lists only ready offline chart packages', () => {
     expect(getOfflineReadyChartPackages(packageManifest).map((chartPackage) => chartPackage.id)).toEqual([
       'nb-ready-reference',
@@ -181,5 +239,21 @@ describe('NB pilot chart catalog client', () => {
     await expect(fetchNBPilotChartPackageManifest({
       fetchImpl: fetchImpl as unknown as typeof fetch,
     })).rejects.toThrow('Chart package response was not a HarbourMesh NB package manifest');
+  });
+
+  it('rejects package artifacts that include official chart data', async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
+      ...artifactManifest,
+      artifacts: [
+        {
+          ...artifactManifest.artifacts[0],
+          officialChartDataIncluded: true,
+        },
+      ],
+    }), { status: 200 }));
+
+    await expect(fetchNBPilotChartPackageArtifacts({
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    })).rejects.toThrow('Chart package artifact response was not a HarbourMesh NB artifact manifest');
   });
 });

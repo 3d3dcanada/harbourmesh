@@ -1,6 +1,6 @@
 import L, { type LatLngExpression } from 'leaflet';
-import { CircleMarker, LayersControl, MapContainer, Pane, Polygon, Popup, Polyline, TileLayer, WMSTileLayer, useMap } from 'react-leaflet';
-import { Fragment, useEffect, useMemo } from 'react';
+import { CircleMarker, LayerGroup, LayersControl, MapContainer, Pane, Polygon, Popup, Polyline, TileLayer, WMSTileLayer, useMap } from 'react-leaflet';
+import { useEffect, useMemo } from 'react';
 import { AlertTriangle, Database, Droplets, FileLock2, Ship } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn, formatCoordinate, formatHeading } from '@/lib/utils';
@@ -211,7 +211,7 @@ export function NBPilotChart({
             if (routePositions.length === 0) return null;
 
             return (
-              <Fragment key={route.id}>
+              <LayerGroup key={route.id}>
                 {routePositions.length > 1 && (
                   <Polyline
                     positions={routePositions}
@@ -249,7 +249,7 @@ export function NBPilotChart({
                     </Popup>
                   </CircleMarker>
                 ))}
-              </Fragment>
+              </LayerGroup>
             );
           })}
         </Pane>

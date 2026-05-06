@@ -37,6 +37,7 @@ yarn-error.log*
 coverage/
 .nyc_output/
 *.lcov
+.playwright-cli/
 
 # Cache
 .cache/

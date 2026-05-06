@@ -31,7 +31,7 @@ Active checkout:
 Observed state:
 
 - Frontend: React/Vite app exists, with the community section now wired to local telemetry, AIS targets, soundings, hazards, upload batches, local map overlay features, and NB reference mapping instead of hard-coded demo community data.
-- Charts: NB pilot reference chart work has started with React Leaflet, OSM base tiles, legal GeoNB WMS overlays, a chart source catalog, and NB offline package manifests; it is not a certified navigation chart system and package artifacts are not generated yet.
+- Charts: NB pilot reference chart work has started with React Leaflet, OSM base tiles, legal GeoNB WMS overlays, a chart source catalog, NB offline package manifests, generated reference-only GeoJSON package artifacts, and a Navigation chart package panel; it is not a certified navigation chart system and PMTiles/MBTiles products are not generated yet.
 - Telemetry: recorded Signal K replay and live Signal K WebSocket wiring now exist; live hardware ingest remains unverified.
 - Backend: a Fastify API now exists for NB chart source catalog, NB chart package manifests, community sounding upload, community hazard upload, hazard review, community reference GeoJSON overlay, device registration, and summary endpoints with JSONL local persistence; a PostGIS migration now defines the production target schema, but runtime storage is still JSONL.
 - Community mesh: local raw sounding capture, local hazard reporting, consent-safe offline upload queues, backend upload endpoints, pending-by-default hazard moderation, an operator review surface, queryable review history, a raw reference overlay, and privacy-preserving aggregate GeoJSON now exist; per-operator auth identity and vector tile products are still not implemented.
@@ -43,14 +43,14 @@ Observed state:
 
 Last light checks:
 
-- `npm run test:run`: passing, 114 web tests.
+- `npm run test:run`: passing, 116 web tests.
 - `npm test` in `server`: passing, 21 server tests.
 - `npm run type-check`: passing.
 - `npm run type-check` in `server`: passing.
 - `npm run lint`: passing with 0 warnings.
 - `npm audit --json`: 0 vulnerabilities.
 - `npm run build`: passing for the web app.
-- `npm run build`: section-level code splitting is active; the initial app JS chunk is 279.29 kB / 88.74 kB gzip and the prior Vite oversized chunk warning is gone.
+- `npm run build`: section-level code splitting is active; the initial app JS chunk is 279.29 kB / 88.73 kB gzip, the Navigation section chunk is 27.08 kB / 6.31 kB gzip, and the prior Vite oversized chunk warning is gone.
 - `npm run build` in `server`: passing.
 - `npm audit --json` in `server`: 0 vulnerabilities.
 - Server API auth tests cover missing keys, accepted header keys, accepted Bearer keys, scoped write/review key separation, protected device registry reads, and fail-closed production-style config.
@@ -64,6 +64,7 @@ Last light checks:
 - Web local data portability tests cover export/import round trips and verify AI provider secret stores are excluded.
 - Web hazard moderation tests cover protected review-queue loading, review history loading, review receipt validation, API error handling, and invalid receipt rejection.
 - Web aggregate overlay tests cover aggregate GeoJSON fetching, privacy metadata validation, and rejection when raw IDs or official chart data are exposed.
+- Web chart artifact tests cover `/api/charts/nb/package-artifacts` client validation, GeoJSON artifact manifest loading, pending PMTiles/MBTiles flags, and rejection of artifacts that include official chart data.
 - Local API smoke on port 3101: `/health`, `POST /api/community/soundings`, and `/api/community/soundings/summary` returned expected responses.
 - Local API smoke on port 3102: `POST /api/devices/register` and `GET /api/devices` returned expected responses.
 - Local API smoke on port 3103: `/health`, `POST /api/community/hazards`, and `/api/community/hazards/summary` returned expected responses.
@@ -76,6 +77,8 @@ Last light checks:
 - Browser smoke on port 5176: Community Moderation rendered the Load Review Queue control at 1280x900 and the tab list stayed inside the 360x780 viewport.
 - Browser smoke on port 5176: Community Moderation rendered the Review History card and Load History control at 1280x900 and 360x780.
 - Browser smoke on port 5176: Community Map rendered the Load Aggregates control at 1280x900 and 360x780, with the map card contained at both sizes.
+- Browser smoke on port 5173 with API on port 3001: Navigation Chart View rendered the Chart Packages panel, Load Artifacts returned `GET /api/charts/nb/package-artifacts => 200 OK`, two reference-only GeoJSON artifacts rendered, and the pass had no console errors after adding the app favicon.
+- Browser smoke on port 5173: Navigation Chart View and the loaded Chart Packages panel were checked at 1280x900 and 360x800.
 - No live Signal K hardware test or real-vessel API load test was run for this snapshot.
 
 ## Implementation Progress On 2026-05-06
@@ -113,6 +116,9 @@ Completed in the active checkout:
 - Added the first PostGIS migration for vessels, devices, soundings, hazards, reviews, aggregate cells, and release manifests with spatial indexes and legal/privacy checks.
 - Added review-scoped `/api/community/hazards/reviews` so hazard moderation decisions are queryable as audit history.
 - Wired hazard review history into the Community moderation tab with a protected history client and responsive review-history panel.
+- Wired generated NB chart package artifacts into the web chart catalog client and Navigation Chart View so pilots can load reference-only GeoJSON artifact manifests, byte sizes, checksums, excluded official source IDs, and pending PMTiles/MBTiles status.
+- Replaced the route overlay React fragment inside the Leaflet pane with a `LayerGroup`, clearing the chart-view React console warning during browser smoke.
+- Added an SVG favicon link so the browser smoke no longer carries a missing `/favicon.ico` error.
 
 Still not done:
 
