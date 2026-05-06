@@ -23,6 +23,7 @@ describe('local data portability', () => {
       'harbormesh-vessel-data': JSON.stringify({ state: { vessels: [{ id: 'vessel-1' }] } }),
       'harbormesh-ai': JSON.stringify({ state: { providers: [{ apiKey: 'secret' }] } }),
       'harbormesh-pilot-api': JSON.stringify({ apiKey: 'hm_secret' }),
+      'harbormesh-account-session': JSON.stringify({ session: { accessToken: 'hm_user_session_v1.secret' } }),
     });
 
     const bundle = buildLocalDataExport(storage, '2026-05-06T12:30:00.000Z');
@@ -30,11 +31,12 @@ describe('local data portability', () => {
     expect(bundle).toMatchObject({
       schemaVersion: 'harbourmesh.local-data-export.v1',
       exportedAt: '2026-05-06T12:30:00.000Z',
-      excludedStores: ['harbormesh-ai', 'harbormesh-pilot-api'],
+      excludedStores: ['harbormesh-ai', 'harbormesh-pilot-api', 'harbormesh-account-session'],
     });
     expect(bundle.stores['harbormesh-vessel-data']).toEqual({ state: { vessels: [{ id: 'vessel-1' }] } });
     expect(bundle.stores).not.toHaveProperty('harbormesh-ai');
     expect(bundle.stores).not.toHaveProperty('harbormesh-pilot-api');
+    expect(bundle.stores).not.toHaveProperty('harbormesh-account-session');
   });
 
   it('round-trips valid exports into portable local stores', () => {
@@ -76,6 +78,14 @@ describe('local data portability', () => {
       exportedAt: '2026-05-06T12:30:00.000Z',
       stores: {
         'harbormesh-pilot-api': { apiKey: 'hm_secret' },
+      },
+      excludedStores: [],
+    }))).toThrow('must not include secret stores');
+    expect(() => parseLocalDataExport(JSON.stringify({
+      schemaVersion: 'harbourmesh.local-data-export.v1',
+      exportedAt: '2026-05-06T12:30:00.000Z',
+      stores: {
+        'harbormesh-account-session': { session: { accessToken: 'hm_user_session_v1.secret' } },
       },
       excludedStores: [],
     }))).toThrow('must not include secret stores');

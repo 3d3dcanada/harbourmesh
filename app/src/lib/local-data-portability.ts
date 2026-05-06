@@ -12,6 +12,7 @@ export const PORTABLE_STORE_KEYS = [
 export const EXCLUDED_STORE_KEYS = [
   'harbormesh-ai',
   'harbormesh-pilot-api',
+  'harbormesh-account-session',
 ] as const;
 
 export type PortableStoreKey = typeof PORTABLE_STORE_KEYS[number];

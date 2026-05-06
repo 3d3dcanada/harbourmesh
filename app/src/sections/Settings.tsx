@@ -22,6 +22,7 @@ import {
   Trash2,
   Info,
   KeyRound,
+  LogOut,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -42,6 +43,15 @@ import {
   parseLocalDataExport,
   serializeLocalDataExport,
 } from '@/lib/local-data-portability';
+import {
+  clearAccountSession,
+  fetchCurrentAccount,
+  getAccountSession,
+  loginAccount,
+  registerAccount,
+  replaceAccountSessionAccount,
+  type AccountSessionEnvelope,
+} from '@/lib/account-session';
 import {
   clearPilotApiCredentials,
   getPilotApiCredentials,
@@ -66,6 +76,14 @@ export function Settings() {
   const [pilotCredentialsSavedAt, setPilotCredentialsSavedAt] = useState(savedPilotApiCredentials?.savedAt ?? null);
   const [pilotReviewSessionExpiresAt, setPilotReviewSessionExpiresAt] = useState(savedPilotApiCredentials?.reviewSessionExpiresAt ?? null);
   const [pilotReviewSessionLoading, setPilotReviewSessionLoading] = useState(false);
+  const savedAccountSession = getAccountSession();
+  const [accountSession, setAccountSession] = useState<AccountSessionEnvelope | null>(savedAccountSession);
+  const [accountEmailInput, setAccountEmailInput] = useState(savedAccountSession?.session.account.email ?? '');
+  const [accountDisplayNameInput, setAccountDisplayNameInput] = useState(savedAccountSession?.session.account.displayName ?? '');
+  const [accountPasswordInput, setAccountPasswordInput] = useState('');
+  const [accountInviteCodeInput, setAccountInviteCodeInput] = useState('');
+  const [accountLoading, setAccountLoading] = useState(false);
+  const [accountError, setAccountError] = useState<string | null>(null);
   const [newProvider, setNewProvider] = useState({
     name: '',
     providerType: AIProviderType.LOCAL,
@@ -238,6 +256,117 @@ export function Settings() {
     }
   };
 
+  const applyAccountSession = (sessionEnvelope: AccountSessionEnvelope) => {
+    setAccountSession(sessionEnvelope);
+    setAccountEmailInput(sessionEnvelope.session.account.email);
+    setAccountDisplayNameInput(sessionEnvelope.session.account.displayName);
+    setAccountPasswordInput('');
+    setAccountInviteCodeInput('');
+  };
+
+  const handleRegisterAccount = async () => {
+    setAccountLoading(true);
+    setAccountError(null);
+
+    try {
+      const sessionEnvelope = await registerAccount({
+        email: accountEmailInput,
+        displayName: accountDisplayNameInput,
+        password: accountPasswordInput,
+        inviteCode: accountInviteCodeInput,
+      });
+      applyAccountSession(sessionEnvelope);
+      addNotification({
+        type: 'success',
+        title: 'Account Registered',
+        message: `${sessionEnvelope.session.account.displayName} is signed in.`,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Account registration failed.';
+      setAccountError(message);
+      addNotification({
+        type: 'error',
+        title: 'Account Registration Failed',
+        message,
+      });
+    } finally {
+      setAccountLoading(false);
+    }
+  };
+
+  const handleLoginAccount = async () => {
+    setAccountLoading(true);
+    setAccountError(null);
+
+    try {
+      const sessionEnvelope = await loginAccount({
+        email: accountEmailInput,
+        password: accountPasswordInput,
+      });
+      applyAccountSession(sessionEnvelope);
+      addNotification({
+        type: 'success',
+        title: 'Account Signed In',
+        message: `${sessionEnvelope.session.account.email} is active on this device.`,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Account login failed.';
+      setAccountError(message);
+      addNotification({
+        type: 'error',
+        title: 'Account Sign-In Failed',
+        message,
+      });
+    } finally {
+      setAccountLoading(false);
+    }
+  };
+
+  const handleRefreshAccount = async () => {
+    setAccountLoading(true);
+    setAccountError(null);
+
+    try {
+      const account = await fetchCurrentAccount();
+      const sessionEnvelope = replaceAccountSessionAccount(account);
+      if (sessionEnvelope) {
+        applyAccountSession(sessionEnvelope);
+      } else {
+        setAccountSession(null);
+      }
+      addNotification({
+        type: 'success',
+        title: 'Account Refreshed',
+        message: `${account.email} is current.`,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not refresh account.';
+      setAccountError(message);
+      if (message === 'account_session_required' || message === 'invalid_account_session') {
+        setAccountSession(null);
+      }
+      addNotification({
+        type: 'error',
+        title: 'Account Refresh Failed',
+        message,
+      });
+    } finally {
+      setAccountLoading(false);
+    }
+  };
+
+  const handleSignOutAccount = () => {
+    clearAccountSession();
+    setAccountSession(null);
+    setAccountPasswordInput('');
+    setAccountError(null);
+    addNotification({
+      type: 'info',
+      title: 'Account Signed Out',
+      message: 'This browser no longer has an account session.',
+    });
+  };
+
   const handleRegisterBoatNode = async () => {
     setRegisteringDevice(true);
 
@@ -265,6 +394,9 @@ export function Settings() {
 
   const pilotReviewSessionTimestamp = pilotReviewSessionExpiresAt ? Date.parse(pilotReviewSessionExpiresAt) : NaN;
   const pilotReviewSessionActive = Number.isFinite(pilotReviewSessionTimestamp) && pilotReviewSessionTimestamp > Date.now();
+  const accountSessionExpiresAt = accountSession?.session.expiresAt ?? null;
+  const accountSessionTimestamp = accountSessionExpiresAt ? Date.parse(accountSessionExpiresAt) : NaN;
+  const accountSessionActive = Number.isFinite(accountSessionTimestamp) && accountSessionTimestamp > Date.now();
   
   return (
     <div className="space-y-6">
@@ -277,7 +409,7 @@ export function Settings() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleExportLocalData}>
             <Download className="h-4 w-4 mr-2" />
             Export Data
           </Button>
@@ -292,6 +424,7 @@ export function Settings() {
       <Tabs defaultValue="general" className="space-y-6">
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="account">Account</TabsTrigger>
           <TabsTrigger value="appearance">Appearance</TabsTrigger>
           <TabsTrigger value="ai">AI & Models</TabsTrigger>
           <TabsTrigger value="privacy">Privacy & Consent</TabsTrigger>
@@ -435,6 +568,133 @@ export function Settings() {
                 <p className="text-sm text-muted-foreground">
                   Affects speed, distance, depth, and temperature displays
                 </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Account Settings */}
+        <TabsContent value="account" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Account Session
+              </CardTitle>
+              <CardDescription>
+                Account sessions stay on this browser and are excluded from local data exports.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {accountSession ? (
+                <div className="space-y-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="space-y-1">
+                      <p className="font-medium">{accountSession.session.account.displayName}</p>
+                      <p className="text-sm text-muted-foreground">{accountSession.session.account.email}</p>
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        <Badge variant={accountSessionActive ? 'default' : 'destructive'}>
+                          {accountSessionActive ? 'Signed in' : 'Expired'}
+                        </Badge>
+                        <Badge variant="secondary">{accountSession.session.account.status}</Badge>
+                        {accountSession.session.account.roles.map((role) => (
+                          <Badge key={role} variant="outline">{role}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button variant="outline" onClick={handleRefreshAccount} disabled={accountLoading}>
+                        <RefreshCw className={cn('h-4 w-4 mr-2', accountLoading && 'animate-spin')} />
+                        Refresh
+                      </Button>
+                      <Button variant="outline" onClick={handleSignOutAccount}>
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Sign Out
+                      </Button>
+                    </div>
+                  </div>
+                  <Separator />
+                  <div className="grid gap-3 text-sm text-muted-foreground sm:grid-cols-2">
+                    <p>Saved {new Date(accountSession.savedAt).toLocaleString()}</p>
+                    <p>Expires {new Date(accountSession.session.expiresAt).toLocaleString()}</p>
+                    <p>Account ID {accountSession.session.account.id}</p>
+                    <p>Key ID {accountSession.session.keyId}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-lg border p-4 text-sm text-muted-foreground">
+                  No account session is saved on this browser.
+                </div>
+              )}
+              {accountError && (
+                <p className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive" role="alert">
+                  {accountError}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <KeyRound className="h-5 w-5" />
+                Register or Sign In
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Email</Label>
+                  <Input
+                    type="email"
+                    value={accountEmailInput}
+                    onChange={(event) => setAccountEmailInput(event.target.value)}
+                    placeholder="captain@example.com"
+                    autoComplete="email"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Display Name</Label>
+                  <Input
+                    value={accountDisplayNameInput}
+                    onChange={(event) => setAccountDisplayNameInput(event.target.value)}
+                    placeholder="Captain"
+                    autoComplete="name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Password</Label>
+                  <Input
+                    type="password"
+                    value={accountPasswordInput}
+                    onChange={(event) => setAccountPasswordInput(event.target.value)}
+                    autoComplete={accountSession ? 'current-password' : 'new-password'}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Invite Code</Label>
+                  <Input
+                    value={accountInviteCodeInput}
+                    onChange={(event) => setAccountInviteCodeInput(event.target.value)}
+                    placeholder="Required when registration is invite-gated"
+                    autoComplete="one-time-code"
+                  />
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  onClick={handleRegisterAccount}
+                  disabled={accountLoading || !accountEmailInput.trim() || !accountDisplayNameInput.trim() || !accountPasswordInput}
+                >
+                  {accountLoading ? 'Working' : 'Register Account'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleLoginAccount}
+                  disabled={accountLoading || !accountEmailInput.trim() || !accountPasswordInput}
+                >
+                  Sign In
+                </Button>
               </div>
             </CardContent>
           </Card>
