@@ -81,9 +81,31 @@ export type CommunitySoundingReceipt = {
   storedAt: string;
 };
 
+export type CommunitySoundingReviewStatus = 'unreviewed' | 'accepted' | 'rejected';
+
+export const communitySoundingReviewSchema = z.object({
+  status: z.enum(['accepted', 'rejected']),
+  reviewedBy: z.string().trim().min(2).max(120),
+  reviewedAt: z.string().datetime().optional(),
+  reason: z.enum(['outlier', 'duplicate', 'bad_position', 'bad_offset', 'sensor_fault', 'other']).optional(),
+  note: z.string().trim().max(500).optional(),
+}).strict();
+
+export type CommunitySoundingReview = z.infer<typeof communitySoundingReviewSchema>;
+
+export type CommunitySoundingReviewReceipt = {
+  ok: true;
+  soundingId: string;
+  status: Exclude<CommunitySoundingReviewStatus, 'unreviewed'>;
+  includedInAggregates: boolean;
+  reviewedAt: string;
+};
+
 export type CommunitySoundingSummary = {
   totalRecords: number;
   batchCount: number;
   regions: Record<string, number>;
+  byReviewStatus?: Record<CommunitySoundingReviewStatus, number>;
+  aggregateEligibleCount?: number;
   latestTimestamp?: string;
 };

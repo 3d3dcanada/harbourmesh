@@ -276,6 +276,98 @@ describe('HarbourMesh API', () => {
     });
   });
 
+  it('lets review operators reject bad soundings before public aggregates', async () => {
+    const app = await createTestApp({
+      writeApiKeys: [TEST_WRITE_API_KEY],
+      reviewOperatorKeys: [{ key: TEST_REVIEW_API_KEY, operatorId: 'nb-sounding-reviewer' }],
+      requireApiAuth: true,
+    });
+
+    const upload = await app.inject({
+      method: 'POST',
+      url: '/api/community/soundings',
+      headers: {
+        'x-harbourmesh-api-key': TEST_WRITE_API_KEY,
+      },
+      payload: sampleBatch,
+    });
+    expect(upload.statusCode).toBe(202);
+
+    const reviewQueue = await app.inject({
+      method: 'GET',
+      url: '/api/community/soundings/review',
+      headers: {
+        'x-harbourmesh-api-key': TEST_REVIEW_API_KEY,
+      },
+    });
+    expect(reviewQueue.statusCode).toBe(200);
+    expect(reviewQueue.json()).toMatchObject({
+      soundings: [
+        {
+          id: 'sounding-1',
+          reviewStatus: 'unreviewed',
+        },
+      ],
+    });
+
+    const reviewDecision = await app.inject({
+      method: 'POST',
+      url: '/api/community/soundings/sounding-1/review',
+      headers: {
+        'x-harbourmesh-api-key': TEST_REVIEW_API_KEY,
+      },
+      payload: {
+        status: 'rejected',
+        reviewedBy: 'client-supplied-reviewer',
+        reason: 'outlier',
+        note: 'Depth spike rejected before release.',
+      },
+    });
+    expect(reviewDecision.statusCode).toBe(202);
+    expect(reviewDecision.json()).toMatchObject({
+      ok: true,
+      soundingId: 'sounding-1',
+      status: 'rejected',
+      includedInAggregates: false,
+    });
+
+    const reviewHistory = await app.inject({
+      method: 'GET',
+      url: '/api/community/soundings/reviews',
+      headers: {
+        'x-harbourmesh-api-key': TEST_REVIEW_API_KEY,
+      },
+    });
+    expect(reviewHistory.statusCode).toBe(200);
+    expect(reviewHistory.json()).toMatchObject({
+      reviews: [
+        {
+          soundingId: 'sounding-1',
+          status: 'rejected',
+          reviewedBy: 'nb-sounding-reviewer',
+          reason: 'outlier',
+        },
+      ],
+    });
+
+    const overlay = await app.inject({
+      method: 'GET',
+      url: '/api/community/overlay.geojson',
+    });
+    expect(overlay.json().features).toHaveLength(0);
+
+    const aggregate = await app.inject({
+      method: 'GET',
+      url: '/api/community/aggregates.geojson',
+    });
+    expect(aggregate.json().metadata.sourceRecordCounts).toMatchObject({
+      soundings: 1,
+      acceptedSoundings: 0,
+      rejectedSoundings: 1,
+      aggregateCells: 0,
+    });
+  });
+
   it('requires a pilot API key for protected intake when auth is configured', async () => {
     const app = await createTestApp({
       apiKeys: [TEST_API_KEY],

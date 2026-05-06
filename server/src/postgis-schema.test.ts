@@ -22,6 +22,7 @@ describe('NB pilot PostGIS schema migration', () => {
       'devices',
       'community_sounding_batches',
       'community_soundings',
+      'community_sounding_reviews',
       'community_observation_batches',
       'community_observations',
       'community_hazard_batches',
@@ -46,6 +47,7 @@ describe('NB pilot PostGIS schema migration', () => {
     expect(sql).toContain('ALTER TABLE community_hazards ADD COLUMN IF NOT EXISTS position jsonb');
     expect(sql).toMatch(/community_aggregate_cells[\s\S]+geom geometry\(Polygon, 4326\) NOT NULL/);
     expect(sql).toContain('idx_community_soundings_geom ON community_soundings USING gist(geom)');
+    expect(sql).toContain('idx_community_soundings_review_status ON community_soundings(review_status)');
     expect(sql).toContain('idx_community_observations_geom ON community_observations USING gist(geom)');
     expect(sql).toContain('idx_community_hazards_geom ON community_hazards USING gist(geom)');
     expect(sql).toContain('idx_aggregate_cells_geom ON community_aggregate_cells USING gist(geom)');
@@ -61,6 +63,7 @@ describe('NB pilot PostGIS schema migration', () => {
     expect(sql.match(/official_chart_data_included boolean NOT NULL DEFAULT false CHECK \(official_chart_data_included = false\)/g)?.length).toBeGreaterThanOrEqual(5);
     expect(sql).toContain('raw_record_ids_included boolean NOT NULL DEFAULT false CHECK (raw_record_ids_included = false)');
     expect(sql).toContain('vessel_ids_included boolean NOT NULL DEFAULT false CHECK (vessel_ids_included = false)');
+    expect(sql).toContain("review_status text NOT NULL DEFAULT 'unreviewed' CHECK (review_status IN ('unreviewed', 'accepted', 'rejected'))");
     expect(sql).toContain("CHECK (public_overlay_eligible = false OR (review_status = 'accepted' AND geom IS NOT NULL))");
   });
 

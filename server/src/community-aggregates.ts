@@ -230,7 +230,7 @@ export function buildCommunityAggregateGeoJson(
   cellSizeDegrees = 0.01
 ): CommunityAggregateGeoJson {
   const cells = new Map<string, AggregateCell>();
-  const acceptedSoundings = soundings.filter((sounding) => !sounding.quality.rejected);
+  const acceptedSoundings = soundings.filter((sounding) => !sounding.quality.rejected && sounding.reviewStatus !== 'rejected');
   const positionedObservations = observations.filter((observation) => observation.position && !observation.quality.rejected);
   const publicHazards = hazards.filter((hazard) => hazard.publicOverlayEligible && hazard.position);
 

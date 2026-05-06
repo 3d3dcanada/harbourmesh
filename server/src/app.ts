@@ -50,7 +50,7 @@ import {
   createCommunityObservationRepository,
   type CommunityObservationRepository,
 } from './community-observation-repository.js';
-import { communitySoundingBatchSchema } from './community-soundings.js';
+import { communitySoundingBatchSchema, communitySoundingReviewSchema } from './community-soundings.js';
 import {
   createCommunitySoundingRepository,
   type CommunitySoundingRepository,
@@ -333,6 +333,55 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   });
 
   app.get('/api/community/soundings/summary', async () => repository.getSummary());
+
+  app.get('/api/community/soundings/review', async (request, reply) => {
+    if (!(await requireApiAccess(request, reply, apiAuth, 'review'))) return reply;
+
+    return {
+      soundings: await repository.listRecords(),
+    };
+  });
+
+  app.get('/api/community/soundings/reviews', async (request, reply) => {
+    if (!(await requireApiAccess(request, reply, apiAuth, 'review'))) return reply;
+
+    return {
+      reviews: await repository.listReviews(),
+    };
+  });
+
+  app.post('/api/community/soundings/:soundingId/review', async (request, reply) => {
+    if (!(await requireApiAccess(request, reply, apiAuth, 'review'))) return reply;
+
+    try {
+      const { soundingId } = request.params as { soundingId: string };
+      const reviewIdentity = getRequestApiKeyIdentity(apiAuth, request, 'review');
+      const requestedReview = communitySoundingReviewSchema.parse(request.body);
+      const review = {
+        ...requestedReview,
+        reviewedBy: reviewIdentity?.operatorId ?? requestedReview.reviewedBy,
+      };
+      const receipt = await repository.reviewSounding(soundingId, review);
+      if (!receipt) {
+        return reply.code(404).send({ ok: false, error: 'sounding_not_found' });
+      }
+
+      return reply.code(202).send(receipt);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return reply.code(400).send({
+          ok: false,
+          error: 'invalid_community_sounding_review',
+          issues: error.issues.map((issue) => ({
+            path: issue.path.join('.'),
+            message: issue.message,
+          })),
+        });
+      }
+
+      throw error;
+    }
+  });
 
   app.get('/api/community/overlay.geojson', async () => {
     const [soundings, hazards] = await Promise.all([

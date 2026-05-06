@@ -85,6 +85,11 @@ CREATE TABLE IF NOT EXISTS community_soundings (
   quality jsonb NOT NULL DEFAULT '{}'::jsonb,
   quality_confidence numeric(4, 3) NOT NULL CHECK (quality_confidence >= 0 AND quality_confidence <= 1),
   quality_rejected boolean NOT NULL DEFAULT false,
+  review_status text NOT NULL DEFAULT 'unreviewed' CHECK (review_status IN ('unreviewed', 'accepted', 'rejected')),
+  reviewed_at timestamptz,
+  reviewed_by text,
+  review_reason text CHECK (review_reason IS NULL OR review_reason IN ('outlier', 'duplicate', 'bad_position', 'bad_offset', 'sensor_fault', 'other')),
+  review_note text CHECK (review_note IS NULL OR char_length(review_note) <= 500),
   official_chart_data_included boolean NOT NULL DEFAULT false CHECK (official_chart_data_included = false),
   stored_at timestamptz NOT NULL DEFAULT now()
 );
@@ -93,6 +98,38 @@ CREATE INDEX IF NOT EXISTS idx_community_soundings_geom ON community_soundings U
 CREATE INDEX IF NOT EXISTS idx_community_soundings_observed_at ON community_soundings(observed_at);
 CREATE INDEX IF NOT EXISTS idx_community_soundings_source_device ON community_soundings(source_device_id);
 CREATE INDEX IF NOT EXISTS idx_community_soundings_shareable ON community_soundings(quality_rejected, sharing_state);
+CREATE INDEX IF NOT EXISTS idx_community_soundings_review_status ON community_soundings(review_status);
+
+ALTER TABLE community_soundings ADD COLUMN IF NOT EXISTS review_status text NOT NULL DEFAULT 'unreviewed';
+ALTER TABLE community_soundings ADD COLUMN IF NOT EXISTS reviewed_at timestamptz;
+ALTER TABLE community_soundings ADD COLUMN IF NOT EXISTS reviewed_by text;
+ALTER TABLE community_soundings ADD COLUMN IF NOT EXISTS review_reason text;
+ALTER TABLE community_soundings ADD COLUMN IF NOT EXISTS review_note text;
+ALTER TABLE community_soundings DROP CONSTRAINT IF EXISTS community_soundings_review_status_check;
+ALTER TABLE community_soundings ADD CONSTRAINT community_soundings_review_status_check
+  CHECK (review_status IN ('unreviewed', 'accepted', 'rejected'));
+ALTER TABLE community_soundings DROP CONSTRAINT IF EXISTS community_soundings_review_reason_check;
+ALTER TABLE community_soundings ADD CONSTRAINT community_soundings_review_reason_check
+  CHECK (review_reason IS NULL OR review_reason IN ('outlier', 'duplicate', 'bad_position', 'bad_offset', 'sensor_fault', 'other'));
+ALTER TABLE community_soundings DROP CONSTRAINT IF EXISTS community_soundings_review_note_check;
+ALTER TABLE community_soundings ADD CONSTRAINT community_soundings_review_note_check
+  CHECK (review_note IS NULL OR char_length(review_note) <= 500);
+UPDATE community_soundings
+SET review_status = 'rejected'
+WHERE quality_rejected = true AND review_status = 'unreviewed';
+
+CREATE TABLE IF NOT EXISTS community_sounding_reviews (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  sounding_id uuid NOT NULL REFERENCES community_soundings(id) ON DELETE CASCADE,
+  status text NOT NULL CHECK (status IN ('accepted', 'rejected')),
+  reviewed_by text NOT NULL,
+  reviewed_at timestamptz NOT NULL DEFAULT now(),
+  reason text CHECK (reason IS NULL OR reason IN ('outlier', 'duplicate', 'bad_position', 'bad_offset', 'sensor_fault', 'other')),
+  note text CHECK (note IS NULL OR char_length(note) <= 500)
+);
+
+CREATE INDEX IF NOT EXISTS idx_sounding_reviews_sounding_id ON community_sounding_reviews(sounding_id);
+CREATE INDEX IF NOT EXISTS idx_sounding_reviews_reviewed_at ON community_sounding_reviews(reviewed_at);
 
 CREATE TABLE IF NOT EXISTS community_observation_batches (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

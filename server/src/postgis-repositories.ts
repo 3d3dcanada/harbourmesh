@@ -12,8 +12,8 @@ import type { CommunityObservationBatch, CommunityObservationSummary } from './c
 import type { CommunityObservationRepository, StoredCommunityObservation } from './community-observation-repository.js';
 import type { CommunityAggregateGeoJson } from './community-aggregates.js';
 import type { CommunityAggregateReleaseManifest } from './community-release-manifests.js';
-import type { CommunitySoundingBatch, CommunitySoundingSummary } from './community-soundings.js';
-import type { CommunitySoundingRepository, StoredCommunitySounding } from './community-sounding-repository.js';
+import type { CommunitySoundingBatch, CommunitySoundingReview, CommunitySoundingSummary } from './community-soundings.js';
+import type { CommunitySoundingRepository, StoredCommunitySounding, StoredSoundingReview } from './community-sounding-repository.js';
 import type { DeviceRepository } from './device-repository.js';
 import type { DeviceRegistration } from './devices.js';
 
@@ -198,11 +198,11 @@ function createPostgisSoundingRepository(pool: Pool): CommunitySoundingRepositor
               raw_message_id, observed_at, received_at, consent_captured_at, sharing_state, geom,
               raw_depth_meters, depth_meters, depth_reference, tide_correction_applied,
               water_level_correction_applied, offsets, quality, quality_confidence,
-              quality_rejected, official_chart_data_included, stored_at
+              quality_rejected, review_status, official_chart_data_included, stored_at
             ) VALUES (
               $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
               ST_SetSRID(ST_MakePoint($11, $12), 4326),
-              $13, $14, $15, $16, $17, $18::jsonb, $19::jsonb, $20, $21, false, $22
+              $13, $14, $15, $16, $17, $18::jsonb, $19::jsonb, $20, $21, $22, false, $23
             )
             ON CONFLICT (external_record_id) DO NOTHING`,
             [
@@ -227,6 +227,7 @@ function createPostgisSoundingRepository(pool: Pool): CommunitySoundingRepositor
               JSON.stringify(record.quality),
               record.quality.confidence,
               record.quality.rejected,
+              record.quality.rejected ? 'rejected' : 'unreviewed',
               storedAt,
             ]
           );
@@ -243,8 +244,43 @@ function createPostgisSoundingRepository(pool: Pool): CommunitySoundingRepositor
       });
     },
 
+    async reviewSounding(soundingId: string, review: CommunitySoundingReview) {
+      const sounding = await pool.query<{ id: string; quality_rejected: boolean }>(
+        'SELECT id, quality_rejected FROM community_soundings WHERE external_record_id = $1',
+        [soundingId]
+      );
+      if (sounding.rowCount === 0) return null;
+
+      const reviewedAt = review.reviewedAt ?? new Date().toISOString();
+      await withTransaction(pool, async (client) => {
+        await client.query(
+          `UPDATE community_soundings
+          SET review_status = $1,
+            reviewed_at = $2,
+            reviewed_by = $3,
+            review_reason = $4,
+            review_note = $5
+          WHERE id = $6`,
+          [review.status, reviewedAt, review.reviewedBy, review.reason ?? null, review.note ?? null, sounding.rows[0].id]
+        );
+        await client.query(
+          `INSERT INTO community_sounding_reviews (sounding_id, status, reviewed_by, reviewed_at, reason, note)
+          VALUES ($1, $2, $3, $4, $5, $6)`,
+          [sounding.rows[0].id, review.status, review.reviewedBy, reviewedAt, review.reason ?? null, review.note ?? null]
+        );
+      });
+
+      return {
+        ok: true,
+        soundingId,
+        status: review.status,
+        includedInAggregates: review.status === 'accepted' && !sounding.rows[0].quality_rejected,
+        reviewedAt,
+      };
+    },
+
     async getSummary(): Promise<CommunitySoundingSummary> {
-      const [summary, regions] = await Promise.all([
+      const [summary, regions, reviewStatusCounts, aggregateEligible] = await Promise.all([
         pool.query<{ total_records: string; batch_count: string; latest_timestamp: unknown }>(
           `SELECT
             COUNT(*)::text AS total_records,
@@ -258,12 +294,28 @@ function createPostgisSoundingRepository(pool: Pool): CommunitySoundingRepositor
           JOIN community_sounding_batches b ON b.id = s.batch_id
           GROUP BY b.region`
         ),
+        pool.query<{ review_status: StoredCommunitySounding['reviewStatus']; count: string }>(
+          `SELECT review_status, COUNT(*)::text AS count
+          FROM community_soundings
+          GROUP BY review_status`
+        ),
+        pool.query<{ count: string }>(
+          `SELECT COUNT(*)::text AS count
+          FROM community_soundings
+          WHERE quality_rejected = false AND review_status <> 'rejected'`
+        ),
       ]);
+      const byReviewStatus: CommunitySoundingSummary['byReviewStatus'] = { unreviewed: 0, accepted: 0, rejected: 0 };
+      for (const row of reviewStatusCounts.rows) {
+        byReviewStatus[row.review_status] = Number(row.count);
+      }
 
       return {
         totalRecords: Number(summary.rows[0]?.total_records ?? 0),
         batchCount: Number(summary.rows[0]?.batch_count ?? 0),
         regions: Object.fromEntries(regions.rows.map((row) => [row.region, Number(row.count)])),
+        byReviewStatus,
+        aggregateEligibleCount: Number(aggregateEligible.rows[0]?.count ?? 0),
         latestTimestamp: toOptionalIsoString(summary.rows[0]?.latest_timestamp),
       };
     },
@@ -290,6 +342,11 @@ function createPostgisSoundingRepository(pool: Pool): CommunitySoundingRepositor
         water_level_correction_applied: boolean;
         offsets: unknown;
         quality: unknown;
+        review_status: StoredCommunitySounding['reviewStatus'];
+        reviewed_at: unknown;
+        reviewed_by: string | null;
+        review_reason: CommunitySoundingReview['reason'] | null;
+        review_note: string | null;
         stored_at: unknown;
       }>(
         `SELECT
@@ -313,6 +370,11 @@ function createPostgisSoundingRepository(pool: Pool): CommunitySoundingRepositor
           s.water_level_correction_applied,
           s.offsets,
           s.quality,
+          s.review_status,
+          s.reviewed_at,
+          s.reviewed_by,
+          s.review_reason,
+          s.review_note,
           s.stored_at
         FROM community_soundings s
         JOIN community_sounding_batches b ON b.id = s.batch_id
@@ -340,7 +402,43 @@ function createPostgisSoundingRepository(pool: Pool): CommunitySoundingRepositor
         waterLevelCorrectionApplied: false,
         offsets: toJsonObject(row.offsets, {}),
         quality: toJsonObject(row.quality, { confidence: 0, rejected: true, flags: ['missing_quality'] }),
+        reviewStatus: row.review_status,
+        reviewedAt: toOptionalIsoString(row.reviewed_at),
+        reviewedBy: row.reviewed_by ?? undefined,
+        reviewReason: row.review_reason ?? undefined,
+        reviewNote: row.review_note ?? undefined,
         storedAt: toIsoString(row.stored_at),
+      }));
+    },
+
+    async listReviews() {
+      const result = await pool.query<{
+        sounding_id: string;
+        status: Exclude<StoredCommunitySounding['reviewStatus'], 'unreviewed'>;
+        reviewed_by: string;
+        reviewed_at: unknown;
+        reason: CommunitySoundingReview['reason'] | null;
+        note: string | null;
+      }>(
+        `SELECT
+          s.external_record_id AS sounding_id,
+          r.status,
+          r.reviewed_by,
+          r.reviewed_at,
+          r.reason,
+          r.note
+        FROM community_sounding_reviews r
+        JOIN community_soundings s ON s.id = r.sounding_id
+        ORDER BY r.reviewed_at ASC, s.external_record_id ASC`
+      );
+
+      return result.rows.map((row): StoredSoundingReview => ({
+        soundingId: row.sounding_id,
+        status: row.status,
+        reviewedBy: row.reviewed_by,
+        reviewedAt: toIsoString(row.reviewed_at),
+        reason: row.reason ?? undefined,
+        note: row.note ?? undefined,
       }));
     },
   };

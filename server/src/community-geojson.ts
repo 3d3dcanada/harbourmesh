@@ -59,6 +59,8 @@ function toSoundingFeature(sounding: StoredCommunitySounding): CommunityFeature 
       depthReference: sounding.depthReference,
       confidence: sounding.quality.confidence,
       rejected: sounding.quality.rejected,
+      reviewStatus: sounding.reviewStatus,
+      reviewedAt: sounding.reviewedAt ?? null,
       timestamp: sounding.timestamp,
       storedAt: sounding.storedAt,
       sharingState: sounding.sharingState,
@@ -110,7 +112,7 @@ export function buildCommunityGeoJsonOverlay(
   generatedAt = new Date().toISOString()
 ): CommunityGeoJsonOverlay {
   const soundingFeatures = soundings
-    .filter((sounding) => !sounding.quality.rejected)
+    .filter((sounding) => !sounding.quality.rejected && sounding.reviewStatus !== 'rejected')
     .map(toSoundingFeature);
   const hazardFeatures = hazards.flatMap((hazard) => {
     if (!hazard.publicOverlayEligible) return [];
