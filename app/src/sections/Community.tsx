@@ -28,6 +28,8 @@ import { NBPilotChart } from '@/components/NBPilotChart';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -141,6 +143,7 @@ export function Community() {
   const [aggregateReleasePublishing, setAggregateReleasePublishing] = useState(false);
   const [aggregateReleaseHistory, setAggregateReleaseHistory] = useState<CommunityAggregateReleaseManifest[]>([]);
   const [aggregateReleaseArtifacts, setAggregateReleaseArtifacts] = useState<CommunityAggregateReleaseArtifactManifest | null>(null);
+  const [aggregateReleaseApprovalChecked, setAggregateReleaseApprovalChecked] = useState(false);
   const isOptedIn = consent?.shareTelemetryForCommunity || false;
   const shareableSoundings = getShareableSoundings();
   const queuedBatches = useMemo(() => uploadBatches.filter((batch) => batch.status === 'queued'), [uploadBatches]);
@@ -396,7 +399,20 @@ export function Community() {
 
     try {
       const generatedBy = resolvePilotOperatorId() ?? consent?.vesselId ?? boatNode.deviceId ?? 'local-operator';
-      const release = await publishCommunityAggregateRelease({ generatedBy });
+      const release = await publishCommunityAggregateRelease({
+        generatedBy,
+        ...(aggregateReleaseApprovalChecked ? {
+          approval: {
+            approvedBy: generatedBy,
+            checklist: {
+              referenceOnly: true,
+              officialChartDataExcluded: true,
+              rawRecordIdsExcluded: true,
+              vesselIdsExcluded: true,
+            },
+          },
+        } : {}),
+      });
       const [aggregate, history, artifacts] = await Promise.all([
         fetchLatestCommunityAggregateReleaseCells(),
         fetchCommunityAggregateReleaseHistory(),
@@ -590,7 +606,7 @@ export function Community() {
         </TabsList>
 
         <TabsContent value="map" className="mt-4">
-          <Card className="min-h-[640px] md:h-[560px] md:min-h-0">
+          <Card className="min-h-[640px]">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between gap-3">
                 <CardTitle className="flex items-center gap-2">
@@ -625,8 +641,28 @@ export function Community() {
                   </Button>
                 </div>
               </div>
+              <div className="mt-3 flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <Label htmlFor="aggregate-release-approval" className="text-sm font-medium">
+                    Approval checklist
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Reference-only, official-chart-free, no raw IDs, no vessel IDs.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="aggregate-release-approval"
+                    checked={aggregateReleaseApprovalChecked}
+                    onCheckedChange={(checked) => setAggregateReleaseApprovalChecked(checked === true)}
+                  />
+                  <Label htmlFor="aggregate-release-approval" className="text-xs">
+                    Attach approval
+                  </Label>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="h-[480px] md:h-[calc(100%-60px)]">
+            <CardContent className="h-[480px]">
               <NBPilotChart
                 position={latestPosition ? {
                   latitude: latestPosition.latitude,
@@ -670,6 +706,20 @@ export function Community() {
                     <p className="text-sm font-medium">{new Date(aggregateRelease.generatedAt).toLocaleString()}</p>
                   </div>
                 </div>
+                {aggregateRelease.approval && (
+                  <div className="mt-4 rounded-lg border p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="flex items-center gap-2 text-sm font-medium">
+                        <ClipboardCheck className="h-4 w-4" />
+                        Release approved
+                      </span>
+                      <Badge variant="outline">{aggregateRelease.approval.approvedBy}</Badge>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {new Date(aggregateRelease.approval.approvedAt).toLocaleString()}
+                    </p>
+                  </div>
+                )}
                 {aggregateReleaseHistory.length > 0 && (
                   <div className="mt-4 space-y-2">
                     {aggregateReleaseHistory.map((release) => (
