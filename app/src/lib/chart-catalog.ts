@@ -44,6 +44,40 @@ export type NBPilotChartCatalog = {
   };
 };
 
+export type ChartPackageFormat = 'pmtiles' | 'mbtiles' | 'geojson';
+export type ChartPackageStatus = 'planned' | 'generating' | 'ready';
+
+export type NBPilotChartPackage = {
+  id: string;
+  label: string;
+  region: 'NB_PILOT';
+  intendedUse: 'reference_only';
+  status: ChartPackageStatus;
+  bounds: NBPilotChartCatalog['bounds'];
+  minZoom: number;
+  maxZoom: number;
+  formats: ChartPackageFormat[];
+  sourceIds: string[];
+  excludedSourceIds: string[];
+  communityOverlayIncluded: boolean;
+  officialChartDataIncluded: false;
+  estimatedSizeMb: number | null;
+  generatedAt: string | null;
+  warnings: string[];
+};
+
+export type NBPilotChartPackageManifest = {
+  id: 'nb-pilot-chart-packages';
+  schemaVersion: 'harbourmesh.chart-packages.v1';
+  generatedAt: string;
+  packages: NBPilotChartPackage[];
+  rules: {
+    packagesAreReferenceOnly: boolean;
+    officialChartDataExcluded: boolean;
+    requiresRegenerationBeforeOfflineUse: boolean;
+  };
+};
+
 export type FetchNBPilotChartCatalogOptions = {
   apiBaseUrl?: string;
   fetchImpl?: typeof fetch;
@@ -73,12 +107,36 @@ function isChartCatalog(value: unknown): value is NBPilotChartCatalog {
   );
 }
 
+function isChartPackageManifest(value: unknown): value is NBPilotChartPackageManifest {
+  const manifest = value as Partial<NBPilotChartPackageManifest>;
+  return (
+    manifest.id === 'nb-pilot-chart-packages' &&
+    manifest.schemaVersion === 'harbourmesh.chart-packages.v1' &&
+    typeof manifest.generatedAt === 'string' &&
+    manifest.rules?.officialChartDataExcluded === true &&
+    Array.isArray(manifest.packages) &&
+    manifest.packages.every((chartPackage) => (
+      typeof chartPackage.id === 'string' &&
+      chartPackage.region === 'NB_PILOT' &&
+      chartPackage.intendedUse === 'reference_only' &&
+      chartPackage.officialChartDataIncluded === false &&
+      Array.isArray(chartPackage.sourceIds) &&
+      Array.isArray(chartPackage.excludedSourceIds) &&
+      Array.isArray(chartPackage.formats)
+    ))
+  );
+}
+
 export function getCommunitySafeChartSources(catalog: NBPilotChartCatalog): NBPilotChartSource[] {
   return catalog.sources.filter((source) => source.sharePolicy.mayUploadToCommunityMesh);
 }
 
 export function getLocalOnlyOfficialChartSources(catalog: NBPilotChartCatalog): NBPilotChartSource[] {
   return catalog.sources.filter((source) => source.sharePolicy.handling === 'local-only-official');
+}
+
+export function getOfflineReadyChartPackages(manifest: NBPilotChartPackageManifest): NBPilotChartPackage[] {
+  return manifest.packages.filter((chartPackage) => chartPackage.status === 'ready');
 }
 
 export async function fetchNBPilotChartCatalog(
@@ -101,6 +159,31 @@ export async function fetchNBPilotChartCatalog(
 
   if (!isChartCatalog(body)) {
     throw new Error('Chart catalog response was not a HarbourMesh NB catalog');
+  }
+
+  return body;
+}
+
+export async function fetchNBPilotChartPackageManifest(
+  options: FetchNBPilotChartCatalogOptions = {}
+): Promise<NBPilotChartPackageManifest> {
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const endpoint = resolveEndpoint('/api/charts/nb/packages', options.apiBaseUrl ?? import.meta.env.VITE_API_BASE_URL);
+  const response = await fetchImpl(endpoint, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+    },
+  });
+  const body: unknown = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const error = body && typeof body === 'object' && 'error' in body ? String(body.error) : response.statusText;
+    throw new Error(error || `Chart package manifest request failed with HTTP ${response.status}`);
+  }
+
+  if (!isChartPackageManifest(body)) {
+    throw new Error('Chart package response was not a HarbourMesh NB package manifest');
   }
 
   return body;

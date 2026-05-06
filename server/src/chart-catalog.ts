@@ -44,6 +44,40 @@ export type NBPilotChartCatalog = {
   };
 };
 
+export type ChartPackageFormat = 'pmtiles' | 'mbtiles' | 'geojson';
+export type ChartPackageStatus = 'planned' | 'generating' | 'ready';
+
+export type NBPilotChartPackage = {
+  id: string;
+  label: string;
+  region: 'NB_PILOT';
+  intendedUse: 'reference_only';
+  status: ChartPackageStatus;
+  bounds: NBPilotChartCatalog['bounds'];
+  minZoom: number;
+  maxZoom: number;
+  formats: ChartPackageFormat[];
+  sourceIds: string[];
+  excludedSourceIds: string[];
+  communityOverlayIncluded: boolean;
+  officialChartDataIncluded: false;
+  estimatedSizeMb: number | null;
+  generatedAt: string | null;
+  warnings: string[];
+};
+
+export type NBPilotChartPackageManifest = {
+  id: 'nb-pilot-chart-packages';
+  schemaVersion: 'harbourmesh.chart-packages.v1';
+  generatedAt: string;
+  packages: NBPilotChartPackage[];
+  rules: {
+    packagesAreReferenceOnly: boolean;
+    officialChartDataExcluded: boolean;
+    requiresRegenerationBeforeOfflineUse: boolean;
+  };
+};
+
 const SHAREABLE_REFERENCE_POLICY: ChartSourceSharePolicy = {
   handling: 'shareable-reference',
   mayUploadToCommunityMesh: true,
@@ -158,6 +192,83 @@ export function getNBPilotChartCatalog(generatedAt = new Date().toISOString()): 
       officialChartDataMustRemainLocal: true,
       communityProductsAreReferenceOnly: true,
       nonNavigationalBathymetryMustBeLabelled: true,
+    },
+  };
+}
+
+function buildReferencePackage(config: {
+  id: string;
+  label: string;
+  bounds: NBPilotChartCatalog['bounds'];
+  sourceIds: string[];
+}): NBPilotChartPackage {
+  const officialSourceIds = NB_PILOT_CHART_SOURCES
+    .filter((source) => source.sharePolicy.handling === 'local-only-official')
+    .map((source) => source.id);
+
+  return {
+    id: config.id,
+    label: config.label,
+    region: 'NB_PILOT',
+    intendedUse: 'reference_only',
+    status: 'planned',
+    bounds: config.bounds,
+    minZoom: 6,
+    maxZoom: 15,
+    formats: ['pmtiles', 'mbtiles', 'geojson'],
+    sourceIds: config.sourceIds,
+    excludedSourceIds: officialSourceIds,
+    communityOverlayIncluded: true,
+    officialChartDataIncluded: false,
+    estimatedSizeMb: null,
+    generatedAt: null,
+    warnings: [
+      'Package manifest only; tile artifacts must be generated from eligible sources before offline use.',
+      'Official CHS digital chart products are excluded unless a separate licence authorizes packaging.',
+    ],
+  };
+}
+
+export function getNBPilotChartPackageManifest(
+  generatedAt = new Date().toISOString()
+): NBPilotChartPackageManifest {
+  const catalog = getNBPilotChartCatalog(generatedAt);
+  const eligibleSourceIds = catalog.sources
+    .filter((source) => source.sharePolicy.mayCreateSharedTiles)
+    .map((source) => source.id);
+
+  return {
+    id: 'nb-pilot-chart-packages',
+    schemaVersion: 'harbourmesh.chart-packages.v1',
+    generatedAt,
+    packages: [
+      buildReferencePackage({
+        id: 'nb-coast-reference',
+        label: 'NB coast reference package',
+        bounds: {
+          south: 44.47,
+          west: -67.15,
+          north: 47.25,
+          east: -63.66,
+        },
+        sourceIds: eligibleSourceIds.filter((sourceId) => sourceId !== 'geonb-lake-depth-bathymetry-points'),
+      }),
+      buildReferencePackage({
+        id: 'nb-inland-waterways-reference',
+        label: 'NB inland waterways reference package',
+        bounds: {
+          south: 45.0,
+          west: -68.0,
+          north: 48.1,
+          east: -64.2,
+        },
+        sourceIds: eligibleSourceIds,
+      }),
+    ],
+    rules: {
+      packagesAreReferenceOnly: true,
+      officialChartDataExcluded: true,
+      requiresRegenerationBeforeOfflineUse: true,
     },
   };
 }

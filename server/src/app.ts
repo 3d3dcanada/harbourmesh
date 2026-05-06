@@ -6,7 +6,7 @@ import {
   parseApiKeys,
   requireApiAccess,
 } from './api-auth.js';
-import { getNBPilotChartCatalog } from './chart-catalog.js';
+import { getNBPilotChartCatalog, getNBPilotChartPackageManifest } from './chart-catalog.js';
 import { buildCommunityGeoJsonOverlay } from './community-geojson.js';
 import { communityHazardBatchSchema, communityHazardReviewSchema } from './community-hazards.js';
 import {
@@ -93,6 +93,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   });
 
   app.get('/api/charts/nb/catalog', async () => getNBPilotChartCatalog());
+  app.get('/api/charts/nb/packages', async () => getNBPilotChartPackageManifest());
 
   app.post('/api/community/hazards', async (request, reply) => {
     if (!(await requireApiAccess(request, reply, apiAuth))) return reply;

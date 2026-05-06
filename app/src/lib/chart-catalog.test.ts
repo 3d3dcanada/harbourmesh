@@ -1,9 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  fetchNBPilotChartPackageManifest,
   fetchNBPilotChartCatalog,
   getCommunitySafeChartSources,
+  getOfflineReadyChartPackages,
   getLocalOnlyOfficialChartSources,
   type NBPilotChartCatalog,
+  type NBPilotChartPackageManifest,
 } from './chart-catalog';
 
 const catalog: NBPilotChartCatalog = {
@@ -59,6 +62,55 @@ const catalog: NBPilotChartCatalog = {
   },
 };
 
+const packageManifest: NBPilotChartPackageManifest = {
+  id: 'nb-pilot-chart-packages',
+  schemaVersion: 'harbourmesh.chart-packages.v1',
+  generatedAt: '2026-05-06T12:15:00.000Z',
+  packages: [
+    {
+      id: 'nb-coast-reference',
+      label: 'NB coast reference package',
+      region: 'NB_PILOT',
+      intendedUse: 'reference_only',
+      status: 'planned',
+      bounds: catalog.bounds,
+      minZoom: 6,
+      maxZoom: 15,
+      formats: ['pmtiles', 'mbtiles', 'geojson'],
+      sourceIds: ['geonb-nbhn-watercourse'],
+      excludedSourceIds: ['chs-official-digital-products'],
+      communityOverlayIncluded: true,
+      officialChartDataIncluded: false,
+      estimatedSizeMb: null,
+      generatedAt: null,
+      warnings: ['Manifest only'],
+    },
+    {
+      id: 'nb-ready-reference',
+      label: 'NB ready reference package',
+      region: 'NB_PILOT',
+      intendedUse: 'reference_only',
+      status: 'ready',
+      bounds: catalog.bounds,
+      minZoom: 6,
+      maxZoom: 15,
+      formats: ['pmtiles'],
+      sourceIds: ['geonb-nbhn-watercourse'],
+      excludedSourceIds: ['chs-official-digital-products'],
+      communityOverlayIncluded: true,
+      officialChartDataIncluded: false,
+      estimatedSizeMb: 12,
+      generatedAt: '2026-05-06T12:14:00.000Z',
+      warnings: [],
+    },
+  ],
+  rules: {
+    packagesAreReferenceOnly: true,
+    officialChartDataExcluded: true,
+    requiresRegenerationBeforeOfflineUse: true,
+  },
+};
+
 describe('NB pilot chart catalog client', () => {
   it('fetches and validates the chart catalog API response', async () => {
     const fetchImpl = vi.fn(async () => new Response(JSON.stringify(catalog), { status: 200 }));
@@ -83,11 +135,51 @@ describe('NB pilot chart catalog client', () => {
     expect(getLocalOnlyOfficialChartSources(catalog).map((source) => source.id)).toEqual(['chs-official-digital-products']);
   });
 
+  it('fetches and validates the NB chart package manifest', async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify(packageManifest), { status: 200 }));
+
+    await expect(fetchNBPilotChartPackageManifest({
+      apiBaseUrl: 'http://localhost:3001',
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    })).resolves.toMatchObject({
+      id: 'nb-pilot-chart-packages',
+      rules: {
+        officialChartDataExcluded: true,
+      },
+    });
+
+    expect(fetchImpl).toHaveBeenCalledWith('http://localhost:3001/api/charts/nb/packages', expect.objectContaining({
+      method: 'GET',
+    }));
+  });
+
+  it('lists only ready offline chart packages', () => {
+    expect(getOfflineReadyChartPackages(packageManifest).map((chartPackage) => chartPackage.id)).toEqual([
+      'nb-ready-reference',
+    ]);
+  });
+
   it('rejects malformed catalog responses', async () => {
     const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ ok: true }), { status: 200 }));
 
     await expect(fetchNBPilotChartCatalog({
       fetchImpl: fetchImpl as unknown as typeof fetch,
     })).rejects.toThrow('Chart catalog response was not a HarbourMesh NB catalog');
+  });
+
+  it('rejects package manifests that include official chart data', async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
+      ...packageManifest,
+      packages: [
+        {
+          ...packageManifest.packages[0],
+          officialChartDataIncluded: true,
+        },
+      ],
+    }), { status: 200 }));
+
+    await expect(fetchNBPilotChartPackageManifest({
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    })).rejects.toThrow('Chart package response was not a HarbourMesh NB package manifest');
   });
 });

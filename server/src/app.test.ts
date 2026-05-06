@@ -259,6 +259,40 @@ describe('HarbourMesh API', () => {
     );
   });
 
+  it('serves NB offline chart package manifests without official chart data', async () => {
+    const app = await createTestApp();
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/charts/nb/packages',
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      id: 'nb-pilot-chart-packages',
+      schemaVersion: 'harbourmesh.chart-packages.v1',
+      rules: {
+        packagesAreReferenceOnly: true,
+        officialChartDataExcluded: true,
+        requiresRegenerationBeforeOfflineUse: true,
+      },
+    });
+    expect(response.json().packages).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'nb-coast-reference',
+          intendedUse: 'reference_only',
+          officialChartDataIncluded: false,
+          excludedSourceIds: expect.arrayContaining(['chs-official-digital-products']),
+          formats: expect.arrayContaining(['pmtiles', 'mbtiles', 'geojson']),
+        }),
+        expect.objectContaining({
+          id: 'nb-inland-waterways-reference',
+          sourceIds: expect.arrayContaining(['geonb-lake-depth-bathymetry-points']),
+        }),
+      ])
+    );
+  });
+
   it('accepts and summarizes community hazard batches', async () => {
     const app = await createTestApp();
     const receipt = await app.inject({

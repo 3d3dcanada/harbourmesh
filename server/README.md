@@ -23,6 +23,7 @@ Default API:
 - `POST /api/community/hazards/:hazardId/review`
 - `GET /api/community/overlay.geojson`
 - `GET /api/charts/nb/catalog`
+- `GET /api/charts/nb/packages`
 - `POST /api/devices/register`
 - `GET /api/devices`
 - `GET /api/devices/:deviceId`

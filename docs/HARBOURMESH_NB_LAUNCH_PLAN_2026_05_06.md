@@ -6,7 +6,7 @@ Scope: New Brunswick pilot first, international architecture second
 
 ## Executive Status
 
-HarbourMesh is currently a React/Vite NB pilot app with an early Fastify backend for device registration, chart source catalog, community sounding upload, and community hazard upload. It still does not have a production chart engine, hardware ingest proof, AI runtime, weather-routing engine, moderation workflow, public aggregate data products, or production cloud mesh. The next goal is not a public launch. The next goal is a stable NB pilot foundation that is honest about what is implemented, legally clean around chart data, and ready for real vessel telemetry.
+HarbourMesh is currently a React/Vite NB pilot app with an early Fastify backend for device registration, chart source catalog, chart package manifests, community sounding upload, community hazard upload, and hazard review. It still does not have a production chart engine, hardware ingest proof, AI runtime, weather-routing engine, full moderation operations, public aggregate data products, or production cloud mesh. The next goal is not a public launch. The next goal is a stable NB pilot foundation that is honest about what is implemented, legally clean around chart data, and ready for real vessel telemetry.
 
 The product ambition is correct: a boat-first operating layer where charts, vessel telemetry, sonar soundings, radar-derived observations, hazards, weather, maintenance, and community-contributed local knowledge can become useful together. The implementation has to be phased carefully because official navigation charts, user-generated bathymetry, privacy, liability, and sensor quality are separate problems that should not be mixed into one ungoverned data pool.
 
@@ -31,9 +31,9 @@ Active checkout:
 Observed state:
 
 - Frontend: React/Vite app exists, with the community section now wired to local telemetry, AIS targets, soundings, hazards, upload batches, local map overlay features, and NB reference mapping instead of hard-coded demo community data.
-- Charts: NB pilot reference chart work has started with React Leaflet, OSM base tiles, and legal GeoNB WMS overlays; it is not a certified navigation chart system.
+- Charts: NB pilot reference chart work has started with React Leaflet, OSM base tiles, legal GeoNB WMS overlays, a chart source catalog, and NB offline package manifests; it is not a certified navigation chart system and package artifacts are not generated yet.
 - Telemetry: recorded Signal K replay and live Signal K WebSocket wiring now exist; live hardware ingest remains unverified.
-- Backend: a Fastify API now exists for NB chart source catalog, community sounding upload, community hazard upload, hazard review, community reference GeoJSON overlay, device registration, and summary endpoints with JSONL local persistence; it is a pilot backend, not the final PostGIS/cloud mesh.
+- Backend: a Fastify API now exists for NB chart source catalog, NB chart package manifests, community sounding upload, community hazard upload, hazard review, community reference GeoJSON overlay, device registration, and summary endpoints with JSONL local persistence; it is a pilot backend, not the final PostGIS/cloud mesh.
 - Community mesh: local raw sounding capture, local hazard reporting, consent-safe offline upload queues, backend upload endpoints, pending-by-default hazard moderation, and a reference-only GeoJSON overlay now exist; full moderation operations and public tile products are still not implemented.
 - Security: docs no longer claim production readiness; the weak SHA-256 placeholder key derivation, token signing, and password hashing helpers have been replaced with PBKDF2-HMAC-SHA256/HMAC-SHA256 regressions, and the pilot API now has configurable API-key gates for write/device endpoints. Full user auth, role policy, and secret-management are still not implemented.
 - CI/release: workflows have been adjusted to stop calling missing package scripts.
@@ -55,6 +55,7 @@ Last light checks:
 - `npm audit --json` in `server`: 0 vulnerabilities.
 - Server API auth tests cover missing keys, accepted header keys, accepted Bearer keys, protected device registry reads, and fail-closed production-style config.
 - Server hazard review tests cover pending hazards being withheld from public GeoJSON until accepted, accepted hazards becoming overlay-eligible, and unknown hazard review returning 404.
+- Server chart package tests cover `/api/charts/nb/packages`, planned NB coast and inland-waterway packages, PMTiles/MBTiles/GeoJSON format declarations, community-overlay inclusion, and official CHS exclusion.
 - Local API smoke on port 3101: `/health`, `POST /api/community/soundings`, and `/api/community/soundings/summary` returned expected responses.
 - Local API smoke on port 3102: `POST /api/devices/register` and `GET /api/devices` returned expected responses.
 - Local API smoke on port 3103: `/health`, `POST /api/community/hazards`, and `/api/community/hazards/summary` returned expected responses.
@@ -71,6 +72,7 @@ Completed in the active checkout:
 - Stabilized the React/Vite source enough for tests, type-check, lint, and dependency audit to pass.
 - Added a New Brunswick pilot chart source registry with GeoNB overlays and CHS local-only boundaries.
 - Added a backend NB chart catalog endpoint at `/api/charts/nb/catalog` with GeoNB, CHS NONNA, and CHS official-product source policies.
+- Added a backend NB chart package manifest endpoint at `/api/charts/nb/packages` for planned reference-only coast and inland-waterway offline packages.
 - Replaced the navigation canvas demo with an NB pilot map component.
 - Added Signal K URL building, delta mapping, recorded replay data, and telemetry mode settings.
 - Added a persisted navigation planning store, route distance/course calculations, and an NB pilot reference route overlay.
@@ -89,7 +91,7 @@ Completed in the active checkout:
 
 Still not done:
 
-- No full production user auth, PostGIS schema, moderation operations UI, offline tile packaging, vector tile generation, or reviewed public aggregate tile product exists.
+- No full production user auth, PostGIS schema, moderation operations UI, generated offline tile artifacts, vector tile generation, or reviewed public aggregate tile product exists.
 - No full route-by-route browser/mobile visual verification has been run in this session.
 - No real Signal K server, sonar, radar, AIS receiver, or Boat Node hardware has been tested.
 - Community hazards can now be queued, uploaded to the pilot backend, reviewed through the API, and included in the public reference overlay only after acceptance; moderation UI and aggregate map products are still not implemented.
