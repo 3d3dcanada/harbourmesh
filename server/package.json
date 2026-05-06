@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
+    "charts:nb:artifacts": "tsx src/generate-nb-chart-artifacts.ts",
     "type-check": "tsc -p tsconfig.json --noEmit",
     "start": "node dist/index.js",
     "test": "vitest run"

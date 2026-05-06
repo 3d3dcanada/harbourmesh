@@ -7,6 +7,7 @@ Fastify API for NB pilot community data sync.
 ```bash
 npm ci
 npm run dev
+npm run charts:nb:artifacts -- ./data/chart-artifacts/nb-pilot
 npm test
 npm run type-check
 npm run build
@@ -32,6 +33,8 @@ Default API:
 - `GET /api/devices/:deviceId`
 
 Data is appended as JSONL under `./data` by default. Set `HARBOURMESH_DATA_DIR` to move it.
+
+NB reference chart package artifacts can be written to disk with `npm run charts:nb:artifacts -- <output-dir>`. The writer creates compact GeoJSON files plus `manifest.json`; generated files are reference-only and exclude official CHS chart data.
 
 The production persistence target starts in `db/migrations/0001_nb_pilot_community_mesh.sql`. The current server still uses JSONL, but the migration defines the PostGIS tables for devices, soundings, hazards, reviews, aggregate cells, and release manifests.
 

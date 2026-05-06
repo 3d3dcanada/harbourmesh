@@ -1,4 +1,6 @@
 import { createHash } from 'node:crypto';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
 import {
   getNBPilotChartPackageManifest,
   type NBPilotChartPackage,
@@ -73,6 +75,25 @@ export type NBPilotChartPackageArtifactManifest = {
   };
 };
 
+export type NBPilotChartPackageArtifactReleaseFile = Omit<NBPilotChartPackageArtifact, 'content'> & {
+  relativePath: string;
+};
+
+export type NBPilotChartPackageArtifactReleaseManifest = {
+  id: 'nb-pilot-chart-package-artifact-release';
+  schemaVersion: 'harbourmesh.chart-package-artifact-release.v1';
+  generatedAt: string;
+  outputDir: string;
+  manifestFileName: 'manifest.json';
+  artifacts: NBPilotChartPackageArtifactReleaseFile[];
+  rules: NBPilotChartPackageArtifactManifest['rules'];
+};
+
+export type WriteNBPilotChartPackageArtifactsOptions = {
+  outputDir: string;
+  generatedAt?: string;
+};
+
 function packageBoundsToPolygon(chartPackage: NBPilotChartPackage): PolygonGeometry {
   const { south, west, north, east } = chartPackage.bounds;
   return {
@@ -122,8 +143,12 @@ function buildArtifactContent(
   };
 }
 
+function serializeArtifactContent(content: ChartPackageArtifactContent): string {
+  return JSON.stringify(content);
+}
+
 function hashContent(content: ChartPackageArtifactContent): { byteLength: number; sha256: string } {
-  const serialized = JSON.stringify(content);
+  const serialized = serializeArtifactContent(content);
   return {
     byteLength: Buffer.byteLength(serialized),
     sha256: createHash('sha256').update(serialized).digest('hex'),
@@ -172,4 +197,55 @@ export function getNBPilotChartPackageArtifactManifest(
       mbtilesGenerationPending: true,
     },
   };
+}
+
+export async function writeNBPilotChartPackageArtifacts(
+  options: WriteNBPilotChartPackageArtifactsOptions
+): Promise<NBPilotChartPackageArtifactReleaseManifest> {
+  const outputDir = resolve(options.outputDir);
+  const generatedAt = options.generatedAt ?? new Date().toISOString();
+  const manifest = getNBPilotChartPackageArtifactManifest(generatedAt);
+  await mkdir(outputDir, { recursive: true });
+
+  const releaseFiles: NBPilotChartPackageArtifactReleaseFile[] = [];
+  for (const artifact of manifest.artifacts) {
+    await writeFile(
+      join(outputDir, artifact.fileName),
+      serializeArtifactContent(artifact.content),
+      'utf8'
+    );
+    releaseFiles.push({
+      id: artifact.id,
+      packageId: artifact.packageId,
+      region: artifact.region,
+      format: artifact.format,
+      mediaType: artifact.mediaType,
+      fileName: artifact.fileName,
+      byteLength: artifact.byteLength,
+      sha256: artifact.sha256,
+      generatedAt: artifact.generatedAt,
+      officialChartDataIncluded: artifact.officialChartDataIncluded,
+      sourceIds: artifact.sourceIds,
+      excludedSourceIds: artifact.excludedSourceIds,
+      warnings: artifact.warnings,
+      relativePath: artifact.fileName,
+    });
+  }
+
+  const releaseManifest: NBPilotChartPackageArtifactReleaseManifest = {
+    id: 'nb-pilot-chart-package-artifact-release',
+    schemaVersion: 'harbourmesh.chart-package-artifact-release.v1',
+    generatedAt,
+    outputDir,
+    manifestFileName: 'manifest.json',
+    artifacts: releaseFiles,
+    rules: manifest.rules,
+  };
+  await writeFile(
+    join(outputDir, releaseManifest.manifestFileName),
+    `${JSON.stringify(releaseManifest, null, 2)}\n`,
+    'utf8'
+  );
+
+  return releaseManifest;
 }
