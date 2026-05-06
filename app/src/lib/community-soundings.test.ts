@@ -81,6 +81,78 @@ describe('community soundings', () => {
     expect(sounding.quality.rejected).toBe(false);
   });
 
+  it('flags and rejects abrupt depth spikes before upload', () => {
+    const spikeMessages: TelemetryMessage[] = [
+      messages[0],
+      messages[1],
+      {
+        id: 'env-spike',
+        vesselId: 'vessel-1',
+        sourceDeviceId: 'signalk',
+        timestamp: '2026-05-06T12:00:06.000Z',
+        messageType: TelemetryMessageType.ENVIRONMENT,
+        payload: {
+          depthBelowTransducer: 80,
+          waterTemperature: 11.4,
+        },
+      },
+    ];
+
+    const [, spike] = createSoundingsFromTelemetry(spikeMessages, consent, {
+      vesselId: 'vessel-1',
+      sourceProtocol: 'signalk',
+      offsets: { surfaceToTransducerMeters: 0.6 },
+      maxDepthJumpMeters: 20,
+    });
+
+    expect(spike.quality.flags).toContain('abrupt_depth_jump');
+    expect(spike.quality.rejected).toBe(true);
+    expect(prepareSoundingForCommunityUpload(spike)).toBeNull();
+  });
+
+  it('does not flag legitimate slower depth changes outside the jump window', () => {
+    const slowerChangeMessages: TelemetryMessage[] = [
+      messages[0],
+      messages[1],
+      {
+        id: 'pos-2',
+        vesselId: 'vessel-1',
+        sourceDeviceId: 'signalk',
+        timestamp: '2026-05-06T12:00:30.000Z',
+        messageType: TelemetryMessageType.POSITION,
+        payload: {
+          latitude: 45.274,
+          longitude: -66.064,
+          accuracy: 9,
+          cog: 74,
+          sog: 7.2,
+          fixType: '3d',
+        },
+      },
+      {
+        id: 'env-slower-change',
+        vesselId: 'vessel-1',
+        sourceDeviceId: 'signalk',
+        timestamp: '2026-05-06T12:00:32.000Z',
+        messageType: TelemetryMessageType.ENVIRONMENT,
+        payload: {
+          depthBelowTransducer: 45,
+          waterTemperature: 11.2,
+        },
+      },
+    ];
+
+    const [, slowerChange] = createSoundingsFromTelemetry(slowerChangeMessages, consent, {
+      vesselId: 'vessel-1',
+      sourceProtocol: 'signalk',
+      offsets: { surfaceToTransducerMeters: 0.6 },
+      maxDepthJumpMeters: 20,
+    });
+
+    expect(slowerChange.quality.flags).not.toContain('abrupt_depth_jump');
+    expect(slowerChange.quality.rejected).toBe(false);
+  });
+
   it('keeps records local-only when telemetry community sharing is disabled', () => {
     const [sounding] = createSoundingsFromTelemetry(messages, {
       ...consent,

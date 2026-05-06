@@ -65,6 +65,7 @@ export type SoundingExtractionOptions = {
   offsets?: SoundingOffsets;
   receivedAt?: string;
   maxPositionAgeMs?: number;
+  maxDepthJumpMeters?: number;
 };
 
 export type CommunitySoundingUpload = Pick<
@@ -108,6 +109,8 @@ export type BuildCommunitySoundingUploadBatchOptions = {
 };
 
 const DEFAULT_MAX_POSITION_AGE_MS = 60_000;
+const DEFAULT_MAX_DEPTH_JUMP_METERS = 20;
+const DEPTH_JUMP_WINDOW_MS = 15_000;
 const BLURRED_POSITION_DECIMALS = 2;
 
 function isEnvironmentPayload(payload: TelemetryMessage['payload']): payload is EnvironmentPayload {
@@ -228,6 +231,36 @@ function scoreSoundingQuality(input: {
   };
 }
 
+function applyDepthJumpQuality(
+  quality: SoundingQuality,
+  input: {
+    currentDepthMeters: number;
+    currentTimestamp: string;
+    previousSounding?: RawDepthSounding;
+    maxDepthJumpMeters: number;
+  }
+): SoundingQuality {
+  if (!input.previousSounding) return quality;
+
+  const currentTime = new Date(input.currentTimestamp).getTime();
+  const previousTime = new Date(input.previousSounding.timestamp).getTime();
+  if (Number.isNaN(currentTime) || Number.isNaN(previousTime)) return quality;
+
+  const elapsedMs = Math.abs(currentTime - previousTime);
+  const depthDeltaMeters = Math.abs(input.currentDepthMeters - input.previousSounding.depthMeters);
+  if (elapsedMs > DEPTH_JUMP_WINDOW_MS || depthDeltaMeters <= input.maxDepthJumpMeters) return quality;
+
+  const flags = Array.from(new Set([...quality.flags, 'abrupt_depth_jump']));
+  const confidencePenalty = depthDeltaMeters > input.maxDepthJumpMeters * 2 ? 0.5 : 0.25;
+  const confidence = Math.max(0, Number((quality.confidence - confidencePenalty).toFixed(2)));
+
+  return {
+    confidence,
+    rejected: quality.rejected || confidence < 0.35 || depthDeltaMeters > input.maxDepthJumpMeters * 2,
+    flags,
+  };
+}
+
 function findNearestPosition(
   messages: TelemetryMessage[],
   timestamp: string,
@@ -261,6 +294,8 @@ export function createSoundingsFromTelemetry(
   const receivedAt = options.receivedAt ?? new Date().toISOString();
   const offsets = options.offsets ?? {};
   const maxPositionAgeMs = options.maxPositionAgeMs ?? DEFAULT_MAX_POSITION_AGE_MS;
+  const maxDepthJumpMeters = options.maxDepthJumpMeters ?? DEFAULT_MAX_DEPTH_JUMP_METERS;
+  const lastSoundingBySource = new Map<string, RawDepthSounding>();
   const soundings: RawDepthSounding[] = [];
 
   for (const message of messages) {
@@ -274,15 +309,23 @@ export function createSoundingsFromTelemetry(
     if (!position) continue;
 
     const sharingState = getSharingState(consent);
-    const quality = scoreSoundingQuality({
+    const normalizedDepthMeters = normalizeDepth(depth.rawDepthMeters, depth.depthReference, offsets);
+    const sourceKey = `${message.sourceDeviceId}:${depth.depthReference}`;
+    const baseQuality = scoreSoundingQuality({
       rawDepthMeters: depth.rawDepthMeters,
       depthReference: depth.depthReference,
       position,
       offsets,
       sourceProtocol: options.sourceProtocol,
     });
+    const quality = applyDepthJumpQuality(baseQuality, {
+      currentDepthMeters: normalizedDepthMeters,
+      currentTimestamp: message.timestamp,
+      previousSounding: lastSoundingBySource.get(sourceKey),
+      maxDepthJumpMeters,
+    });
 
-    soundings.push({
+    const sounding: RawDepthSounding = {
       id: `${message.id}:sounding`,
       vesselId: options.vesselId,
       sourceDeviceId: message.sourceDeviceId,
@@ -296,7 +339,7 @@ export function createSoundingsFromTelemetry(
         accuracyMeters: position.accuracy,
       },
       rawDepthMeters: depth.rawDepthMeters,
-      depthMeters: normalizeDepth(depth.rawDepthMeters, depth.depthReference, offsets),
+      depthMeters: normalizedDepthMeters,
       depthReference: depth.depthReference,
       tideCorrectionApplied: false,
       waterLevelCorrectionApplied: false,
@@ -319,7 +362,10 @@ export function createSoundingsFromTelemetry(
         ...getUploadPosition(position, sharingState),
       },
       quality,
-    });
+    };
+
+    soundings.push(sounding);
+    lastSoundingBySource.set(sourceKey, sounding);
   }
 
   return soundings;
