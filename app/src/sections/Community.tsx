@@ -9,16 +9,19 @@ import {
   AlertTriangle,
   BarChart3,
   CheckCircle2,
+  ClipboardCheck,
   Database,
   Droplets,
   Eye,
   Globe,
   Info,
   Map,
+  RefreshCw,
   Shield,
   Ship,
   Thermometer,
   Waves,
+  XCircle,
 } from 'lucide-react';
 import { NBPilotChart } from '@/components/NBPilotChart';
 import { Badge } from '@/components/ui/badge';
@@ -27,6 +30,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  listCommunityHazardsForReview,
+  reviewCommunityHazard,
+  type CommunityHazardReviewRecord,
+} from '@/lib/community-hazard-review';
 import { prepareSoundingForCommunityUpload, type RawDepthSounding } from '@/lib/community-soundings';
 import { uploadCommunityHazardBatch, uploadCommunitySoundingBatch } from '@/lib/community-sync';
 import { buildLocalCommunityOverlayFeatures } from '@/lib/local-community-overlay';
@@ -90,6 +98,11 @@ export function Community() {
   const [activeTab, setActiveTab] = useState('map');
   const [syncingBatchId, setSyncingBatchId] = useState<string | null>(null);
   const [syncingHazardBatchId, setSyncingHazardBatchId] = useState<string | null>(null);
+  const [reviewHazards, setReviewHazards] = useState<CommunityHazardReviewRecord[]>([]);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewingHazardId, setReviewingHazardId] = useState<string | null>(null);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+  const [reviewLoadedAt, setReviewLoadedAt] = useState<string | null>(null);
   const isOptedIn = consent?.shareTelemetryForCommunity || false;
   const shareableSoundings = getShareableSoundings();
   const queuedBatches = useMemo(() => uploadBatches.filter((batch) => batch.status === 'queued'), [uploadBatches]);
@@ -158,6 +171,17 @@ export function Community() {
   const communityOverlayFeatures = useMemo(
     () => buildLocalCommunityOverlayFeatures(rawSoundings, hazards),
     [hazards, rawSoundings]
+  );
+  const reviewCounts = useMemo(() => {
+    const counts = { pending: 0, accepted: 0, rejected: 0 };
+    for (const hazard of reviewHazards) {
+      counts[hazard.reviewStatus] += 1;
+    }
+    return counts;
+  }, [reviewHazards]);
+  const pendingReviewHazards = useMemo(
+    () => reviewHazards.filter((hazard) => hazard.reviewStatus === 'pending'),
+    [reviewHazards]
   );
 
   const handleOptIn = (enabled: boolean) => {
@@ -233,6 +257,54 @@ export function Community() {
       });
     } finally {
       setSyncingHazardBatchId(null);
+    }
+  };
+
+  const handleLoadReviewQueue = async () => {
+    setReviewLoading(true);
+    setReviewError(null);
+
+    try {
+      const queue = await listCommunityHazardsForReview();
+      setReviewHazards(queue.hazards);
+      setReviewLoadedAt(new Date().toISOString());
+    } catch (error) {
+      setReviewError(error instanceof Error ? error.message : 'Hazard review queue failed');
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
+  const handleReviewHazard = async (
+    hazardId: string,
+    status: 'accepted' | 'rejected'
+  ) => {
+    const reviewedBy = consent?.vesselId ?? boatNode.deviceId ?? 'local-operator';
+
+    setReviewingHazardId(`${hazardId}:${status}`);
+    setReviewError(null);
+
+    try {
+      const receipt = await reviewCommunityHazard({
+        hazardId,
+        status,
+        reviewedBy,
+      });
+      setReviewHazards((currentHazards) => currentHazards.map((hazard) => (
+        hazard.id === hazardId
+          ? {
+              ...hazard,
+              reviewStatus: receipt.status,
+              publicOverlayEligible: receipt.publicOverlayEligible,
+              reviewedAt: receipt.reviewedAt,
+              reviewedBy,
+            }
+          : hazard
+      )));
+    } catch (error) {
+      setReviewError(error instanceof Error ? error.message : 'Hazard review failed');
+    } finally {
+      setReviewingHazardId(null);
     }
   };
 
@@ -314,7 +386,7 @@ export function Community() {
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
+        <TabsList className="w-full justify-start overflow-x-auto sm:w-fit [&_[data-slot=tabs-trigger]]:flex-none">
           <TabsTrigger value="map">
             <Map className="mr-2 h-4 w-4" />
             Community Map
@@ -326,6 +398,10 @@ export function Community() {
           <TabsTrigger value="hazards">
             <AlertTriangle className="mr-2 h-4 w-4" />
             Hazards
+          </TabsTrigger>
+          <TabsTrigger value="moderation">
+            <ClipboardCheck className="mr-2 h-4 w-4" />
+            Moderation
           </TabsTrigger>
           <TabsTrigger value="bathymetry">
             <Droplets className="mr-2 h-4 w-4" />
@@ -500,6 +576,123 @@ export function Community() {
                         <p className="text-xs text-muted-foreground">
                           {batch.lastError ?? batch.acknowledgedId ?? batch.payload.schemaVersion}
                         </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="moderation" className="mt-4">
+          <div className="grid gap-4 md:grid-cols-4">
+            <Card>
+              <CardContent className="py-4">
+                <p className="text-sm text-muted-foreground">Review Queue</p>
+                <p className="text-2xl font-bold">{reviewHazards.length}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="py-4">
+                <p className="text-sm text-muted-foreground">Pending</p>
+                <p className="text-2xl font-bold">{reviewCounts.pending}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="py-4">
+                <p className="text-sm text-muted-foreground">Accepted</p>
+                <p className="text-2xl font-bold">{reviewCounts.accepted}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="py-4">
+                <p className="text-sm text-muted-foreground">Rejected</p>
+                <p className="text-2xl font-bold">{reviewCounts.rejected}</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card className="mt-4">
+            <CardHeader>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <ClipboardCheck className="h-5 w-5" />
+                    Hazard Moderation
+                  </CardTitle>
+                  <CardDescription>
+                    Accepted positioned hazards become eligible for the public community overlay.
+                  </CardDescription>
+                </div>
+                <Button size="sm" onClick={handleLoadReviewQueue} disabled={reviewLoading}>
+                  <RefreshCw className={cn('mr-2 h-4 w-4', reviewLoading && 'animate-spin')} />
+                  {reviewLoading ? 'Loading' : 'Load Review Queue'}
+                </Button>
+              </div>
+              {reviewLoadedAt && (
+                <p className="text-xs text-muted-foreground">
+                  Loaded {new Date(reviewLoadedAt).toLocaleString()} · {pendingReviewHazards.length} pending
+                </p>
+              )}
+            </CardHeader>
+            <CardContent>
+              {reviewError && (
+                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-200">
+                  {reviewError}
+                </div>
+              )}
+
+              {reviewHazards.length === 0 ? (
+                <div className="rounded-lg border border-dashed p-8 text-center">
+                  <ClipboardCheck className="mx-auto mb-3 h-10 w-10 text-muted-foreground/50" />
+                  <p className="text-sm text-muted-foreground">No review queue loaded.</p>
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {reviewHazards.map((hazard) => (
+                    <div key={hazard.id} className="flex flex-col gap-3 py-4 lg:flex-row lg:items-center lg:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-medium">{hazard.description}</p>
+                          <Badge variant="outline" className="capitalize text-xs">{hazard.severity}</Badge>
+                          <Badge variant="outline" className="capitalize text-xs">{hazard.reviewStatus}</Badge>
+                          {hazard.publicOverlayEligible && (
+                            <Badge variant="default" className="text-xs">Overlay</Badge>
+                          )}
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {hazard.type} · {hazard.region} · {new Date(hazard.reportedAt).toLocaleString()}
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {hazard.position
+                            ? `${hazard.position.latitude.toFixed(5)}, ${hazard.position.longitude.toFixed(5)} · ${hazard.position.source}`
+                            : 'No shared position'}
+                        </p>
+                        {hazard.reviewedAt && (
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Reviewed {new Date(hazard.reviewedAt).toLocaleString()} by {hazard.reviewedBy ?? 'operator'}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => void handleReviewHazard(hazard.id, 'accepted')}
+                          disabled={reviewingHazardId !== null}
+                        >
+                          <CheckCircle2 className="mr-2 h-4 w-4" />
+                          Accept
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => void handleReviewHazard(hazard.id, 'rejected')}
+                          disabled={reviewingHazardId !== null}
+                        >
+                          <XCircle className="mr-2 h-4 w-4" />
+                          Reject
+                        </Button>
                       </div>
                     </div>
                   ))}

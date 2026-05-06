@@ -6,7 +6,7 @@ Scope: New Brunswick pilot first, international architecture second
 
 ## Executive Status
 
-HarbourMesh is currently a React/Vite NB pilot app with an early Fastify backend for device registration, chart source catalog, chart package manifests, community sounding upload, community hazard upload, and hazard review. It still does not have a production chart engine, hardware ingest proof, AI runtime, weather-routing engine, full moderation operations, public aggregate data products, or production cloud mesh. The next goal is not a public launch. The next goal is a stable NB pilot foundation that is honest about what is implemented, legally clean around chart data, and ready for real vessel telemetry.
+HarbourMesh is currently a React/Vite NB pilot app with an early Fastify backend for device registration, chart source catalog, chart package manifests, community sounding upload, community hazard upload, and hazard review. It still does not have a production chart engine, hardware ingest proof, AI runtime, weather-routing engine, moderation roles, public aggregate data products, or production cloud mesh. The next goal is not a public launch. The next goal is a stable NB pilot foundation that is honest about what is implemented, legally clean around chart data, and ready for real vessel telemetry.
 
 The product ambition is correct: a boat-first operating layer where charts, vessel telemetry, sonar soundings, radar-derived observations, hazards, weather, maintenance, and community-contributed local knowledge can become useful together. The implementation has to be phased carefully because official navigation charts, user-generated bathymetry, privacy, liability, and sensor quality are separate problems that should not be mixed into one ungoverned data pool.
 
@@ -34,7 +34,7 @@ Observed state:
 - Charts: NB pilot reference chart work has started with React Leaflet, OSM base tiles, legal GeoNB WMS overlays, a chart source catalog, and NB offline package manifests; it is not a certified navigation chart system and package artifacts are not generated yet.
 - Telemetry: recorded Signal K replay and live Signal K WebSocket wiring now exist; live hardware ingest remains unverified.
 - Backend: a Fastify API now exists for NB chart source catalog, NB chart package manifests, community sounding upload, community hazard upload, hazard review, community reference GeoJSON overlay, device registration, and summary endpoints with JSONL local persistence; it is a pilot backend, not the final PostGIS/cloud mesh.
-- Community mesh: local raw sounding capture, local hazard reporting, consent-safe offline upload queues, backend upload endpoints, pending-by-default hazard moderation, and a reference-only GeoJSON overlay now exist; full moderation operations and public tile products are still not implemented.
+- Community mesh: local raw sounding capture, local hazard reporting, consent-safe offline upload queues, backend upload endpoints, pending-by-default hazard moderation, an operator review surface, and a reference-only GeoJSON overlay now exist; moderation roles and public tile products are still not implemented.
 - Security: docs no longer claim production readiness; the weak SHA-256 placeholder key derivation, token signing, and password hashing helpers have been replaced with PBKDF2-HMAC-SHA256/HMAC-SHA256 regressions, and the pilot API now has configurable API-key gates for write/device endpoints. Full user auth, role policy, and secret-management are still not implemented.
 - CI/release: workflows have been adjusted to stop calling missing package scripts.
 - Testing: current tests now cover chart source metadata, Signal K mapping, community sounding extraction, local hazard reporting, device registration, store queue behavior, and crypto helper regressions; they still do not prove navigation safety, hardware ingest, production auth, browser layout, or security readiness.
@@ -43,7 +43,7 @@ Observed state:
 
 Last light checks:
 
-- `npm run test:run`: passing, 107 web tests.
+- `npm run test:run`: passing, 110 web tests.
 - `npm test` in `server`: passing, 14 API tests.
 - `npm run type-check`: passing.
 - `npm run type-check` in `server`: passing.
@@ -60,6 +60,7 @@ Last light checks:
 - Web demo-source notice tests cover accessible status rendering for simulated/demo data surfaces.
 - Web local persistence tests cover vessel/items, documents, logs, and tasks writing to named local-first stores.
 - Web local data portability tests cover export/import round trips and verify AI provider secret stores are excluded.
+- Web hazard moderation tests cover protected review-queue loading, review receipt validation, API error handling, and invalid receipt rejection.
 - Local API smoke on port 3101: `/health`, `POST /api/community/soundings`, and `/api/community/soundings/summary` returned expected responses.
 - Local API smoke on port 3102: `POST /api/devices/register` and `GET /api/devices` returned expected responses.
 - Local API smoke on port 3103: `/health`, `POST /api/community/hazards`, and `/api/community/hazards/summary` returned expected responses.
@@ -69,6 +70,7 @@ Last light checks:
 - Browser smoke on port 5176: Dashboard and Community lazy-loaded through sidebar navigation at 1280x900 and the Community view rendered at 360x780.
 - Browser smoke on port 5176: demo-data notices rendered on Inventory, Documents, Logs & Tasks, Vessel, and Boat Map after sidebar navigation.
 - Browser smoke on port 5176: Settings Data & Storage rendered the Export All Data and Import Data controls at 1280x900.
+- Browser smoke on port 5176: Community Moderation rendered the Load Review Queue control at 1280x900 and the tab list stayed inside the 360x780 viewport.
 - No live Signal K hardware test or real-vessel API load test was run for this snapshot.
 
 ## Implementation Progress On 2026-05-06
@@ -98,13 +100,14 @@ Completed in the active checkout:
 - Added shared demo-data notices to vessel, boat map, inventory, documents, logs/tasks, and fleet surfaces, and stopped auto-saving demo documents/logs/tasks/vessel data into local stores.
 - Added local-first persistence for user-owned vessel data, items, documents, logs, and tasks.
 - Wired Settings data export/import to a versioned local-data bundle that excludes AI provider secret storage.
+- Added an operator hazard moderation surface in Community with protected review-queue loading and accept/reject actions against the pilot API.
 
 Still not done:
 
-- No full production user auth, PostGIS schema, moderation operations UI, generated offline tile artifacts, vector tile generation, or reviewed public aggregate tile product exists.
+- No full production user auth, PostGIS schema, moderation roles, generated offline tile artifacts, vector tile generation, or reviewed public aggregate tile product exists.
 - No full route-by-route browser/mobile visual verification has been run in this session.
 - No real Signal K server, sonar, radar, AIS receiver, or Boat Node hardware has been tested.
-- Community hazards can now be queued, uploaded to the pilot backend, reviewed through the API, and included in the public reference overlay only after acceptance; moderation UI and aggregate map products are still not implemented.
+- Community hazards can now be queued, uploaded to the pilot backend, reviewed through the API/UI, and included in the public reference overlay only after acceptance; moderation roles and aggregate map products are still not implemented.
 
 ## NB Data Strategy
 
@@ -339,7 +342,7 @@ Tasks:
 - Add PostGIS schema for tracks, observations, hazards, soundings, and source metadata.
 - Add upload queue for offline-first sync.
 - Add public/private/fleet visibility rules.
-- Add moderation for hazards and community map labels.
+- Add moderation roles, audit history, and review states for hazards and community map labels.
 - Add geohash/grid aggregation so raw tracks are not exposed by default.
 
 Exit criteria:
