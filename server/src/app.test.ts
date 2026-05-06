@@ -1289,6 +1289,95 @@ describe('HarbourMesh API', () => {
     expect(latest.json().id).toBe(published.json().release.id);
   });
 
+  it('can require an explicit approval checklist before publishing aggregate releases', async () => {
+    const app = await createTestApp({
+      writeApiKeys: [TEST_WRITE_API_KEY],
+      reviewOperatorKeys: [{ key: TEST_REVIEW_API_KEY, operatorId: 'nb-release-approver' }],
+      requireApiAuth: true,
+      requireAggregateReleaseApproval: true,
+    });
+
+    await app.inject({
+      method: 'POST',
+      url: '/api/community/soundings',
+      headers: {
+        'x-harbourmesh-api-key': TEST_WRITE_API_KEY,
+      },
+      payload: sampleBatch,
+    });
+
+    const missingLatest = await app.inject({
+      method: 'GET',
+      url: '/api/community/releases/aggregates/latest',
+    });
+    expect(missingLatest.statusCode).toBe(404);
+    expect(missingLatest.json()).toMatchObject({
+      ok: false,
+      error: 'aggregate_release_not_found',
+    });
+
+    const missingApproval = await app.inject({
+      method: 'POST',
+      url: '/api/community/releases/aggregates',
+      headers: {
+        'x-harbourmesh-api-key': TEST_REVIEW_API_KEY,
+      },
+      payload: {
+        generatedBy: 'client-supplied-reviewer',
+      },
+    });
+    expect(missingApproval.statusCode).toBe(428);
+    expect(missingApproval.json()).toMatchObject({
+      ok: false,
+      error: 'aggregate_release_approval_required',
+    });
+
+    const approved = await app.inject({
+      method: 'POST',
+      url: '/api/community/releases/aggregates',
+      headers: {
+        'x-harbourmesh-api-key': TEST_REVIEW_API_KEY,
+      },
+      payload: {
+        generatedBy: 'client-supplied-reviewer',
+        approval: {
+          approvedBy: 'client-supplied-reviewer',
+          checklist: {
+            referenceOnly: true,
+            officialChartDataExcluded: true,
+            rawRecordIdsExcluded: true,
+            vesselIdsExcluded: true,
+          },
+          notes: 'NB release gate checked',
+        },
+      },
+    });
+
+    expect(approved.statusCode).toBe(201);
+    expect(approved.json().release).toMatchObject({
+      approval: {
+        required: true,
+        approvedBy: 'nb-release-approver',
+        checklist: {
+          referenceOnly: true,
+          officialChartDataExcluded: true,
+          rawRecordIdsExcluded: true,
+          vesselIdsExcluded: true,
+        },
+        notes: 'NB release gate checked',
+      },
+    });
+    expect(approved.json().release.approval.approvedAt).toMatch(/2026-/);
+
+    const latest = await app.inject({
+      method: 'GET',
+      url: '/api/community/releases/aggregates/latest',
+    });
+    expect(latest.statusCode).toBe(200);
+    expect(latest.json().id).toBe(approved.json().release.id);
+    expect(latest.json().approval.approvedBy).toBe('nb-release-approver');
+  });
+
   it('returns not found for reviews of unknown hazards', async () => {
     const app = await createTestApp();
     const response = await app.inject({

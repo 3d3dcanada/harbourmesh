@@ -22,6 +22,18 @@ export type CommunityAggregateReleaseManifest = {
     rawRecordIdsIncluded: false;
     vesselIdsIncluded: false;
   };
+  approval?: {
+    required: boolean;
+    approvedBy: string;
+    approvedAt: string;
+    checklist: {
+      referenceOnly: true;
+      officialChartDataExcluded: true;
+      rawRecordIdsExcluded: true;
+      vesselIdsExcluded: true;
+    };
+    notes?: string;
+  };
 };
 
 function serializeAggregateGeoJson(aggregate: CommunityAggregateGeoJson): string {

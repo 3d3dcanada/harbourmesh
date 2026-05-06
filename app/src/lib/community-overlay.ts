@@ -112,6 +112,18 @@ export type CommunityAggregateReleaseManifest = {
     rawRecordIdsIncluded: false;
     vesselIdsIncluded: false;
   };
+  approval?: {
+    required: boolean;
+    approvedBy: string;
+    approvedAt: string;
+    checklist: {
+      referenceOnly: true;
+      officialChartDataExcluded: true;
+      rawRecordIdsExcluded: true;
+      vesselIdsExcluded: true;
+    };
+    notes?: string;
+  };
 };
 
 export type CommunityAggregateReleaseArtifact = {
@@ -171,6 +183,17 @@ export type CommunityAggregateReleaseHistory = {
 
 export type PublishCommunityAggregateReleaseInput = {
   generatedBy?: string;
+  approval?: {
+    approvedBy: string;
+    approvedAt?: string;
+    checklist: {
+      referenceOnly: true;
+      officialChartDataExcluded: true;
+      rawRecordIdsExcluded: true;
+      vesselIdsExcluded: true;
+    };
+    notes?: string;
+  };
 };
 
 export type CommunityAggregateReleaseMutationOptions = FetchCommunityOverlayOptions & {
@@ -450,6 +473,7 @@ export async function publishCommunityAggregateRelease(
     headers: buildJsonHeaders(resolvePilotApiKey(options.apiKey)),
     body: JSON.stringify({
       ...(input.generatedBy?.trim() ? { generatedBy: input.generatedBy.trim() } : {}),
+      ...(input.approval ? { approval: input.approval } : {}),
     }),
   });
   const body: unknown = await response.json().catch(() => null);

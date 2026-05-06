@@ -30,7 +30,10 @@ import {
   getCommunityAggregateReleaseArtifactManifest,
 } from './community-aggregate-release-artifacts.js';
 import { buildCommunityGeoJsonOverlay } from './community-geojson.js';
-import { buildCommunityAggregateReleaseManifest } from './community-release-manifests.js';
+import {
+  buildCommunityAggregateReleaseManifest,
+  type CommunityAggregateReleaseManifest,
+} from './community-release-manifests.js';
 import { communityHazardBatchSchema, communityHazardReviewSchema } from './community-hazards.js';
 import {
   createCommunityHazardRepository,
@@ -74,6 +77,7 @@ export type BuildAppOptions = {
   chartPackageArtifactOptions?: BuildNBPilotChartPackageArtifactsOptions;
   artifactSigningKey?: string;
   artifactSigningKeyId?: string;
+  requireAggregateReleaseApproval?: boolean;
   logger?: boolean;
 };
 
@@ -89,6 +93,11 @@ type DownloadableArtifact = {
 type ArtifactSigningConfig = {
   key: string;
   keyId: string;
+};
+
+type AggregateReleaseApproval = NonNullable<CommunityAggregateReleaseManifest['approval']>;
+type AggregateReleaseApprovalRequest = Omit<AggregateReleaseApproval, 'required' | 'approvedAt'> & {
+  approvedAt?: string;
 };
 
 function chartArtifactOptionsFromEnvironment(): BuildNBPilotChartPackageArtifactsOptions {
@@ -160,6 +169,8 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     ?? createCommunityAggregateReleaseRepository(options.dataDir);
   const chartPackageArtifactOptions = options.chartPackageArtifactOptions ?? chartArtifactOptionsFromEnvironment();
   const artifactSigningConfig = artifactSigningConfigFromOptions(options);
+  const requireAggregateReleaseApproval = options.requireAggregateReleaseApproval
+    ?? process.env.HARBOURMESH_REQUIRE_AGGREGATE_RELEASE_APPROVAL === 'true';
   const apiAuth = createApiAuthConfig({
     keys: options.apiKeys ?? parseApiKeys(process.env.HARBOURMESH_API_KEYS, process.env.HARBOURMESH_API_KEY),
     keySha256Hashes: options.apiKeySha256Hashes ?? parseApiKeySha256Hashes(process.env.HARBOURMESH_API_KEY_SHA256S, process.env.HARBOURMESH_API_KEY_SHA256),
@@ -178,9 +189,33 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
 
   const aggregateReleasePublishSchema = z.object({
     generatedBy: z.string().trim().min(2).max(120).optional(),
+    approval: z.object({
+      approvedBy: z.string().trim().min(2).max(120),
+      approvedAt: z.string().datetime().optional(),
+      checklist: z.object({
+        referenceOnly: z.literal(true),
+        officialChartDataExcluded: z.literal(true),
+        rawRecordIdsExcluded: z.literal(true),
+        vesselIdsExcluded: z.literal(true),
+      }).strict(),
+      notes: z.string().trim().max(1000).optional(),
+    }).strict().optional(),
   });
 
-  async function publishAggregateRelease(generatedBy = 'system:auto') {
+  function normalizeAggregateReleaseApproval(
+    approval: AggregateReleaseApprovalRequest,
+    approvedByOverride?: string
+  ): AggregateReleaseApproval {
+    return {
+      required: requireAggregateReleaseApproval,
+      approvedBy: approvedByOverride ?? approval.approvedBy,
+      approvedAt: approval.approvedAt ?? new Date().toISOString(),
+      checklist: approval.checklist,
+      ...(approval.notes ? { notes: approval.notes } : {}),
+    };
+  }
+
+  async function publishAggregateRelease(generatedBy = 'system:auto', approval?: AggregateReleaseApproval) {
     const [soundings, hazards, observations] = await Promise.all([
       repository.listRecords(),
       hazardRepository.listRecords(),
@@ -188,13 +223,17 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     ]);
     const generatedAt = new Date().toISOString();
     const aggregate = buildCommunityAggregateGeoJson(soundings, hazards, observations, generatedAt);
-    const manifest = buildCommunityAggregateReleaseManifest(aggregate);
+    const baseManifest = buildCommunityAggregateReleaseManifest(aggregate);
+    const manifest = approval ? { ...baseManifest, approval } : baseManifest;
 
     return aggregateReleaseRepository.publishAggregateRelease({ aggregate, manifest, generatedBy });
   }
 
   async function getOrPublishLatestAggregateRelease() {
-    return (await aggregateReleaseRepository.getLatestAggregateRelease()) ?? publishAggregateRelease();
+    const latest = await aggregateReleaseRepository.getLatestAggregateRelease();
+    if (latest || requireAggregateReleaseApproval) return latest;
+
+    return publishAggregateRelease();
   }
 
   app.get('/health', async () => ({
@@ -247,19 +286,32 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     return buildCommunityAggregateGeoJson(soundings, hazards, observations);
   });
 
-  app.get('/api/community/releases/aggregates/latest', async () => {
-    return getOrPublishLatestAggregateRelease();
+  app.get('/api/community/releases/aggregates/latest', async (_request, reply) => {
+    const release = await getOrPublishLatestAggregateRelease();
+    if (!release) {
+      return reply.code(404).send({ ok: false, error: 'aggregate_release_not_found' });
+    }
+
+    return release;
   });
 
-  app.get('/api/community/releases/aggregates/latest/cells.geojson', async () => {
+  app.get('/api/community/releases/aggregates/latest/cells.geojson', async (_request, reply) => {
     const release = await getOrPublishLatestAggregateRelease();
+    if (!release) {
+      return reply.code(404).send({ ok: false, error: 'aggregate_release_not_found' });
+    }
+
     const cells = await aggregateReleaseRepository.listAggregateCells(release.id);
 
     return buildCommunityAggregateGeoJsonFromStoredRelease(release, cells);
   });
 
-  app.get('/api/community/releases/aggregates/latest/artifacts', async () => {
+  app.get('/api/community/releases/aggregates/latest/artifacts', async (_request, reply) => {
     const release = await getOrPublishLatestAggregateRelease();
+    if (!release) {
+      return reply.code(404).send({ ok: false, error: 'aggregate_release_not_found' });
+    }
+
     const cells = await aggregateReleaseRepository.listAggregateCells(release.id);
     const aggregate = buildCommunityAggregateGeoJsonFromStoredRelease(release, cells);
 
@@ -273,6 +325,10 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     }
 
     const release = await getOrPublishLatestAggregateRelease();
+    if (!release) {
+      return reply.code(404).send({ ok: false, error: 'aggregate_release_not_found' });
+    }
+
     const cells = await aggregateReleaseRepository.listAggregateCells(release.id);
     const aggregate = buildCommunityAggregateGeoJsonFromStoredRelease(release, cells);
     const artifacts = await buildCommunityAggregateReleaseArtifacts(release, aggregate);
@@ -303,7 +359,20 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     try {
       const reviewIdentity = getRequestApiKeyIdentity(apiAuth, request, 'review');
       const requestBody = aggregateReleasePublishSchema.parse(request.body ?? {});
-      const release = await publishAggregateRelease(reviewIdentity?.operatorId ?? requestBody.generatedBy ?? 'review-operator');
+      if (requireAggregateReleaseApproval && !requestBody.approval) {
+        return reply.code(428).send({
+          ok: false,
+          error: 'aggregate_release_approval_required',
+        });
+      }
+
+      const approval = requestBody.approval
+        ? normalizeAggregateReleaseApproval(requestBody.approval, reviewIdentity?.operatorId)
+        : undefined;
+      const release = await publishAggregateRelease(
+        reviewIdentity?.operatorId ?? requestBody.generatedBy ?? 'review-operator',
+        approval
+      );
 
       return reply.code(201).send({
         ok: true,

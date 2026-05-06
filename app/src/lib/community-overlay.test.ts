@@ -375,8 +375,18 @@ describe('community overlay client', () => {
       release: aggregateRelease,
     }), { status: 201 }));
 
+    const approval = {
+      approvedBy: 'nb-pilot-reviewer',
+      checklist: {
+        referenceOnly: true,
+        officialChartDataExcluded: true,
+        rawRecordIdsExcluded: true,
+        vesselIdsExcluded: true,
+      },
+    } as const;
+
     await expect(publishCommunityAggregateRelease(
-      { generatedBy: 'nb-pilot-reviewer' },
+      { generatedBy: 'nb-pilot-reviewer', approval },
       {
         apiBaseUrl: 'http://localhost:3001',
         apiKey: 'review-key',
@@ -393,6 +403,7 @@ describe('community overlay client', () => {
       }),
       body: JSON.stringify({
         generatedBy: 'nb-pilot-reviewer',
+        approval,
       }),
     }));
   });
