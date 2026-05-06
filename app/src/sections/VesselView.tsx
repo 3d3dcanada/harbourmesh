@@ -3,7 +3,7 @@
  * Digital twin and vessel details management
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Ship,
   Ruler,
@@ -26,6 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DataSourceNotice } from '@/components/DataSourceNotice';
 import { cn } from '@/lib/utils';
 import { useVesselStore } from '@/store';
 import { VesselType, type Vessel } from '@/types';
@@ -196,13 +197,7 @@ export function VesselView() {
   const [editedVessel, setEditedVessel] = useState<Vessel>(demoVessel);
   const [activeTab, setActiveTab] = useState('general');
   
-  // Initialize with demo vessel if none selected
-  React.useEffect(() => {
-    if (!currentVessel) {
-      setCurrentVessel(demoVessel);
-    }
-  }, [currentVessel, setCurrentVessel]);
-  
+  const usingDemoVessel = !currentVessel;
   const vessel = currentVessel || demoVessel;
   
   const handleSave = () => {
@@ -257,6 +252,12 @@ export function VesselView() {
           )}
         </div>
       </div>
+
+      {usingDemoVessel && (
+        <DataSourceNotice title="Demo vessel">
+          This vessel profile is sample data and has not been saved as your active vessel.
+        </DataSourceNotice>
+      )}
       
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>

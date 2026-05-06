@@ -24,6 +24,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DataSourceNotice } from '@/components/DataSourceNotice';
 import { cn } from '@/lib/utils';
 import { useVesselStore } from '@/store';
 import { SpaceType, type Space } from '@/types';
@@ -81,7 +82,8 @@ export function BoatMap() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingSpace, setEditingSpace] = useState<Space | null>(null);
 
-  const currentSpaces = storeSpaces.length > 0 ? storeSpaces : demoSpaces;
+  const usingDemoSpaces = storeSpaces.length === 0;
+  const currentSpaces = usingDemoSpaces ? demoSpaces : storeSpaces;
   const decks = useMemo(() => [...new Set(currentSpaces.map((s) => s.deck ?? 0))].sort((a, b) => b - a), [currentSpaces]);
   const deckSpaces = useMemo(() => currentSpaces.filter((s) => (s.deck ?? 0) === activeDeck), [currentSpaces, activeDeck]);
   const selected = useMemo(() => currentSpaces.find((s) => s.id === selectedSpaceId) ?? null, [currentSpaces, selectedSpaceId]);
@@ -140,6 +142,12 @@ export function BoatMap() {
         </div>
         <Button><Plus className="h-4 w-4 mr-2" /> Add Space</Button>
       </div>
+
+      {usingDemoSpaces && (
+        <DataSourceNotice title="Demo vessel map">
+          These compartments are sample layout records until vessel spaces are created.
+        </DataSourceNotice>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* SVG Deck Plan */}

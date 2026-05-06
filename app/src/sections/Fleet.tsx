@@ -36,6 +36,7 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';
 import { cn, formatDate } from '@/lib/utils';
+import { DataSourceNotice } from '@/components/DataSourceNotice';
 
 // Demo fleet data
 const demoFleet = [
@@ -191,6 +192,10 @@ export function Fleet() {
           </Button>
         </div>
       </div>
+
+      <DataSourceNotice title="Demo fleet">
+        Fleet rows, manifests, and procedures are sample records until a fleet backend is connected.
+      </DataSourceNotice>
       
       {/* Fleet Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">

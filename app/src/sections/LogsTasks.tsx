@@ -38,6 +38,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { DataSourceNotice } from '@/components/DataSourceNotice';
 import { cn, formatRelativeTime, formatCoordinate } from '@/lib/utils';
 import { useLogTaskStore } from '@/store';
 import { LogEntryType, TaskType, TaskStatus, Severity, type LogEntry, type Task } from '@/types';
@@ -249,7 +250,7 @@ const demoTasks: Task[] = [
 ];
 
 export function LogsTasks() {
-  const { logs, tasks, setLogs, setTasks, completeTask } = useLogTaskStore();
+  const { logs, tasks, completeTask } = useLogTaskStore();
   const [activeTab, setActiveTab] = useState('logs');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
@@ -258,14 +259,10 @@ export function LogsTasks() {
   const [, setSelectedLog] = useState<LogEntry | null>(null);
   const [, setSelectedTask] = useState<Task | null>(null);
   
-  // Initialize with demo data
-  React.useEffect(() => {
-    if (logs.length === 0) setLogs(demoLogs);
-    if (tasks.length === 0) setTasks(demoTasks);
-  }, [logs.length, tasks.length, setLogs, setTasks]);
-  
-  const currentLogs = logs.length > 0 ? logs : demoLogs;
-  const currentTasks = tasks.length > 0 ? tasks : demoTasks;
+  const usingDemoLogs = logs.length === 0;
+  const usingDemoTasks = tasks.length === 0;
+  const currentLogs = usingDemoLogs ? demoLogs : logs;
+  const currentTasks = usingDemoTasks ? demoTasks : tasks;
   
   // Filter logs
   const filteredLogs = currentLogs.filter((log) => {
@@ -334,6 +331,12 @@ export function LogsTasks() {
           </Button>
         </div>
       </div>
+
+      {(usingDemoLogs || usingDemoTasks) && (
+        <DataSourceNotice title="Demo logs and tasks">
+          Sample records are displayed until vessel-owned logs and tasks are created.
+        </DataSourceNotice>
+      )}
       
       {/* Task Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

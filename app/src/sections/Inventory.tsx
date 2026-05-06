@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { DataSourceNotice } from '@/components/DataSourceNotice';
 import { cn } from '@/lib/utils';
 import { useVesselStore } from '@/store';
 import { ItemCategory } from '@/types';
@@ -59,7 +60,8 @@ export function Inventory() {
   const [sortBy, setSortBy] = useState<'name' | 'category' | 'quantity' | 'expiry'>('category');
   const [sortAsc, setSortAsc] = useState(true);
 
-  const displayItems = items.length > 0 ? items : mockItems;
+  const usingDemoItems = items.length === 0;
+  const displayItems = usingDemoItems ? mockItems : items;
 
   const filteredItems = useMemo(() => {
     let result = displayItems;
@@ -135,6 +137,12 @@ export function Inventory() {
         </div>
         <Button><Plus className="h-4 w-4 mr-2" /> Add Item</Button>
       </div>
+
+      {usingDemoItems && (
+        <DataSourceNotice title="Demo inventory">
+          These inventory rows are sample records and have not been saved for a vessel.
+        </DataSourceNotice>
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-sm text-muted-foreground">Total Items</p><p className="text-2xl font-bold">{totalItems}</p></div><Package className="h-8 w-8 text-muted-foreground/30" /></div></CardContent></Card>

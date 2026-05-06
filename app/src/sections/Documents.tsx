@@ -36,6 +36,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DataSourceNotice } from '@/components/DataSourceNotice';
 import { cn, formatDate, formatFileSize, truncate } from '@/lib/utils';
 import { useDocumentStore } from '@/store';
 import { DocumentType, UserRole, type Document } from '@/types';
@@ -242,21 +243,15 @@ const demoDocuments: Document[] = [
 ];
 
 export function Documents() {
-  const { documents, setDocuments, selectedDocument, selectDocument } = useDocumentStore();
+  const { documents, selectedDocument, selectDocument } = useDocumentStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
   const [filterSensitivity, setFilterSensitivity] = useState<string>('all');
   const [showUpload, setShowUpload] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   
-  // Initialize with demo data
-  React.useEffect(() => {
-    if (documents.length === 0) {
-      setDocuments(demoDocuments);
-    }
-  }, [documents.length, setDocuments]);
-  
-  const currentDocuments = documents.length > 0 ? documents : demoDocuments;
+  const usingDemoDocuments = documents.length === 0;
+  const currentDocuments = usingDemoDocuments ? demoDocuments : documents;
   
   // Filter documents
   const filteredDocuments = currentDocuments.filter((doc) => {
@@ -325,6 +320,12 @@ export function Documents() {
           </Button>
         </div>
       </div>
+
+      {usingDemoDocuments && (
+        <DataSourceNotice title="Demo documents">
+          These document records are sample metadata and are not stored user documents.
+        </DataSourceNotice>
+      )}
       
       {/* Expiring Documents Alert */}
       {expiringDocs.length > 0 && (
