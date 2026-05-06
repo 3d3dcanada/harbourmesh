@@ -132,7 +132,7 @@ docker build -t harbourmesh-api ./server
 docker run --rm -p 3001:3001 harbourmesh-api
 ```
 
-Set `HARBOURMESH_WRITE_API_KEYS`/`HARBOURMESH_REVIEW_API_KEYS`, or their `*_SHA256S` hash equivalents, plus `HARBOURMESH_DATABASE_URL` for a PostGIS pilot deployment. Without `HARBOURMESH_DATABASE_URL`, the API keeps using local JSONL under `HARBOURMESH_DATA_DIR`.
+Set `HARBOURMESH_ACCOUNT_SESSION_SIGNING_KEY` for account registration/login sessions, `HARBOURMESH_ACCOUNT_REGISTRATION_INVITE_CODE` for invite-gated registration, `HARBOURMESH_WRITE_API_KEYS`/`HARBOURMESH_REVIEW_API_KEYS`, or their `*_SHA256S` hash equivalents, plus `HARBOURMESH_DATABASE_URL` for a PostGIS pilot deployment. Without `HARBOURMESH_DATABASE_URL`, the API keeps using local JSONL under `HARBOURMESH_DATA_DIR`.
 
 ## Documentation
 

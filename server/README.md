@@ -16,6 +16,10 @@ npm run build
 Default API:
 
 - `GET /health`
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/auth/me`
+- `POST /api/auth/operator-session`
 - `POST /api/community/soundings`
 - `GET /api/community/soundings/summary`
 - `POST /api/community/observations`
@@ -66,6 +70,8 @@ Set `HARBOURMESH_ARTIFACT_SIGNING_KEY` to add HMAC-SHA256 signature headers to c
 The production persistence target starts in `db/migrations/0001_nb_pilot_community_mesh.sql`. With `HARBOURMESH_DATABASE_URL`, the current server writes devices, soundings, observations, hazards, reviews, aggregate release manifests, and aggregate cells to PostGIS. JSONL remains the no-database local fallback. `GET /api/community/releases/aggregates/latest` auto-publishes the first aggregate release when no release exists; review-scoped `POST /api/community/releases/aggregates` publishes a new release from the current governed community records. `GET /api/community/releases/aggregates/latest/artifacts` builds a reference-only artifact manifest for the latest release with GeoJSON plus MBTiles/PMTiles vector-tile products when aggregate cells exist. `GET /api/community/releases/aggregates/latest/artifacts/:format` downloads the latest release artifact bytes for `geojson`, `mbtiles`, or `pmtiles` with checksum and privacy headers.
 
 Set `HARBOURMESH_REQUIRE_AGGREGATE_RELEASE_APPROVAL=true` to disable latest-release auto-publishing and require review-scoped `POST /api/community/releases/aggregates` requests to include an approval checklist confirming reference-only use, official chart exclusion, raw record ID exclusion, and vessel ID exclusion.
+
+Set `HARBOURMESH_ACCOUNT_SESSION_SIGNING_KEY` before enabling account registration/login. Account passwords are stored with PBKDF2-HMAC-SHA256, and `/api/auth/register` plus `/api/auth/login` return HMAC-SHA256 signed Bearer sessions. Use `HARBOURMESH_ACCOUNT_SESSION_SIGNING_KEY_ID` for a stable session key id, `HARBOURMESH_ACCOUNT_SESSION_TTL_SECONDS` for session lifetime, and `HARBOURMESH_ACCOUNT_REGISTRATION_INVITE_CODE` to require an invite code for registration. When `NODE_ENV=production`, account registration requires an invite code.
 
 Set `HARBOURMESH_API_KEYS` to a comma-separated list of legacy pilot API keys before exposing the server. Legacy keys can access every protected endpoint. For scoped keys, use `HARBOURMESH_WRITE_API_KEYS` for intake/device writes and `HARBOURMESH_REVIEW_API_KEYS` for hazard review operations. For deployments that should not store plaintext keys, use `HARBOURMESH_API_KEY_SHA256S`, `HARBOURMESH_WRITE_API_KEY_SHA256S`, and `HARBOURMESH_REVIEW_API_KEY_SHA256S` with comma-separated SHA-256 hex digests of the client keys. For auditable moderator identity, use `HARBOURMESH_REVIEW_OPERATOR_KEYS` with comma-separated `operator-id:key` entries, or `HARBOURMESH_REVIEW_OPERATOR_KEY_SHA256S` with `operator-id:sha256` entries; matching review keys override client-supplied `reviewedBy` values before writing review history. Protected endpoints accept either `X-HarbourMesh-API-Key: <key>` or `Authorization: Bearer <key>`.
 

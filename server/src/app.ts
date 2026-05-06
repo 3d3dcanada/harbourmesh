@@ -1,7 +1,17 @@
 import { createHash, createHmac } from 'node:crypto';
 import cors from '@fastify/cors';
-import Fastify, { type FastifyInstance, type FastifyReply } from 'fastify';
+import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify';
 import { z, ZodError } from 'zod';
+import {
+  accountLoginSchema,
+  accountRegistrationSchema,
+  createAccountAuthConfig,
+  createAccountSessionToken,
+  createUserAccountRepository,
+  toPublicUserAccount,
+  verifyAccountSessionToken,
+  type UserAccountRepository,
+} from './account-auth.js';
 import {
   createApiAuthConfig,
   createOperatorSessionToken,
@@ -69,6 +79,7 @@ export type BuildAppOptions = {
   observationRepository?: CommunityObservationRepository;
   deviceRepository?: DeviceRepository;
   aggregateReleaseRepository?: CommunityAggregateReleaseRepository;
+  userAccountRepository?: UserAccountRepository;
   apiKeys?: readonly string[];
   apiKeySha256Hashes?: readonly string[];
   writeApiKeys?: readonly string[];
@@ -86,6 +97,11 @@ export type BuildAppOptions = {
   sessionSigningKey?: string;
   sessionSigningKeyId?: string;
   sessionTtlSeconds?: number;
+  accountSessionSigningKey?: string;
+  accountSessionSigningKeyId?: string;
+  accountSessionTtlSeconds?: number;
+  accountRegistrationInviteCode?: string;
+  accountRegistrationRequiresInvite?: boolean;
   requireAggregateReleaseApproval?: boolean;
   logger?: boolean;
 };
@@ -130,6 +146,23 @@ function artifactSigningConfigFromOptions(options: BuildAppOptions): ArtifactSig
 function sessionTtlFromOptions(options: BuildAppOptions): number | undefined {
   const rawTtl = options.sessionTtlSeconds ?? Number(process.env.HARBOURMESH_SESSION_TTL_SECONDS);
   return Number.isFinite(rawTtl) && rawTtl > 0 ? rawTtl : undefined;
+}
+
+function accountSessionTtlFromOptions(options: BuildAppOptions): number | undefined {
+  const rawTtl = options.accountSessionTtlSeconds ?? Number(process.env.HARBOURMESH_ACCOUNT_SESSION_TTL_SECONDS);
+  return Number.isFinite(rawTtl) && rawTtl > 0 ? rawTtl : undefined;
+}
+
+function accountRegistrationRequiresInvite(options: BuildAppOptions): boolean {
+  if (typeof options.accountRegistrationRequiresInvite === 'boolean') return options.accountRegistrationRequiresInvite;
+  if (options.accountRegistrationInviteCode ?? process.env.HARBOURMESH_ACCOUNT_REGISTRATION_INVITE_CODE) return true;
+  return process.env.NODE_ENV === 'production';
+}
+
+function extractBearerToken(request: FastifyRequest): string | undefined {
+  const authorization = request.headers.authorization;
+  const value = Array.isArray(authorization) ? authorization[0] : authorization;
+  return value?.match(/^Bearer\s+(.+)$/i)?.[1]?.trim();
 }
 
 function artifactSigningPayload(artifact: DownloadableArtifact): string {
@@ -181,10 +214,18 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   const aggregateReleaseRepository = options.aggregateReleaseRepository
     ?? postgisRepositories?.aggregateReleases
     ?? createCommunityAggregateReleaseRepository(options.dataDir);
+  const userAccountRepository = options.userAccountRepository ?? createUserAccountRepository(options.dataDir);
   const chartPackageArtifactOptions = options.chartPackageArtifactOptions ?? chartArtifactOptionsFromEnvironment();
   const artifactSigningConfig = artifactSigningConfigFromOptions(options);
   const requireAggregateReleaseApproval = options.requireAggregateReleaseApproval
     ?? process.env.HARBOURMESH_REQUIRE_AGGREGATE_RELEASE_APPROVAL === 'true';
+  const accountAuth = createAccountAuthConfig({
+    sessionSigningKey: options.accountSessionSigningKey ?? process.env.HARBOURMESH_ACCOUNT_SESSION_SIGNING_KEY,
+    sessionSigningKeyId: options.accountSessionSigningKeyId ?? process.env.HARBOURMESH_ACCOUNT_SESSION_SIGNING_KEY_ID,
+    sessionTtlSeconds: accountSessionTtlFromOptions(options),
+    registrationInviteCode: options.accountRegistrationInviteCode ?? process.env.HARBOURMESH_ACCOUNT_REGISTRATION_INVITE_CODE,
+    registrationRequiresInvite: accountRegistrationRequiresInvite(options),
+  });
   const apiAuth = createApiAuthConfig({
     keys: options.apiKeys ?? parseApiKeys(process.env.HARBOURMESH_API_KEYS, process.env.HARBOURMESH_API_KEY),
     keySha256Hashes: options.apiKeySha256Hashes ?? parseApiKeySha256Hashes(process.env.HARBOURMESH_API_KEY_SHA256S, process.env.HARBOURMESH_API_KEY_SHA256),
@@ -263,6 +304,160 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     service: 'harbourmesh-server',
     time: new Date().toISOString(),
   }));
+
+  app.post('/api/auth/register', async (request, reply) => {
+    if (!accountAuth.sessionSigningKey) {
+      return reply.code(503).send({
+        ok: false,
+        error: 'account_session_signing_not_configured',
+      });
+    }
+
+    try {
+      const requestBody = accountRegistrationSchema.parse(request.body ?? {});
+      if (accountAuth.registrationRequiresInvite) {
+        if (!accountAuth.registrationInviteCode) {
+          return reply.code(503).send({
+            ok: false,
+            error: 'account_registration_invite_not_configured',
+          });
+        }
+
+        if (requestBody.inviteCode !== accountAuth.registrationInviteCode) {
+          return reply.code(403).send({
+            ok: false,
+            error: 'invalid_account_registration_invite',
+          });
+        }
+      }
+
+      const account = await userAccountRepository.createAccount(requestBody);
+      if (!account) {
+        return reply.code(409).send({
+          ok: false,
+          error: 'account_already_exists',
+        });
+      }
+
+      const session = createAccountSessionToken(accountAuth, account);
+      if (!session) {
+        return reply.code(503).send({
+          ok: false,
+          error: 'account_session_unavailable',
+        });
+      }
+
+      return reply.code(201).send({
+        ok: true,
+        session,
+      });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return reply.code(400).send({
+          ok: false,
+          error: 'invalid_account_registration_request',
+          issues: error.issues.map((issue) => ({
+            path: issue.path.join('.'),
+            message: issue.message,
+          })),
+        });
+      }
+
+      throw error;
+    }
+  });
+
+  app.post('/api/auth/login', async (request, reply) => {
+    if (!accountAuth.sessionSigningKey) {
+      return reply.code(503).send({
+        ok: false,
+        error: 'account_session_signing_not_configured',
+      });
+    }
+
+    try {
+      const requestBody = accountLoginSchema.parse(request.body ?? {});
+      const account = await userAccountRepository.verifyCredentials(requestBody.email, requestBody.password);
+      if (!account) {
+        return reply.code(401).send({
+          ok: false,
+          error: 'invalid_account_credentials',
+        });
+      }
+
+      const session = createAccountSessionToken(accountAuth, account);
+      if (!session) {
+        return reply.code(503).send({
+          ok: false,
+          error: 'account_session_unavailable',
+        });
+      }
+
+      return reply.code(201).send({
+        ok: true,
+        session,
+      });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return reply.code(400).send({
+          ok: false,
+          error: 'invalid_account_login_request',
+          issues: error.issues.map((issue) => ({
+            path: issue.path.join('.'),
+            message: issue.message,
+          })),
+        });
+      }
+
+      throw error;
+    }
+  });
+
+  app.get('/api/auth/me', async (request, reply) => {
+    if (!accountAuth.sessionSigningKey) {
+      return reply.code(503).send({
+        ok: false,
+        error: 'account_session_signing_not_configured',
+      });
+    }
+
+    const token = extractBearerToken(request);
+    if (!token) {
+      return reply
+        .code(401)
+        .header('WWW-Authenticate', 'Bearer realm="harbourmesh-account"')
+        .send({
+          ok: false,
+          error: 'account_session_required',
+        });
+    }
+
+    const session = verifyAccountSessionToken(accountAuth, token);
+    if (!session) {
+      return reply.code(403).send({
+        ok: false,
+        error: 'invalid_account_session',
+      });
+    }
+
+    const account = await userAccountRepository.getAccountById(session.accountId);
+    if (!account || account.status !== 'active') {
+      return reply.code(401).send({
+        ok: false,
+        error: 'account_not_available',
+      });
+    }
+
+    return {
+      ok: true,
+      account: toPublicUserAccount(account),
+      session: {
+        issuedAt: session.issuedAt,
+        expiresAt: session.expiresAt,
+        keyId: session.keyId,
+      },
+    };
+  });
 
   app.post('/api/auth/operator-session', async (request, reply) => {
     if (!(await requireApiAccess(request, reply, apiAuth, 'review'))) return reply;
