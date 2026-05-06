@@ -119,7 +119,7 @@ const sampleObservationBatch: CommunityObservationBatch = {
       receivedAt: '2026-05-06T12:05:22.000Z',
       position: {
         latitude: 45.271,
-        longitude: -66.061,
+        longitude: -66.059,
         accuracy: 150,
         source: 'radar',
         timestamp: '2026-05-06T12:05:20.000Z',
@@ -809,6 +809,11 @@ describe('HarbourMesh API', () => {
       url: '/api/community/hazards',
       payload: sampleHazardBatch,
     });
+    await app.inject({
+      method: 'POST',
+      url: '/api/community/observations',
+      payload: sampleObservationBatch,
+    });
 
     const pendingAggregates = await app.inject({
       method: 'GET',
@@ -828,6 +833,8 @@ describe('HarbourMesh API', () => {
           soundings: 1,
           acceptedSoundings: 1,
           rejectedSoundings: 0,
+          observations: 2,
+          positionedObservations: 1,
           hazards: 1,
           publicHazards: 0,
           aggregateCells: 1,
@@ -842,6 +849,9 @@ describe('HarbourMesh API', () => {
       properties: {
         kind: 'aggregate_cell',
         soundingCount: 1,
+        observationCount: 1,
+        radarContactObservationCount: 1,
+        weatherObservationCount: 0,
         hazardCount: 0,
         averageDepthMeters: 12.5,
         averageConfidence: 0.9,
@@ -878,6 +888,7 @@ describe('HarbourMesh API', () => {
     });
     expect(aggregateFeature.properties).toMatchObject({
       soundingCount: 1,
+      observationCount: 1,
       hazardCount: 1,
       mediumHazardCount: 1,
     });

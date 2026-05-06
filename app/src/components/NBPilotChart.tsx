@@ -96,6 +96,7 @@ function getAggregateCenter(feature: CommunityAggregateFeature): MapPosition {
 function getAggregateColor(feature: CommunityAggregateFeature): string {
   if (feature.properties.highHazardCount > 0) return '#dc2626';
   if (feature.properties.hazardCount > 0) return '#d97706';
+  if (feature.properties.observationCount > 0) return '#2563eb';
   return '#0891b2';
 }
 
@@ -277,6 +278,7 @@ export function NBPilotChart({
                     {typeof feature.properties.averageDepthMeters === 'number' && (
                       <div>{feature.properties.averageDepthMeters.toFixed(1)} m avg depth</div>
                     )}
+                    <div>{feature.properties.observationCount} observations</div>
                     <div>{feature.properties.hazardCount} accepted hazards</div>
                     <div>Raw vessel IDs: excluded</div>
                     <div>Official chart data: excluded</div>

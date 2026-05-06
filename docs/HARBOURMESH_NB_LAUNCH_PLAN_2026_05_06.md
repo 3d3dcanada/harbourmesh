@@ -50,12 +50,12 @@ Last light checks:
 - `npm run lint`: passing with 0 warnings.
 - `npm audit --json`: 0 vulnerabilities.
 - `npm run build`: passing for the web app.
-- `npm run build`: section-level code splitting is active; the initial app JS chunk is 286.85 kB / 90.35 kB gzip, the Navigation section chunk is 29.42 kB / 6.89 kB gzip, the Settings section chunk is 44.40 kB / 9.01 kB gzip, the Community section chunk is 56.82 kB / 9.96 kB gzip, and the prior Vite oversized chunk warning is gone.
+- `npm run build`: section-level code splitting is active; the initial app JS chunk is 286.85 kB / 90.34 kB gzip, the Navigation section chunk is 29.42 kB / 6.88 kB gzip, the Settings section chunk is 44.40 kB / 9.00 kB gzip, the Community section chunk is 56.86 kB / 9.97 kB gzip, and the prior Vite oversized chunk warning is gone.
 - `npm run build` in `server`: passing.
 - `npm audit --json` in `server`: 0 vulnerabilities.
 - Server API auth tests cover missing keys, accepted header keys, accepted Bearer keys, scoped write/review key separation, review-operator key parsing, reviewer identity override for audit history, protected device registry reads, and fail-closed production-style config.
 - Server hazard review tests cover pending hazards being withheld from public GeoJSON until accepted, accepted hazards becoming overlay-eligible, review history listing, and unknown hazard review returning 404.
-- Server aggregate GeoJSON tests cover cell polygons, sounding depth averages, accepted-hazard counts, official chart exclusion, and raw vessel/source ID omission.
+- Server aggregate GeoJSON tests cover cell polygons, sounding depth averages, positioned observation counts, accepted-hazard counts, official chart exclusion, and raw vessel/source ID omission.
 - Server chart package tests cover `/api/charts/nb/packages`, `/api/charts/nb/package-artifacts`, NB coast and inland-waterway package definitions, generated GeoJSON artifact checksums, pending PMTiles/MBTiles flags, community-overlay inclusion, and official CHS exclusion.
 - Server chart artifact writer tests cover compact GeoJSON file output, checksum-matching bytes, `manifest.json` writing, release manifest content omission, and official chart exclusion.
 - Server observation tests cover protected upload of governed radar/weather-style observations, duplicate receipts, summary counts by type/region, raw sensor payload exclusion, and position-sharing policy rejection.
@@ -69,7 +69,7 @@ Last light checks:
 - Web sounding quality tests cover abrupt depth-jump rejection before upload and slower depth changes outside the jump window staying valid.
 - Web observation tests cover consent-safe telemetry observation derivation, raw sensor payload exclusion, AIS identifier omission from metrics, upload batch policy, local queue de-duplication, status tracking, and upload receipt validation.
 - Web hazard moderation tests cover protected review-queue loading, review history loading, review receipt validation, API error handling, and invalid receipt rejection.
-- Web aggregate overlay tests cover aggregate GeoJSON fetching, privacy metadata validation, and rejection when raw IDs or official chart data are exposed.
+- Web aggregate overlay tests cover aggregate GeoJSON fetching, positioned observation counts, privacy metadata validation, and rejection when raw IDs or official chart data are exposed.
 - Web chart artifact tests cover `/api/charts/nb/package-artifacts` client validation, GeoJSON artifact manifest loading, pending PMTiles/MBTiles flags, and rejection of artifacts that include official chart data.
 - Local API smoke on port 3101: `/health`, `POST /api/community/soundings`, and `/api/community/soundings/summary` returned expected responses.
 - Local API smoke on port 3102: `POST /api/devices/register` and `GET /api/devices` returned expected responses.
@@ -126,6 +126,7 @@ Completed in the active checkout:
 - Added a sounding quality guard that flags abrupt sonar/depth jumps and rejects likely depth spikes before they enter community upload batches.
 - Added a protected community observation API and JSONL repository for governed radar, AIS, weather, track, condition, and system-health observations with consent, quality, raw-payload exclusion, duplicate handling, and summary metadata.
 - Wired frontend community observation derivation, local persistence, offline queueing, upload receipt validation, and Community conditions controls for governed telemetry observations.
+- Folded positioned governed observations into privacy-preserving aggregate GeoJSON cells and map popups without exposing raw record IDs, vessel IDs, or source device IDs.
 - Added an operator hazard moderation surface in Community with protected review-queue loading and accept/reject actions against the pilot API.
 - Split pilot API keys into backward-compatible legacy keys plus scoped write keys and review keys so intake/device access can be separated from hazard moderation.
 - Added `HARBOURMESH_REVIEW_OPERATOR_KEYS` support so review-scoped API keys can carry server-side operator IDs and override client-supplied reviewer names before moderation audit history is written.

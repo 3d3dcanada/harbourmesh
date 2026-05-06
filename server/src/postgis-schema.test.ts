@@ -45,6 +45,7 @@ describe('NB pilot PostGIS schema migration', () => {
     expect(sql).toContain('idx_community_observations_geom ON community_observations USING gist(geom)');
     expect(sql).toContain('idx_community_hazards_geom ON community_hazards USING gist(geom)');
     expect(sql).toContain('idx_aggregate_cells_geom ON community_aggregate_cells USING gist(geom)');
+    expect(sql).toContain('observation_count integer NOT NULL DEFAULT 0 CHECK (observation_count >= 0)');
   });
 
   it('keeps official chart data and raw identifiers out of shared products by schema rule', async () => {

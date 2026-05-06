@@ -107,12 +107,13 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   });
 
   app.get('/api/community/aggregates.geojson', async () => {
-    const [soundings, hazards] = await Promise.all([
+    const [soundings, hazards, observations] = await Promise.all([
       repository.listRecords(),
       hazardRepository.listRecords(),
+      observationRepository.listRecords(),
     ]);
 
-    return buildCommunityAggregateGeoJson(soundings, hazards);
+    return buildCommunityAggregateGeoJson(soundings, hazards, observations);
   });
 
   app.get('/api/charts/nb/catalog', async () => getNBPilotChartCatalog());

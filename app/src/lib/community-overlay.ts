@@ -27,6 +27,12 @@ export type CommunityAggregateFeature = {
     cellSizeDegrees: number;
     region: string;
     soundingCount: number;
+    observationCount: number;
+    weatherObservationCount: number;
+    conditionObservationCount: number;
+    aisTargetObservationCount: number;
+    radarContactObservationCount: number;
+    healthObservationCount: number;
     hazardCount: number;
     highHazardCount: number;
     mediumHazardCount: number;
@@ -74,6 +80,8 @@ export type CommunityAggregateGeoJson = {
       soundings: number;
       acceptedSoundings: number;
       rejectedSoundings: number;
+      observations: number;
+      positionedObservations: number;
       hazards: number;
       publicHazards: number;
       aggregateCells: number;
@@ -128,6 +136,7 @@ function isCommunityAggregate(value: unknown): value is CommunityAggregateGeoJso
       Array.isArray(feature.geometry.coordinates?.[0]) &&
       feature.geometry.coordinates[0].length >= 4 &&
       feature.properties?.kind === 'aggregate_cell' &&
+      typeof feature.properties.observationCount === 'number' &&
       feature.properties.officialChartDataIncluded === false &&
       feature.properties.rawRecordIdsIncluded === false &&
       feature.properties.vesselIdsIncluded === false
