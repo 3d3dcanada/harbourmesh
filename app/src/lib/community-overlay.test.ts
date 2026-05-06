@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  fetchCommunityAggregates,
   fetchCommunityOverlay,
   getCommunityOverlayFeaturesByKind,
+  type CommunityAggregateGeoJson,
   type CommunityGeoJsonOverlay,
 } from './community-overlay';
 
@@ -49,6 +51,62 @@ const overlay: CommunityGeoJsonOverlay = {
   },
 };
 
+const aggregate: CommunityAggregateGeoJson = {
+  type: 'FeatureCollection',
+  features: [
+    {
+      type: 'Feature',
+      id: 'aggregate:45.2700:-66.0600',
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[
+          [-66.06, 45.27],
+          [-66.05, 45.27],
+          [-66.05, 45.28],
+          [-66.06, 45.28],
+          [-66.06, 45.27],
+        ]],
+      },
+      properties: {
+        kind: 'aggregate_cell',
+        cellId: '45.2700:-66.0600',
+        cellSizeDegrees: 0.01,
+        region: 'NB_PILOT',
+        soundingCount: 3,
+        hazardCount: 1,
+        highHazardCount: 0,
+        mediumHazardCount: 1,
+        lowHazardCount: 0,
+        minDepthMeters: 12,
+        maxDepthMeters: 14,
+        averageDepthMeters: 13,
+        averageConfidence: 0.82,
+        rawRecordIdsIncluded: false,
+        vesselIdsIncluded: false,
+        officialChartDataIncluded: false,
+      },
+    },
+  ],
+  metadata: {
+    schemaVersion: 'harbourmesh.community-aggregates.v1',
+    generatedAt: '2026-05-06T12:13:00.000Z',
+    intendedUse: 'community_reference_overlay',
+    officialChartDataIncluded: false,
+    communityProductsAreReferenceOnly: true,
+    rawRecordIdsIncluded: false,
+    vesselIdsIncluded: false,
+    cellSizeDegrees: 0.01,
+    sourceRecordCounts: {
+      soundings: 3,
+      acceptedSoundings: 3,
+      rejectedSoundings: 0,
+      hazards: 1,
+      publicHazards: 1,
+      aggregateCells: 1,
+    },
+  },
+};
+
 describe('community overlay client', () => {
   it('fetches and validates the community GeoJSON overlay', async () => {
     const fetchImpl = vi.fn(async () => new Response(JSON.stringify(overlay), { status: 200 }));
@@ -85,5 +143,38 @@ describe('community overlay client', () => {
     await expect(fetchCommunityOverlay({
       fetchImpl: fetchImpl as unknown as typeof fetch,
     })).rejects.toThrow('Community overlay response was not a HarbourMesh reference overlay');
+  });
+
+  it('fetches and validates aggregate community GeoJSON cells', async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify(aggregate), { status: 200 }));
+
+    await expect(fetchCommunityAggregates({
+      apiBaseUrl: 'http://localhost:3001',
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    })).resolves.toMatchObject({
+      type: 'FeatureCollection',
+      metadata: {
+        rawRecordIdsIncluded: false,
+        vesselIdsIncluded: false,
+      },
+    });
+
+    expect(fetchImpl).toHaveBeenCalledWith('http://localhost:3001/api/community/aggregates.geojson', expect.objectContaining({
+      method: 'GET',
+    }));
+  });
+
+  it('rejects aggregate responses that expose raw IDs or official chart data', async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
+      ...aggregate,
+      metadata: {
+        ...aggregate.metadata,
+        rawRecordIdsIncluded: true,
+      },
+    }), { status: 200 }));
+
+    await expect(fetchCommunityAggregates({
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    })).rejects.toThrow('Community aggregate response was not a HarbourMesh aggregate overlay');
   });
 });

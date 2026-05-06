@@ -35,6 +35,10 @@ import {
   reviewCommunityHazard,
   type CommunityHazardReviewRecord,
 } from '@/lib/community-hazard-review';
+import {
+  fetchCommunityAggregates,
+  type CommunityAggregateFeature,
+} from '@/lib/community-overlay';
 import { prepareSoundingForCommunityUpload, type RawDepthSounding } from '@/lib/community-soundings';
 import { uploadCommunityHazardBatch, uploadCommunitySoundingBatch } from '@/lib/community-sync';
 import { buildLocalCommunityOverlayFeatures } from '@/lib/local-community-overlay';
@@ -103,6 +107,9 @@ export function Community() {
   const [reviewingHazardId, setReviewingHazardId] = useState<string | null>(null);
   const [reviewError, setReviewError] = useState<string | null>(null);
   const [reviewLoadedAt, setReviewLoadedAt] = useState<string | null>(null);
+  const [aggregateFeatures, setAggregateFeatures] = useState<CommunityAggregateFeature[]>([]);
+  const [aggregateLoading, setAggregateLoading] = useState(false);
+  const [aggregateError, setAggregateError] = useState<string | null>(null);
   const isOptedIn = consent?.shareTelemetryForCommunity || false;
   const shareableSoundings = getShareableSoundings();
   const queuedBatches = useMemo(() => uploadBatches.filter((batch) => batch.status === 'queued'), [uploadBatches]);
@@ -260,6 +267,20 @@ export function Community() {
     }
   };
 
+  const handleLoadCommunityAggregates = async () => {
+    setAggregateLoading(true);
+    setAggregateError(null);
+
+    try {
+      const aggregate = await fetchCommunityAggregates();
+      setAggregateFeatures(aggregate.features);
+    } catch (error) {
+      setAggregateError(error instanceof Error ? error.message : 'Community aggregate load failed');
+    } finally {
+      setAggregateLoading(false);
+    }
+  };
+
   const handleLoadReviewQueue = async () => {
     setReviewLoading(true);
     setReviewError(null);
@@ -414,20 +435,30 @@ export function Community() {
         </TabsList>
 
         <TabsContent value="map" className="mt-4">
-          <Card className="h-[560px]">
+          <Card className="min-h-[640px] md:h-[560px] md:min-h-0">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between gap-3">
                 <CardTitle className="flex items-center gap-2">
                   <Globe className="h-5 w-5" />
                   NB Community Map
                 </CardTitle>
-                <Badge variant="outline">
-                  <Ship className="mr-1 h-3 w-3" />
-                  {aisTargets.length + (latestPosition ? 1 : 0)} vessels
-                </Badge>
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  <Badge variant={aggregateError ? 'destructive' : 'outline'}>
+                    <Database className="mr-1 h-3 w-3" />
+                    {aggregateError ? 'Aggregate error' : `${aggregateFeatures.length} aggregate cells`}
+                  </Badge>
+                  <Badge variant="outline">
+                    <Ship className="mr-1 h-3 w-3" />
+                    {aisTargets.length + (latestPosition ? 1 : 0)} vessels
+                  </Badge>
+                  <Button size="sm" variant="outline" onClick={handleLoadCommunityAggregates} disabled={aggregateLoading}>
+                    <RefreshCw className={cn('mr-2 h-4 w-4', aggregateLoading && 'animate-spin')} />
+                    {aggregateLoading ? 'Loading' : 'Load Aggregates'}
+                  </Button>
+                </div>
               </div>
             </CardHeader>
-            <CardContent className="h-[calc(100%-60px)]">
+            <CardContent className="h-[480px] md:h-[calc(100%-60px)]">
               <NBPilotChart
                 position={latestPosition ? {
                   latitude: latestPosition.latitude,
@@ -436,6 +467,7 @@ export function Community() {
                 heading={latestMotion?.yaw ?? 0}
                 aisTargets={aisTargets}
                 communityFeatures={communityOverlayFeatures}
+                communityAggregateFeatures={aggregateFeatures}
               />
             </CardContent>
           </Card>

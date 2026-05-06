@@ -1,10 +1,10 @@
 import L, { type LatLngExpression } from 'leaflet';
-import { CircleMarker, LayersControl, MapContainer, Pane, Popup, Polyline, TileLayer, WMSTileLayer, useMap } from 'react-leaflet';
+import { CircleMarker, LayersControl, MapContainer, Pane, Polygon, Popup, Polyline, TileLayer, WMSTileLayer, useMap } from 'react-leaflet';
 import { Fragment, useEffect, useMemo } from 'react';
 import { AlertTriangle, Database, Droplets, FileLock2, Ship } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn, formatCoordinate, formatHeading } from '@/lib/utils';
-import type { CommunityOverlayFeature } from '@/lib/community-overlay';
+import type { CommunityAggregateFeature, CommunityOverlayFeature } from '@/lib/community-overlay';
 import type { Route } from '@/types';
 import {
   GEONB_WMS_LAYERS,
@@ -30,6 +30,7 @@ type NBPilotChartProps = {
   routes?: Route[];
   activeRouteId?: string | null;
   communityFeatures?: CommunityOverlayFeature[];
+  communityAggregateFeatures?: CommunityAggregateFeature[];
   className?: string;
 };
 
@@ -74,6 +75,32 @@ function getFeatureColor(feature: CommunityOverlayFeature): string {
   if (feature.properties.severity === 'high') return '#dc2626';
   if (feature.properties.severity === 'medium') return '#d97706';
   return '#2563eb';
+}
+
+function getAggregateCenter(feature: CommunityAggregateFeature): MapPosition {
+  const ring = feature.geometry.coordinates[0].slice(0, -1);
+  const totals = ring.reduce(
+    (sum, [longitude, latitude]) => ({
+      latitude: sum.latitude + latitude,
+      longitude: sum.longitude + longitude,
+    }),
+    { latitude: 0, longitude: 0 }
+  );
+
+  return {
+    latitude: totals.latitude / ring.length,
+    longitude: totals.longitude / ring.length,
+  };
+}
+
+function getAggregateColor(feature: CommunityAggregateFeature): string {
+  if (feature.properties.highHazardCount > 0) return '#dc2626';
+  if (feature.properties.hazardCount > 0) return '#d97706';
+  return '#0891b2';
+}
+
+function getAggregatePositions(feature: CommunityAggregateFeature): LatLngExpression[] {
+  return feature.geometry.coordinates[0].map(([longitude, latitude]) => [latitude, longitude]);
 }
 
 function RecenterOnPosition({ center }: { center: MapPosition }) {
@@ -121,6 +148,7 @@ export function NBPilotChart({
   routes = [],
   activeRouteId = null,
   communityFeatures = [],
+  communityAggregateFeatures = [],
   className,
 }: NBPilotChartProps) {
   const usablePosition = isWithinNBPilotBounds(position) ? position : null;
@@ -137,6 +165,10 @@ export function NBPilotChart({
   const visibleCommunityFeatures = useMemo(
     () => communityFeatures.filter((feature) => isWithinNBPilotBounds(getFeaturePosition(feature))),
     [communityFeatures],
+  );
+  const visibleAggregateFeatures = useMemo(
+    () => communityAggregateFeatures.filter((feature) => isWithinNBPilotBounds(getAggregateCenter(feature))),
+    [communityAggregateFeatures],
   );
 
   return (
@@ -223,6 +255,37 @@ export function NBPilotChart({
         </Pane>
 
         <Pane name="harbourmesh-community-overlay" style={{ zIndex: 635 }}>
+          {visibleAggregateFeatures.map((feature) => {
+            const color = getAggregateColor(feature);
+
+            return (
+              <Polygon
+                key={feature.id}
+                positions={getAggregatePositions(feature)}
+                pathOptions={{
+                  color,
+                  fillColor: color,
+                  fillOpacity: 0.18,
+                  opacity: 0.65,
+                  weight: 1,
+                }}
+              >
+                <Popup>
+                  <div className="space-y-1 text-sm">
+                    <strong>Community aggregate</strong>
+                    <div>{feature.properties.soundingCount} soundings</div>
+                    {typeof feature.properties.averageDepthMeters === 'number' && (
+                      <div>{feature.properties.averageDepthMeters.toFixed(1)} m avg depth</div>
+                    )}
+                    <div>{feature.properties.hazardCount} accepted hazards</div>
+                    <div>Raw vessel IDs: excluded</div>
+                    <div>Official chart data: excluded</div>
+                  </div>
+                </Popup>
+              </Polygon>
+            );
+          })}
+
           {visibleCommunityFeatures.map((feature) => {
             const position = getFeaturePosition(feature);
             const kind = getFeatureKind(feature);

@@ -43,7 +43,7 @@ Observed state:
 
 Last light checks:
 
-- `npm run test:run`: passing, 110 web tests.
+- `npm run test:run`: passing, 112 web tests.
 - `npm test` in `server`: passing, 15 API tests.
 - `npm run type-check`: passing.
 - `npm run type-check` in `server`: passing.
@@ -62,6 +62,7 @@ Last light checks:
 - Web local persistence tests cover vessel/items, documents, logs, and tasks writing to named local-first stores.
 - Web local data portability tests cover export/import round trips and verify AI provider secret stores are excluded.
 - Web hazard moderation tests cover protected review-queue loading, review receipt validation, API error handling, and invalid receipt rejection.
+- Web aggregate overlay tests cover aggregate GeoJSON fetching, privacy metadata validation, and rejection when raw IDs or official chart data are exposed.
 - Local API smoke on port 3101: `/health`, `POST /api/community/soundings`, and `/api/community/soundings/summary` returned expected responses.
 - Local API smoke on port 3102: `POST /api/devices/register` and `GET /api/devices` returned expected responses.
 - Local API smoke on port 3103: `/health`, `POST /api/community/hazards`, and `/api/community/hazards/summary` returned expected responses.
@@ -72,6 +73,7 @@ Last light checks:
 - Browser smoke on port 5176: demo-data notices rendered on Inventory, Documents, Logs & Tasks, Vessel, and Boat Map after sidebar navigation.
 - Browser smoke on port 5176: Settings Data & Storage rendered the Export All Data and Import Data controls at 1280x900.
 - Browser smoke on port 5176: Community Moderation rendered the Load Review Queue control at 1280x900 and the tab list stayed inside the 360x780 viewport.
+- Browser smoke on port 5176: Community Map rendered the Load Aggregates control at 1280x900 and 360x780, with the map card contained at both sizes.
 - No live Signal K hardware test or real-vessel API load test was run for this snapshot.
 
 ## Implementation Progress On 2026-05-06
@@ -98,6 +100,7 @@ Completed in the active checkout:
 - Added configurable pilot API-key enforcement for community uploads and device registry endpoints, with public chart catalog, summaries, and reference overlay endpoints left readable.
 - Added pending-by-default hazard review for backend community hazards so public GeoJSON overlays only include accepted hazards.
 - Added `/api/community/aggregates.geojson` for privacy-preserving community aggregate cells with depth averages and accepted hazard counts, without raw record IDs or vessel IDs.
+- Wired aggregate GeoJSON loading into the Community map and rendered aggregate cells as reference polygons separate from local/raw overlay markers.
 - Added NMEA 0183 parser regressions and fixed GGA field indexing, longitude degree parsing, RMC date/time handling, checksum rejection, and DBT offset handling.
 - Added shared demo-data notices to vessel, boat map, inventory, documents, logs/tasks, and fleet surfaces, and stopped auto-saving demo documents/logs/tasks/vessel data into local stores.
 - Added local-first persistence for user-owned vessel data, items, documents, logs, and tasks.
