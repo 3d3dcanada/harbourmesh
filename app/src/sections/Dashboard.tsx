@@ -5,11 +5,9 @@
 
 import React from 'react';
 import {
-  Ship,
   MapPin,
   Wind,
   Droplets,
-  Thermometer,
   Navigation,
   AlertTriangle,
   CheckCircle2,
@@ -27,10 +25,9 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn, formatCoordinate, formatHeading, formatSpeed, formatDepth, formatTemperature, formatRelativeTime } from '@/lib/utils';
+import { cn, formatCoordinate, formatHeading, formatRelativeTime } from '@/lib/utils';
 import { useTelemetry } from '@/hooks/useTelemetry';
 import { useLogTaskStore, useDocumentStore, useVesselStore, useAppStore } from '@/store';
 import type { LogEntry, Task } from '@/types';

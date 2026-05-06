@@ -112,7 +112,7 @@ vi.mock('leaflet', () => ({
 // Mock navigator.geolocation
 Object.defineProperty(navigator, 'geolocation', {
   value: {
-    getCurrentPosition: vi.fn((success, error) => {
+    getCurrentPosition: vi.fn((success, _error) => {
       success({
         coords: {
           latitude: 44.6501,

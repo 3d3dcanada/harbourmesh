@@ -7,34 +7,28 @@ import React, { useState } from 'react';
 import {
   Ship,
   Ruler,
-  Weight,
   Anchor,
-  Flag,
-  MapPin,
   Edit3,
   Save,
   X,
   Plus,
-  Trash2,
-  Fuel,
   Droplets,
   Settings2,
   Info,
   Camera,
   Zap,
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { cn, formatDistance } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { useVesselStore } from '@/store';
-import { VesselType, type Vessel, type Engine as EngineType, type Tank } from '@/types';
+import { VesselType, type Vessel } from '@/types';
 
 // Vessel type display names
 const vesselTypeNames: Record<string, string> = {

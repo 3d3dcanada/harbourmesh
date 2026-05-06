@@ -16,7 +16,7 @@ import {
   useNavigationPlanStore,
 } from './index';
 import { createMockVessel, createMockLogEntry, createMockTask, createMockDocument, createMockItem } from '../test/setup';
-import { SharePositionLevel } from '../types';
+import { SharePositionLevel, SpaceType } from '../types';
 import type { RawDepthSounding } from '../lib/community-soundings';
 import { NB_PILOT_REFERENCE_ROUTE } from '../lib/navigation-planning';
 
@@ -211,7 +211,14 @@ describe('Vessel Store', () => {
     
     act(() => {
       result.current.setSpaces([
-        { id: 'space-1', vesselId: 'vessel-1', name: 'Cockpit', type: 'cockpit' } as any,
+        {
+          id: 'space-1',
+          vesselId: 'vessel-1',
+          name: 'Cockpit',
+          type: SpaceType.COCKPIT,
+          createdAt: '2026-05-06T12:00:00.000Z',
+          updatedAt: '2026-05-06T12:00:00.000Z',
+        },
       ]);
     });
     

@@ -57,7 +57,7 @@ interface AppStore extends AppState {
 
 export const useAppStore = create<AppStore>()(
   persist(
-    (set, get) => ({
+    (set, _get) => ({
       // Initial state
       sidebarOpen: true,
       activeView: 'dashboard',

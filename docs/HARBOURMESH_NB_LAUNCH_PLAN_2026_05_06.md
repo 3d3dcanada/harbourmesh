@@ -47,7 +47,7 @@ Last light checks:
 - `npm test` in `server`: passing, 9 API tests.
 - `npm run type-check`: passing.
 - `npm run type-check` in `server`: passing.
-- `npm run lint`: passing with 59 warnings.
+- `npm run lint`: passing with 0 warnings.
 - `npm audit --json`: 0 vulnerabilities.
 - `npm run build`: passing for the web app.
 - `npm run build` in `server`: passing.

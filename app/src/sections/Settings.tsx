@@ -5,9 +5,7 @@
 
 import React, { useState } from 'react';
 import {
-  Settings as SettingsIcon,
   User,
-  Bell,
   Shield,
   Database,
   Wifi,
@@ -18,17 +16,10 @@ import {
   Cloud,
   Bot,
   CheckCircle2,
-  AlertTriangle,
-  Lock,
-  Eye,
-  EyeOff,
-  Save,
   RefreshCw,
   Download,
   Upload,
   Trash2,
-  ChevronRight,
-  ExternalLink,
   Info,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

@@ -5,24 +5,19 @@
 
 import React, { useState } from 'react';
 import {
-  Compass,
   Navigation as NavigationIcon,
   MapPin,
   Wind,
   Droplets,
   Thermometer,
   Gauge,
-  Anchor,
   Layers,
   Maximize2,
   Minimize2,
-  Target,
   Activity,
   Ship,
   AlertTriangle,
-  Settings,
   Info,
-  Crosshair,
   Clock,
   Zap,
   TrendingUp,
@@ -31,8 +26,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import { cn, formatCoordinate, formatHeading, formatSpeed, formatDepth, formatTemperature } from '@/lib/utils';
+import { cn, formatCoordinate, formatHeading } from '@/lib/utils';
 import { useTelemetry } from '@/hooks/useTelemetry';
 import { NBPilotChart } from '@/components/NBPilotChart';
 import { useNavigationPlanStore } from '@/store';

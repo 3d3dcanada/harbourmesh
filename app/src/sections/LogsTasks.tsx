@@ -26,7 +26,7 @@ import {
   FileText,
   CheckSquare,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -255,8 +255,8 @@ export function LogsTasks() {
   const [filterType, setFilterType] = useState<string>('all');
   const [showAddLog, setShowAddLog] = useState(false);
   const [showAddTask, setShowAddTask] = useState(false);
-  const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [, setSelectedLog] = useState<LogEntry | null>(null);
+  const [, setSelectedTask] = useState<Task | null>(null);
   
   // Initialize with demo data
   React.useEffect(() => {

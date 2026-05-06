@@ -30,7 +30,6 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { useOnboardingStore, useAppStore } from '@/store';
 import { VesselType, SpaceType, ItemCategory, type OnboardingStep } from '@/types';
@@ -86,19 +85,14 @@ const inventorySuggestions = [
 
 export function Onboarding() {
   const { 
-    isOnboarding, 
-    currentStep, 
     vesselData, 
     spaces, 
     items, 
-    aiSuggestions,
     nextStep, 
     prevStep, 
     updateVesselData,
     addSpace,
     addItem,
-    acceptSuggestion,
-    rejectSuggestion,
     completeOnboarding,
   } = useOnboardingStore();
   
