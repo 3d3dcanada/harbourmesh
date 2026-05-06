@@ -6,7 +6,7 @@ Scope: New Brunswick pilot first, international architecture second
 
 ## Executive Status
 
-HarbourMesh is currently a React/Vite NB pilot app with an early Fastify backend for device registration, chart source catalog, chart package manifests, generated GeoJSON package artifacts, community sounding upload, community hazard upload, hazard review, and privacy-preserving aggregate GeoJSON. It still does not have a production chart engine, hardware ingest proof, AI runtime, weather-routing engine, operator identity/audit trails, vector tile products, or production cloud mesh. The next goal is not a public launch. The next goal is a stable NB pilot foundation that is honest about what is implemented, legally clean around chart data, and ready for real vessel telemetry.
+HarbourMesh is currently a React/Vite NB pilot app with an early Fastify backend for device registration, chart source catalog, chart package manifests, generated GeoJSON package artifacts, community sounding upload, community hazard upload, hazard review/history, and privacy-preserving aggregate GeoJSON. It still does not have a production chart engine, hardware ingest proof, AI runtime, weather-routing engine, per-operator auth identity, vector tile products, or production cloud mesh. The next goal is not a public launch. The next goal is a stable NB pilot foundation that is honest about what is implemented, legally clean around chart data, and ready for real vessel telemetry.
 
 The product ambition is correct: a boat-first operating layer where charts, vessel telemetry, sonar soundings, radar-derived observations, hazards, weather, maintenance, and community-contributed local knowledge can become useful together. The implementation has to be phased carefully because official navigation charts, user-generated bathymetry, privacy, liability, and sensor quality are separate problems that should not be mixed into one ungoverned data pool.
 
@@ -34,8 +34,8 @@ Observed state:
 - Charts: NB pilot reference chart work has started with React Leaflet, OSM base tiles, legal GeoNB WMS overlays, a chart source catalog, and NB offline package manifests; it is not a certified navigation chart system and package artifacts are not generated yet.
 - Telemetry: recorded Signal K replay and live Signal K WebSocket wiring now exist; live hardware ingest remains unverified.
 - Backend: a Fastify API now exists for NB chart source catalog, NB chart package manifests, community sounding upload, community hazard upload, hazard review, community reference GeoJSON overlay, device registration, and summary endpoints with JSONL local persistence; a PostGIS migration now defines the production target schema, but runtime storage is still JSONL.
-- Community mesh: local raw sounding capture, local hazard reporting, consent-safe offline upload queues, backend upload endpoints, pending-by-default hazard moderation, an operator review surface, a raw reference overlay, and privacy-preserving aggregate GeoJSON now exist; operator identity/audit trails and vector tile products are still not implemented.
-- Security: docs no longer claim production readiness; the weak SHA-256 placeholder key derivation, token signing, and password hashing helpers have been replaced with PBKDF2-HMAC-SHA256/HMAC-SHA256 regressions, and the pilot API now has configurable scoped API-key gates for write/device and review endpoints. Full user auth, secret-management, and per-operator audit identity are still not implemented.
+- Community mesh: local raw sounding capture, local hazard reporting, consent-safe offline upload queues, backend upload endpoints, pending-by-default hazard moderation, an operator review surface, queryable review history, a raw reference overlay, and privacy-preserving aggregate GeoJSON now exist; per-operator auth identity and vector tile products are still not implemented.
+- Security: docs no longer claim production readiness; the weak SHA-256 placeholder key derivation, token signing, and password hashing helpers have been replaced with PBKDF2-HMAC-SHA256/HMAC-SHA256 regressions, and the pilot API now has configurable scoped API-key gates for write/device and review endpoints. Full user auth, secret-management, and per-operator auth identity are still not implemented.
 - CI/release: workflows have been adjusted to stop calling missing package scripts.
 - Testing: current tests now cover chart source metadata, Signal K mapping, community sounding extraction, local hazard reporting, device registration, store queue behavior, and crypto helper regressions; they still do not prove navigation safety, hardware ingest, production auth, browser layout, or security readiness.
 
@@ -44,7 +44,7 @@ Observed state:
 Last light checks:
 
 - `npm run test:run`: passing, 112 web tests.
-- `npm test` in `server`: passing, 20 server tests.
+- `npm test` in `server`: passing, 21 server tests.
 - `npm run type-check`: passing.
 - `npm run type-check` in `server`: passing.
 - `npm run lint`: passing with 0 warnings.
@@ -54,7 +54,7 @@ Last light checks:
 - `npm run build` in `server`: passing.
 - `npm audit --json` in `server`: 0 vulnerabilities.
 - Server API auth tests cover missing keys, accepted header keys, accepted Bearer keys, scoped write/review key separation, protected device registry reads, and fail-closed production-style config.
-- Server hazard review tests cover pending hazards being withheld from public GeoJSON until accepted, accepted hazards becoming overlay-eligible, and unknown hazard review returning 404.
+- Server hazard review tests cover pending hazards being withheld from public GeoJSON until accepted, accepted hazards becoming overlay-eligible, review history listing, and unknown hazard review returning 404.
 - Server aggregate GeoJSON tests cover cell polygons, sounding depth averages, accepted-hazard counts, official chart exclusion, and raw vessel/source ID omission.
 - Server chart package tests cover `/api/charts/nb/packages`, `/api/charts/nb/package-artifacts`, NB coast and inland-waterway package definitions, generated GeoJSON artifact checksums, pending PMTiles/MBTiles flags, community-overlay inclusion, and official CHS exclusion.
 - Server PostGIS schema tests cover the NB pilot migration, spatial observation/hazard/aggregate columns, GIST indexes, and schema-level exclusion of official chart data/raw identifiers from shared products.
@@ -110,13 +110,14 @@ Completed in the active checkout:
 - Added an operator hazard moderation surface in Community with protected review-queue loading and accept/reject actions against the pilot API.
 - Split pilot API keys into backward-compatible legacy keys plus scoped write keys and review keys so intake/device access can be separated from hazard moderation.
 - Added the first PostGIS migration for vessels, devices, soundings, hazards, reviews, aggregate cells, and release manifests with spatial indexes and legal/privacy checks.
+- Added review-scoped `/api/community/hazards/reviews` so hazard moderation decisions are queryable as audit history.
 
 Still not done:
 
-- No full production user auth, runtime PostGIS repositories, operator identity/audit trails, generated PMTiles/MBTiles artifacts, vector tile generation, or reviewed aggregate tile release process exists.
+- No full production user auth, runtime PostGIS repositories, per-operator auth identity, generated PMTiles/MBTiles artifacts, vector tile generation, or reviewed aggregate tile release process exists.
 - No full route-by-route browser/mobile visual verification has been run in this session.
 - No real Signal K server, sonar, radar, AIS receiver, or Boat Node hardware has been tested.
-- Community hazards can now be queued, uploaded to the pilot backend, reviewed through the API/UI with review-scoped keys, included in the raw reference overlay only after acceptance, and counted in privacy-preserving aggregates; per-operator audit trails and vector tile products are still not implemented.
+- Community hazards can now be queued, uploaded to the pilot backend, reviewed through the API/UI with review-scoped keys, listed through review history, included in the raw reference overlay only after acceptance, and counted in privacy-preserving aggregates; per-operator auth identity and vector tile products are still not implemented.
 
 ## NB Data Strategy
 

@@ -29,7 +29,7 @@ export type StoredCommunityHazard = CommunityHazardUpload & {
   reviewNote?: string;
 };
 
-type StoredHazardReview = CommunityHazardReview & {
+export type StoredHazardReview = CommunityHazardReview & {
   hazardId: string;
   reviewedAt: string;
 };
@@ -39,6 +39,7 @@ export type CommunityHazardRepository = {
   reviewHazard: (hazardId: string, review: CommunityHazardReview) => Promise<CommunityHazardReviewReceipt | null>;
   getSummary: () => Promise<CommunityHazardSummary>;
   listRecords: () => Promise<StoredCommunityHazard[]>;
+  listReviews: () => Promise<StoredHazardReview[]>;
 };
 
 export function createCommunityHazardRepository(dataDir: string): CommunityHazardRepository {
@@ -169,6 +170,10 @@ export function createCommunityHazardRepository(dataDir: string): CommunityHazar
 
     async listRecords() {
       return listRecords();
+    },
+
+    async listReviews() {
+      return readJsonLines<StoredHazardReview>(reviewsFile);
     },
   };
 }

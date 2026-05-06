@@ -20,6 +20,7 @@ Default API:
 - `POST /api/community/hazards`
 - `GET /api/community/hazards/summary`
 - `GET /api/community/hazards/review`
+- `GET /api/community/hazards/reviews`
 - `POST /api/community/hazards/:hazardId/review`
 - `GET /api/community/overlay.geojson`
 - `GET /api/community/aggregates.geojson`
@@ -47,6 +48,7 @@ Protected endpoints:
 Review-scoped endpoints:
 
 - `GET /api/community/hazards/review`
+- `GET /api/community/hazards/reviews`
 - `POST /api/community/hazards/:hazardId/review`
 
 When `NODE_ENV=production`, pilot API auth is required and the protected endpoints fail closed with `503 api_auth_not_configured` if no key is configured.

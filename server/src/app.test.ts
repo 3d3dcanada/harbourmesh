@@ -214,6 +214,15 @@ describe('HarbourMesh API', () => {
       requiredScope: 'review',
     });
 
+    const writeReviewHistory = await app.inject({
+      method: 'GET',
+      url: '/api/community/hazards/reviews',
+      headers: {
+        'x-harbourmesh-api-key': TEST_WRITE_API_KEY,
+      },
+    });
+    expect(writeReviewHistory.statusCode).toBe(403);
+
     const reviewQueue = await app.inject({
       method: 'GET',
       url: '/api/community/hazards/review',
@@ -684,6 +693,45 @@ describe('HarbourMesh API', () => {
     expect(response.json()).toMatchObject({
       ok: false,
       error: 'hazard_not_found',
+    });
+  });
+
+  it('records hazard review audit history', async () => {
+    const app = await createTestApp();
+
+    await app.inject({
+      method: 'POST',
+      url: '/api/community/hazards',
+      payload: sampleHazardBatch,
+    });
+
+    await app.inject({
+      method: 'POST',
+      url: '/api/community/hazards/hazard-1/review',
+      payload: {
+        status: 'rejected',
+        reviewedBy: 'nb-pilot-reviewer',
+        reviewedAt: '2026-05-06T12:20:00.000Z',
+        note: 'Duplicate report from same area.',
+      },
+    });
+
+    const history = await app.inject({
+      method: 'GET',
+      url: '/api/community/hazards/reviews',
+    });
+
+    expect(history.statusCode).toBe(200);
+    expect(history.json()).toMatchObject({
+      reviews: [
+        {
+          hazardId: 'hazard-1',
+          status: 'rejected',
+          reviewedBy: 'nb-pilot-reviewer',
+          reviewedAt: '2026-05-06T12:20:00.000Z',
+          note: 'Duplicate report from same area.',
+        },
+      ],
     });
   });
 

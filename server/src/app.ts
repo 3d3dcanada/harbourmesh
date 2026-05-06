@@ -140,6 +140,14 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     };
   });
 
+  app.get('/api/community/hazards/reviews', async (request, reply) => {
+    if (!(await requireApiAccess(request, reply, apiAuth, 'review'))) return reply;
+
+    return {
+      reviews: await hazardRepository.listReviews(),
+    };
+  });
+
   app.post('/api/community/hazards/:hazardId/review', async (request, reply) => {
     if (!(await requireApiAccess(request, reply, apiAuth, 'review'))) return reply;
 
