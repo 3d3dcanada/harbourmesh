@@ -1,6 +1,7 @@
 import { mkdir, mkdtemp } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { parseOperatorApiKeys } from './api-auth.js';
 import { buildApp, type BuildAppOptions } from './app.js';
 import type { CommunityHazardBatch } from './community-hazards.js';
 import type { CommunitySoundingBatch } from './community-soundings.js';
@@ -108,6 +109,19 @@ async function createTestApp(options: Partial<Omit<BuildAppOptions, 'dataDir'>> 
 }
 
 describe('HarbourMesh API', () => {
+  it('parses review operator API keys from environment-style config', () => {
+    expect(parseOperatorApiKeys(`nb-ops:${TEST_REVIEW_API_KEY}, broken, second: second-key `)).toEqual([
+      {
+        key: TEST_REVIEW_API_KEY,
+        operatorId: 'nb-ops',
+      },
+      {
+        key: 'second-key',
+        operatorId: 'second',
+      },
+    ]);
+  });
+
   it('accepts valid community sounding batches', async () => {
     const app = await createTestApp();
     const response = await app.inject({
@@ -162,7 +176,7 @@ describe('HarbourMesh API', () => {
   it('separates write and review scoped pilot API keys', async () => {
     const app = await createTestApp({
       writeApiKeys: [TEST_WRITE_API_KEY],
-      reviewApiKeys: [TEST_REVIEW_API_KEY],
+      reviewOperatorKeys: [{ key: TEST_REVIEW_API_KEY, operatorId: 'nb-ops-reviewer' }],
       requireApiAuth: true,
     });
 
@@ -248,10 +262,28 @@ describe('HarbourMesh API', () => {
       },
       payload: {
         status: 'accepted',
-        reviewedBy: 'nb-pilot-reviewer',
+        reviewedBy: 'client-supplied-reviewer',
       },
     });
     expect(reviewDecision.statusCode).toBe(202);
+
+    const reviewHistory = await app.inject({
+      method: 'GET',
+      url: '/api/community/hazards/reviews',
+      headers: {
+        'x-harbourmesh-api-key': TEST_REVIEW_API_KEY,
+      },
+    });
+    expect(reviewHistory.statusCode).toBe(200);
+    expect(reviewHistory.json()).toMatchObject({
+      reviews: [
+        {
+          hazardId: 'hazard-1',
+          status: 'accepted',
+          reviewedBy: 'nb-ops-reviewer',
+        },
+      ],
+    });
   });
 
   it('fails closed when pilot API auth is required without configured keys', async () => {

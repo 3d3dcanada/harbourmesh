@@ -3,8 +3,11 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import { ZodError } from 'zod';
 import {
   createApiAuthConfig,
+  getRequestApiKeyIdentity,
+  parseOperatorApiKeys,
   parseApiKeys,
   requireApiAccess,
+  type OperatorApiKey,
 } from './api-auth.js';
 import { getNBPilotChartPackageArtifactManifest } from './chart-package-artifacts.js';
 import { getNBPilotChartCatalog, getNBPilotChartPackageManifest } from './chart-catalog.js';
@@ -34,6 +37,7 @@ export type BuildAppOptions = {
   apiKeys?: readonly string[];
   writeApiKeys?: readonly string[];
   reviewApiKeys?: readonly string[];
+  reviewOperatorKeys?: readonly OperatorApiKey[];
   requireApiAuth?: boolean;
   logger?: boolean;
 };
@@ -47,6 +51,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     keys: options.apiKeys ?? parseApiKeys(process.env.HARBOURMESH_API_KEYS, process.env.HARBOURMESH_API_KEY),
     writeKeys: options.writeApiKeys ?? parseApiKeys(process.env.HARBOURMESH_WRITE_API_KEYS),
     reviewKeys: options.reviewApiKeys ?? parseApiKeys(process.env.HARBOURMESH_REVIEW_API_KEYS),
+    reviewOperatorKeys: options.reviewOperatorKeys ?? parseOperatorApiKeys(process.env.HARBOURMESH_REVIEW_OPERATOR_KEYS),
     required: options.requireApiAuth ?? process.env.NODE_ENV === 'production',
   });
 
@@ -153,7 +158,12 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
 
     try {
       const { hazardId } = request.params as { hazardId: string };
-      const review = communityHazardReviewSchema.parse(request.body);
+      const reviewIdentity = getRequestApiKeyIdentity(apiAuth, request, 'review');
+      const requestedReview = communityHazardReviewSchema.parse(request.body);
+      const review = {
+        ...requestedReview,
+        reviewedBy: reviewIdentity?.operatorId ?? requestedReview.reviewedBy,
+      };
       const receipt = await hazardRepository.reviewHazard(hazardId, review);
       if (!receipt) {
         return reply.code(404).send({ ok: false, error: 'hazard_not_found' });
