@@ -67,4 +67,31 @@ describe('device registration', () => {
       }),
     }));
   });
+
+  it('adds account-session ownership context without replacing pilot API keys', async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
+      ok: true,
+      deviceId: 'boat-node-001',
+      vesselId: 'vessel-1',
+      status: 'registered',
+      registeredAt: '2026-05-06T12:01:00.000Z',
+    }), { status: 202 }));
+    const payload = buildBoatNodeRegistrationPayload(DEFAULT_BOAT_NODE_SETTINGS, consent, {
+      now: '2026-05-06T12:01:00.000Z',
+    });
+
+    await registerBoatNode(payload, {
+      apiBaseUrl: 'http://localhost:3001',
+      apiKey: 'hm_test_api_key_1234567890',
+      accountAccessToken: 'hm_user_session_v1.payload.signature',
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+
+    expect(fetchImpl).toHaveBeenCalledWith('http://localhost:3001/api/devices/register', expect.objectContaining({
+      headers: expect.objectContaining({
+        'X-HarbourMesh-API-Key': 'hm_test_api_key_1234567890',
+        'X-HarbourMesh-Account-Session': 'hm_user_session_v1.payload.signature',
+      }),
+    }));
+  });
 });

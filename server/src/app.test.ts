@@ -652,12 +652,42 @@ describe('HarbourMesh API', () => {
     });
     await app.inject({
       method: 'POST',
+      url: '/api/devices/register',
+      headers: {
+        ...writeHeader,
+        ...ownerAccountHeader,
+      },
+      payload: {
+        ...sampleDeviceRegistration,
+        deviceId: 'owner-boat-node-1',
+        vesselId: 'owner-vessel-1',
+        displayName: 'Owner Boat Node',
+        registeredAt: '2026-05-06T12:07:00.000Z',
+      },
+    });
+    await app.inject({
+      method: 'POST',
       url: '/api/community/soundings',
       headers: {
         ...writeHeader,
         'x-harbourmesh-account-session': otherSession,
       },
       payload: createSoundingBatch('other-sounding-batch', 'other-sounding-1'),
+    });
+    await app.inject({
+      method: 'POST',
+      url: '/api/devices/register',
+      headers: {
+        ...writeHeader,
+        'x-harbourmesh-account-session': otherSession,
+      },
+      payload: {
+        ...sampleDeviceRegistration,
+        deviceId: 'other-boat-node-1',
+        vesselId: 'other-vessel-1',
+        displayName: 'Other Boat Node',
+        registeredAt: '2026-05-06T12:08:00.000Z',
+      },
     });
     const published = await app.inject({
       method: 'POST',
@@ -671,6 +701,17 @@ describe('HarbourMesh API', () => {
       },
     });
     expect(published.statusCode).toBe(201);
+
+    const devices = await app.inject({
+      method: 'GET',
+      url: '/api/devices',
+      headers: writeHeader,
+    });
+    expect(devices.statusCode).toBe(200);
+    expect(JSON.stringify(devices.json())).toContain('owner-boat-node-1');
+    expect(JSON.stringify(devices.json())).toContain('other-boat-node-1');
+    expect(JSON.stringify(devices.json())).not.toContain('ownerAccountId');
+    expect(JSON.stringify(devices.json())).not.toContain(activeTestAccount.id);
 
     const missingSession = await app.inject({
       method: 'GET',
@@ -706,10 +747,11 @@ describe('HarbourMesh API', () => {
       ok: true,
       accountId: activeTestAccount.id,
       summary: {
-        totalRecords: 5,
+        totalRecords: 6,
         soundings: 1,
         hazards: 1,
         observations: 2,
+        devices: 1,
         aggregateReleases: 1,
         byReviewStatus: {
           unreviewed: 1,
@@ -721,10 +763,12 @@ describe('HarbourMesh API', () => {
       expect.objectContaining({ id: 'owner-sounding-1', kind: 'sounding' }),
       expect.objectContaining({ id: 'owner-hazard-1', kind: 'hazard' }),
       expect.objectContaining({ id: 'owner-observation-1', kind: 'observation' }),
+      expect.objectContaining({ id: 'owner-boat-node-1', kind: 'device', status: 'boat_node' }),
       expect.objectContaining({ kind: 'aggregate_release', status: 'published' }),
     ]));
     expect(JSON.stringify(contributions.json())).not.toContain(otherTestAccount.id);
     expect(JSON.stringify(contributions.json())).not.toContain('other-sounding-1');
+    expect(JSON.stringify(contributions.json())).not.toContain('other-boat-node-1');
 
     await app.close();
   });

@@ -5,7 +5,7 @@ import {
   type StorageLike,
 } from './account-session';
 
-export type AccountCommunityContributionKind = 'sounding' | 'hazard' | 'observation' | 'aggregate_release';
+export type AccountCommunityContributionKind = 'sounding' | 'hazard' | 'observation' | 'device' | 'aggregate_release';
 
 export type AccountCommunityContributionItem = {
   id: string;
@@ -21,6 +21,7 @@ export type AccountCommunityContributionSummary = {
   soundings: number;
   hazards: number;
   observations: number;
+  devices: number;
   aggregateReleases: number;
   byReviewStatus: Record<string, number>;
 };
@@ -56,7 +57,13 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function isContributionKind(value: unknown): value is AccountCommunityContributionKind {
-  return value === 'sounding' || value === 'hazard' || value === 'observation' || value === 'aggregate_release';
+  return (
+    value === 'sounding' ||
+    value === 'hazard' ||
+    value === 'observation' ||
+    value === 'device' ||
+    value === 'aggregate_release'
+  );
 }
 
 function isReviewStatusCounts(value: unknown): value is Record<string, number> {
@@ -70,6 +77,7 @@ function isContributionSummary(value: unknown): value is AccountCommunityContrib
     typeof value.soundings === 'number' &&
     typeof value.hazards === 'number' &&
     typeof value.observations === 'number' &&
+    typeof value.devices === 'number' &&
     typeof value.aggregateReleases === 'number' &&
     isReviewStatusCounts(value.byReviewStatus)
   );

@@ -3,8 +3,9 @@ import type { CommunityHazardRepository, StoredCommunityHazard } from './communi
 import type { CommunityObservationRepository, StoredCommunityObservation } from './community-observation-repository.js';
 import type { CommunityAggregateReleaseManifest } from './community-release-manifests.js';
 import type { CommunitySoundingRepository, StoredCommunitySounding } from './community-sounding-repository.js';
+import type { DeviceRepository, StoredDeviceRegistration } from './device-repository.js';
 
-export type AccountCommunityContributionKind = 'sounding' | 'hazard' | 'observation' | 'aggregate_release';
+export type AccountCommunityContributionKind = 'sounding' | 'hazard' | 'observation' | 'device' | 'aggregate_release';
 
 export type AccountCommunityContributionItem = {
   id: string;
@@ -20,6 +21,7 @@ export type AccountCommunityContributionSummary = {
   soundings: number;
   hazards: number;
   observations: number;
+  devices: number;
   aggregateReleases: number;
   byReviewStatus: Record<string, number>;
 };
@@ -36,6 +38,7 @@ export type AccountCommunityContributionRepositories = {
   soundings: CommunitySoundingRepository;
   hazards: CommunityHazardRepository;
   observations: CommunityObservationRepository;
+  devices: DeviceRepository;
   aggregateReleases: CommunityAggregateReleaseRepository;
 };
 
@@ -50,6 +53,10 @@ function soundingStatus(record: StoredCommunitySounding): string {
 
 function observationStatus(record: StoredCommunityObservation): string {
   return record.quality.rejected ? 'quality_rejected' : 'received';
+}
+
+function deviceStatus(record: StoredDeviceRegistration): string {
+  return record.kind;
 }
 
 function hazardStatus(record: StoredCommunityHazard): string {
@@ -77,10 +84,11 @@ export async function buildAccountCommunityContributions(
   repositories: AccountCommunityContributionRepositories,
   generatedAt = new Date().toISOString()
 ): Promise<AccountCommunityContributions> {
-  const [allSoundings, allHazards, allObservations, aggregateReleases] = await Promise.all([
+  const [allSoundings, allHazards, allObservations, devices, aggregateReleases] = await Promise.all([
     repositories.soundings.listRecords(),
     repositories.hazards.listRecords(),
     repositories.observations.listRecords(),
+    repositories.devices.listDevicesByOwner(accountId),
     repositories.aggregateReleases.listAggregateReleasesByPublisher(accountId),
   ]);
   const soundings = allSoundings.filter((record) => record.ownerAccountId === accountId);
@@ -115,6 +123,13 @@ export async function buildAccountCommunityContributions(
       status: observationStatus(record),
       createdAt: record.observedAt,
     })),
+    ...devices.map((record) => ({
+      id: record.deviceId,
+      kind: 'device' as const,
+      region: 'NB_PILOT',
+      status: deviceStatus(record),
+      createdAt: record.registeredAt,
+    })),
     ...aggregateReleases.map((release) => ({
       id: release.id,
       kind: 'aggregate_release' as const,
@@ -129,10 +144,11 @@ export async function buildAccountCommunityContributions(
     accountId,
     generatedAt,
     summary: {
-      totalRecords: soundings.length + hazards.length + observations.length + aggregateReleases.length,
+      totalRecords: soundings.length + hazards.length + observations.length + devices.length + aggregateReleases.length,
       soundings: soundings.length,
       hazards: hazards.length,
       observations: observations.length,
+      devices: devices.length,
       aggregateReleases: aggregateReleases.length,
       byReviewStatus,
     },

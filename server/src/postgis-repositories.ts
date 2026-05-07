@@ -16,7 +16,7 @@ import type { CommunityAggregateGeoJson } from './community-aggregates.js';
 import type { CommunityAggregateReleaseManifest } from './community-release-manifests.js';
 import type { CommunitySoundingBatch, CommunitySoundingReview, CommunitySoundingSummary } from './community-soundings.js';
 import type { CommunitySoundingRepository, StoredCommunitySounding, StoredSoundingReview } from './community-sounding-repository.js';
-import type { DeviceRepository } from './device-repository.js';
+import type { DeviceRepository, StoredDeviceRegistration } from './device-repository.js';
 import type { DeviceRegistration } from './devices.js';
 
 type Queryable = {
@@ -1261,7 +1261,7 @@ function createPostgisAggregateReleaseRepository(pool: Pool): CommunityAggregate
 
 function createPostgisDeviceRepository(pool: Pool): DeviceRepository {
   return {
-    async registerDevice(registration) {
+    async registerDevice(registration, owner) {
       return withTransaction(pool, async (client) => {
         const existing = await client.query<{ device_id: string }>(
           'SELECT device_id FROM devices WHERE device_id = $1',
@@ -1277,8 +1277,9 @@ function createPostgisDeviceRepository(pool: Pool): DeviceRepository {
         await client.query(
           `INSERT INTO devices (
             device_id, vessel_id, external_vessel_id, display_name, kind, software_version,
-            signal_k_base_url, capabilities, consent_captured_at, registered_at, last_seen_at, updated_at
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, now())
+            signal_k_base_url, capabilities, consent_captured_at, registered_at, last_seen_at, updated_at,
+            owner_account_id, owner_account_roles
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, now(), $12, $13::jsonb)
           ON CONFLICT (device_id) DO UPDATE SET
             vessel_id = EXCLUDED.vessel_id,
             external_vessel_id = EXCLUDED.external_vessel_id,
@@ -1290,6 +1291,8 @@ function createPostgisDeviceRepository(pool: Pool): DeviceRepository {
             consent_captured_at = EXCLUDED.consent_captured_at,
             registered_at = EXCLUDED.registered_at,
             last_seen_at = EXCLUDED.last_seen_at,
+            owner_account_id = EXCLUDED.owner_account_id,
+            owner_account_roles = EXCLUDED.owner_account_roles,
             updated_at = now()`,
           [
             registration.deviceId,
@@ -1303,6 +1306,8 @@ function createPostgisDeviceRepository(pool: Pool): DeviceRepository {
             registration.consentCapturedAt ?? registration.registeredAt,
             registration.registeredAt,
             registration.registeredAt,
+            accountIdValue(owner),
+            accountRolesValue(owner),
           ]
         );
 
@@ -1373,6 +1378,45 @@ function createPostgisDeviceRepository(pool: Pool): DeviceRepository {
       );
 
       return result.rows[0] ? mapDeviceRegistration(result.rows[0]) : null;
+    },
+
+    async listDevicesByOwner(accountId) {
+      const result = await pool.query<{
+        device_id: string;
+        external_vessel_id: string;
+        display_name: string;
+        kind: DeviceRegistration['kind'];
+        software_version: string | null;
+        signal_k_base_url: string | null;
+        registered_at: unknown;
+        consent_captured_at: unknown;
+        capabilities: unknown;
+        owner_account_id: string | null;
+        owner_account_roles: unknown;
+      }>(
+        `SELECT
+          device_id,
+          external_vessel_id,
+          display_name,
+          kind,
+          software_version,
+          signal_k_base_url,
+          registered_at,
+          consent_captured_at,
+          capabilities,
+          owner_account_id,
+          owner_account_roles
+        FROM devices
+        WHERE owner_account_id = $1
+        ORDER BY registered_at DESC, device_id ASC`,
+        [accountId]
+      );
+
+      return result.rows.map((row): StoredDeviceRegistration => ({
+        ...mapDeviceRegistration(row),
+        ownerAccountId: row.owner_account_id ?? undefined,
+        ownerAccountRoles: toOptionalAccountRoles(row.owner_account_roles),
+      }));
     },
   };
 }

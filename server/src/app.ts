@@ -527,6 +527,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
       soundings: repository,
       hazards: hazardRepository,
       observations: observationRepository,
+      devices: deviceRepository,
       aggregateReleases: aggregateReleaseRepository,
     });
   });
@@ -966,11 +967,13 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   });
 
   app.post('/api/devices/register', async (request, reply) => {
+    const accountOwnership = await getAccountOwnershipContextIfPresent(request, reply);
+    if (!accountOwnership.ok) return reply;
     if (!(await requireApiAccess(request, reply, apiAuth))) return reply;
 
     try {
       const registration = deviceRegistrationSchema.parse(request.body);
-      const receipt = await deviceRepository.registerDevice(registration);
+      const receipt = await deviceRepository.registerDevice(registration, accountOwnership.context);
       return reply.code(202).send(receipt);
     } catch (error) {
       if (error instanceof ZodError) {

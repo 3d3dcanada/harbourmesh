@@ -1,5 +1,6 @@
 import type { BoatNodeSettings } from '@/store';
 import type { ConsentSettings } from '@/types';
+import { buildAccountSessionHeaders, type StorageLike } from './account-session';
 import { resolvePilotApiKey } from './pilot-api-credentials';
 
 export type DeviceRegistrationPayload = {
@@ -25,6 +26,8 @@ export type DeviceRegistrationReceipt = {
 export type RegisterBoatNodeOptions = {
   apiBaseUrl?: string;
   apiKey?: string;
+  accountAccessToken?: string;
+  accountSessionStorage?: StorageLike | null;
   fetchImpl?: typeof fetch;
   softwareVersion?: string;
   now?: string;
@@ -51,10 +54,15 @@ function resolveApiKey(apiKey?: string): string | undefined {
   return resolvePilotApiKey(apiKey);
 }
 
-function buildJsonHeaders(apiKey?: string): Record<string, string> {
+function buildJsonHeaders(
+  apiKey?: string,
+  accountAccessToken?: string,
+  accountSessionStorage?: StorageLike | null
+): Record<string, string> {
   return {
     'Content-Type': 'application/json',
     ...(apiKey ? { 'X-HarbourMesh-API-Key': apiKey } : {}),
+    ...buildAccountSessionHeaders(accountAccessToken, accountSessionStorage),
   };
 }
 
@@ -83,7 +91,7 @@ export async function registerBoatNode(
   const fetchImpl = options.fetchImpl ?? fetch;
   const response = await fetchImpl(resolveEndpoint(options.apiBaseUrl ?? import.meta.env.VITE_API_BASE_URL), {
     method: 'POST',
-    headers: buildJsonHeaders(resolveApiKey(options.apiKey)),
+    headers: buildJsonHeaders(resolveApiKey(options.apiKey), options.accountAccessToken, options.accountSessionStorage),
     body: JSON.stringify(payload),
   });
   const body: unknown = await response.json().catch(() => null);

@@ -768,12 +768,13 @@ export function Settings() {
 
               {accountContributions ? (
                 <div className="space-y-4">
-                  <div className="grid gap-3 sm:grid-cols-5">
+                  <div className="grid gap-3 sm:grid-cols-6">
                     {[
                       ['Total', accountContributions.summary.totalRecords],
                       ['Soundings', accountContributions.summary.soundings],
                       ['Hazards', accountContributions.summary.hazards],
                       ['Observations', accountContributions.summary.observations],
+                      ['Devices', accountContributions.summary.devices],
                       ['Releases', accountContributions.summary.aggregateReleases],
                     ].map(([label, value]) => (
                       <div key={label} className="rounded-lg border p-3">

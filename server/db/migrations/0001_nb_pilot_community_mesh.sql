@@ -32,12 +32,18 @@ CREATE TABLE IF NOT EXISTS devices (
   consent_captured_at timestamptz NOT NULL,
   registered_at timestamptz NOT NULL,
   last_seen_at timestamptz,
+  owner_account_id text,
+  owner_account_roles jsonb NOT NULL DEFAULT '[]'::jsonb,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE INDEX IF NOT EXISTS idx_devices_external_vessel_id ON devices(external_vessel_id);
 CREATE INDEX IF NOT EXISTS idx_devices_kind ON devices(kind);
+CREATE INDEX IF NOT EXISTS idx_devices_owner_account ON devices(owner_account_id);
+
+ALTER TABLE devices ADD COLUMN IF NOT EXISTS owner_account_id text;
+ALTER TABLE devices ADD COLUMN IF NOT EXISTS owner_account_roles jsonb NOT NULL DEFAULT '[]'::jsonb;
 
 ALTER TABLE devices DROP CONSTRAINT IF EXISTS devices_kind_check;
 ALTER TABLE devices ADD CONSTRAINT devices_kind_check

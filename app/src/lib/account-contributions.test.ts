@@ -38,10 +38,11 @@ const contributionResponse: AccountCommunityContributions = {
   accountId: 'acct_1',
   generatedAt: '2026-05-06T19:00:00.000Z',
   summary: {
-    totalRecords: 4,
+    totalRecords: 5,
     soundings: 1,
     hazards: 1,
     observations: 1,
+    devices: 1,
     aggregateReleases: 1,
     byReviewStatus: {
       accepted: 1,
