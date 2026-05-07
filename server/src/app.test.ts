@@ -34,6 +34,14 @@ const activeTestAccount: StoredUserAccount = {
   updatedAt: '2026-05-06T12:00:00.000Z',
 };
 
+const otherTestAccount: StoredUserAccount = {
+  ...activeTestAccount,
+  id: 'acct_other_test_456',
+  email: 'other@example.com',
+  emailNormalized: 'other@example.com',
+  displayName: 'Other Example',
+};
+
 const sampleBatch: CommunitySoundingBatch = {
   id: 'batch-1',
   schemaVersion: 'harbourmesh.community-soundings.v1',
@@ -231,19 +239,27 @@ const sampleTrackObservationBatch: CommunityObservationBatch = {
   },
 };
 
-function createStaticAccountRepository(account: StoredUserAccount | null = activeTestAccount): UserAccountRepository {
+function createStaticAccountRepository(
+  accountOrAccounts: StoredUserAccount | StoredUserAccount[] | null = activeTestAccount
+): UserAccountRepository {
+  const accounts = Array.isArray(accountOrAccounts)
+    ? accountOrAccounts
+    : accountOrAccounts ? [accountOrAccounts] : [];
+
   return {
     async createAccount() {
-      return account;
+      return accounts[0] ?? null;
     },
     async getAccountByEmail(email) {
-      return account?.emailNormalized === email.trim().toLowerCase() ? account : null;
+      const normalizedEmail = email.trim().toLowerCase();
+      return accounts.find((account) => account.emailNormalized === normalizedEmail) ?? null;
     },
     async getAccountById(accountId) {
-      return account?.id === accountId ? account : null;
+      return accounts.find((account) => account.id === accountId) ?? null;
     },
-    async verifyCredentials() {
-      return account;
+    async verifyCredentials(email) {
+      const normalizedEmail = email.trim().toLowerCase();
+      return accounts.find((account) => account.emailNormalized === normalizedEmail && account.status === 'active') ?? null;
     },
   };
 }
@@ -286,6 +302,42 @@ async function readJsonLines<T>(filePath: string): Promise<T[]> {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
     throw error;
   }
+}
+
+function createSoundingBatch(batchId: string, recordId: string): CommunitySoundingBatch {
+  return {
+    ...sampleBatch,
+    id: batchId,
+    records: sampleBatch.records.map((record) => ({
+      ...record,
+      id: recordId,
+      rawMessageId: `${recordId}:raw-message`,
+    })),
+  };
+}
+
+function createHazardBatch(batchId: string, hazardId: string): CommunityHazardBatch {
+  return {
+    ...sampleHazardBatch,
+    id: batchId,
+    hazards: sampleHazardBatch.hazards.map((hazard) => ({
+      ...hazard,
+      id: hazardId,
+      description: `${hazard.description} ${hazardId}`,
+    })),
+  };
+}
+
+function createObservationBatch(batchId: string, observationIds: string[]): CommunityObservationBatch {
+  return {
+    ...sampleObservationBatch,
+    id: batchId,
+    recordCount: observationIds.length,
+    observations: observationIds.map((observationId, index) => ({
+      ...sampleObservationBatch.observations[index % sampleObservationBatch.observations.length],
+      id: observationId,
+    })),
+  };
 }
 
 describe('HarbourMesh API', () => {
@@ -554,6 +606,127 @@ describe('HarbourMesh API', () => {
       error: 'account_not_available',
     });
     await disabledSessionApp.close();
+  });
+
+  it('lists private account contribution history without exposing another account', async () => {
+    const app = await createTestApp({
+      writeApiKeys: [TEST_WRITE_API_KEY],
+      reviewOperatorKeys: [{ key: TEST_REVIEW_API_KEY, operatorId: 'nb-account-reviewer' }],
+      requireApiAuth: true,
+      accountSessionSigningKey: TEST_ACCOUNT_SESSION_SIGNING_KEY,
+      accountSessionSigningKeyId: TEST_ACCOUNT_SESSION_SIGNING_KEY_ID,
+      userAccountRepository: createStaticAccountRepository([activeTestAccount, otherTestAccount]),
+    });
+    const ownerSession = createTestAccountSession(activeTestAccount);
+    const otherSession = createTestAccountSession(otherTestAccount);
+    const ownerAccountHeader = { 'x-harbourmesh-account-session': ownerSession };
+    const writeHeader = { 'x-harbourmesh-api-key': TEST_WRITE_API_KEY };
+    const reviewHeader = { 'x-harbourmesh-api-key': TEST_REVIEW_API_KEY };
+
+    await app.inject({
+      method: 'POST',
+      url: '/api/community/soundings',
+      headers: {
+        ...writeHeader,
+        ...ownerAccountHeader,
+      },
+      payload: createSoundingBatch('owner-sounding-batch', 'owner-sounding-1'),
+    });
+    await app.inject({
+      method: 'POST',
+      url: '/api/community/hazards',
+      headers: {
+        ...writeHeader,
+        ...ownerAccountHeader,
+      },
+      payload: createHazardBatch('owner-hazard-batch', 'owner-hazard-1'),
+    });
+    await app.inject({
+      method: 'POST',
+      url: '/api/community/observations',
+      headers: {
+        ...writeHeader,
+        ...ownerAccountHeader,
+      },
+      payload: createObservationBatch('owner-observation-batch', ['owner-observation-1', 'owner-observation-2']),
+    });
+    await app.inject({
+      method: 'POST',
+      url: '/api/community/soundings',
+      headers: {
+        ...writeHeader,
+        'x-harbourmesh-account-session': otherSession,
+      },
+      payload: createSoundingBatch('other-sounding-batch', 'other-sounding-1'),
+    });
+    const published = await app.inject({
+      method: 'POST',
+      url: '/api/community/releases/aggregates',
+      headers: {
+        ...reviewHeader,
+        ...ownerAccountHeader,
+      },
+      payload: {
+        generatedBy: 'nb-account-reviewer',
+      },
+    });
+    expect(published.statusCode).toBe(201);
+
+    const missingSession = await app.inject({
+      method: 'GET',
+      url: '/api/account/community/contributions',
+    });
+    expect(missingSession.statusCode).toBe(401);
+    expect(missingSession.headers['www-authenticate']).toBe('Bearer realm="harbourmesh-account"');
+    expect(missingSession.json()).toMatchObject({
+      ok: false,
+      error: 'account_session_required',
+    });
+
+    const invalidSession = await app.inject({
+      method: 'GET',
+      url: '/api/account/community/contributions',
+      headers: {
+        'x-harbourmesh-account-session': 'hm_user_session_v1.invalid',
+      },
+    });
+    expect(invalidSession.statusCode).toBe(403);
+    expect(invalidSession.json()).toMatchObject({
+      ok: false,
+      error: 'invalid_account_session',
+    });
+
+    const contributions = await app.inject({
+      method: 'GET',
+      url: '/api/account/community/contributions',
+      headers: ownerAccountHeader,
+    });
+    expect(contributions.statusCode).toBe(200);
+    expect(contributions.json()).toMatchObject({
+      ok: true,
+      accountId: activeTestAccount.id,
+      summary: {
+        totalRecords: 5,
+        soundings: 1,
+        hazards: 1,
+        observations: 2,
+        aggregateReleases: 1,
+        byReviewStatus: {
+          unreviewed: 1,
+          pending: 1,
+        },
+      },
+    });
+    expect(contributions.json().recentItems).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'owner-sounding-1', kind: 'sounding' }),
+      expect.objectContaining({ id: 'owner-hazard-1', kind: 'hazard' }),
+      expect.objectContaining({ id: 'owner-observation-1', kind: 'observation' }),
+      expect.objectContaining({ kind: 'aggregate_release', status: 'published' }),
+    ]));
+    expect(JSON.stringify(contributions.json())).not.toContain(otherTestAccount.id);
+    expect(JSON.stringify(contributions.json())).not.toContain('other-sounding-1');
+
+    await app.close();
   });
 
   it('lets review operators reject bad soundings before public aggregates', async () => {

@@ -53,6 +53,10 @@ import {
   type AccountSessionEnvelope,
 } from '@/lib/account-session';
 import {
+  fetchAccountCommunityContributions,
+  type AccountCommunityContributions,
+} from '@/lib/account-contributions';
+import {
   clearPilotApiCredentials,
   getPilotApiCredentials,
   requestPilotOperatorSession,
@@ -84,6 +88,8 @@ export function Settings() {
   const [accountInviteCodeInput, setAccountInviteCodeInput] = useState('');
   const [accountLoading, setAccountLoading] = useState(false);
   const [accountError, setAccountError] = useState<string | null>(null);
+  const [accountContributions, setAccountContributions] = useState<AccountCommunityContributions | null>(null);
+  const [accountContributionsLoading, setAccountContributionsLoading] = useState(false);
   const [newProvider, setNewProvider] = useState({
     name: '',
     providerType: AIProviderType.LOCAL,
@@ -262,6 +268,7 @@ export function Settings() {
     setAccountDisplayNameInput(sessionEnvelope.session.account.displayName);
     setAccountPasswordInput('');
     setAccountInviteCodeInput('');
+    setAccountContributions(null);
   };
 
   const handleRegisterAccount = async () => {
@@ -358,6 +365,7 @@ export function Settings() {
   const handleSignOutAccount = () => {
     clearAccountSession();
     setAccountSession(null);
+    setAccountContributions(null);
     setAccountPasswordInput('');
     setAccountError(null);
     addNotification({
@@ -365,6 +373,35 @@ export function Settings() {
       title: 'Account Signed Out',
       message: 'This browser no longer has an account session.',
     });
+  };
+
+  const handleLoadAccountContributions = async () => {
+    setAccountContributionsLoading(true);
+    setAccountError(null);
+
+    try {
+      const contributions = await fetchAccountCommunityContributions();
+      setAccountContributions(contributions);
+      addNotification({
+        type: 'success',
+        title: 'Contributions Loaded',
+        message: `${contributions.summary.totalRecords} private contribution records found.`,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not load contributions.';
+      setAccountError(message);
+      if (message === 'account_session_required' || message === 'invalid_account_session') {
+        setAccountSession(null);
+        setAccountContributions(null);
+      }
+      addNotification({
+        type: 'error',
+        title: 'Contribution Load Failed',
+        message,
+      });
+    } finally {
+      setAccountContributionsLoading(false);
+    }
   };
 
   const handleRegisterBoatNode = async () => {
@@ -696,6 +733,89 @@ export function Settings() {
                   Sign In
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="h-5 w-5" />
+                Community Contributions
+              </CardTitle>
+              <CardDescription>
+                Private contribution counts are loaded with the signed-in account session.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-medium">
+                    {accountSession ? accountSession.session.account.email : 'Sign in to load private records'}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Public overlays still omit raw account, vessel, and source identifiers.
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={handleLoadAccountContributions}
+                  disabled={!accountSession || accountContributionsLoading}
+                >
+                  <RefreshCw className={cn('h-4 w-4 mr-2', accountContributionsLoading && 'animate-spin')} />
+                  Load Contributions
+                </Button>
+              </div>
+
+              {accountContributions ? (
+                <div className="space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-5">
+                    {[
+                      ['Total', accountContributions.summary.totalRecords],
+                      ['Soundings', accountContributions.summary.soundings],
+                      ['Hazards', accountContributions.summary.hazards],
+                      ['Observations', accountContributions.summary.observations],
+                      ['Releases', accountContributions.summary.aggregateReleases],
+                    ].map(([label, value]) => (
+                      <div key={label} className="rounded-lg border p-3">
+                        <p className="text-xs uppercase text-muted-foreground">{label}</p>
+                        <p className="text-xl font-semibold">{value}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Recent Activity</p>
+                    {accountContributions.recentItems.length > 0 ? (
+                      <div className="space-y-2">
+                        {accountContributions.recentItems.map((item) => (
+                          <div key={`${item.kind}:${item.id}`} className="flex flex-col gap-2 rounded-lg border p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                            <div className="min-w-0">
+                              <p className="truncate font-medium">{item.id}</p>
+                              <p className="text-muted-foreground">
+                                {item.kind.replace('_', ' ')}
+                                {item.region ? ` • ${item.region}` : ''}
+                              </p>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {item.status && <Badge variant="secondary">{item.status}</Badge>}
+                              {item.reviewStatus && <Badge variant="outline">{item.reviewStatus}</Badge>}
+                              <Badge variant="outline">{new Date(item.createdAt).toLocaleString()}</Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="rounded-lg border p-4 text-sm text-muted-foreground">
+                        No private contribution records are stored for this account yet.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-lg border p-4 text-sm text-muted-foreground">
+                  Contribution history has not been loaded in this browser session.
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

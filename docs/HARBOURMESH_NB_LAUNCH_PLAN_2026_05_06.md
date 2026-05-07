@@ -6,7 +6,7 @@ Scope: New Brunswick pilot first, international architecture second
 
 ## Executive Status
 
-HarbourMesh is currently a React/Vite NB pilot app with an early Fastify backend for account registration/login/session auth, web account session controls, account ownership metadata on community intake/review/release records, device registration, chart source catalog, chart package manifests, downloadable generated GeoJSON package artifacts, downloadable starter MBTiles vector-tile artifacts, downloadable starter PMTiles v3 MVT artifacts, optional capped GeoNB feature ingestion for CLI/API release generation, community sounding upload, governed community observation upload, community track-point aggregation, community hazard upload, hazard review/history, review-operator API key identity, accepted hazard GeoJSON/MBTiles/PMTiles artifacts, privacy-preserving aggregate GeoJSON, persisted aggregate release manifests/cells, optional aggregate release approval, and starter community aggregate GeoJSON/MBTiles/PMTiles artifact manifests/downloads. It still does not have a production chart engine, hardware ingest proof, AI runtime, weather-routing engine, full hydrography vector tile products, fleet/team authorization, per-account/fleet access policies, or production cloud mesh. The next goal is not a public launch. The next goal is a stable NB pilot foundation that is honest about what is implemented, legally clean around chart data, and ready for real vessel telemetry.
+HarbourMesh is currently a React/Vite NB pilot app with an early Fastify backend for account registration/login/session auth, web account session controls, account ownership metadata on community intake/review/release records, account-scoped private contribution history, device registration, chart source catalog, chart package manifests, downloadable generated GeoJSON package artifacts, downloadable starter MBTiles vector-tile artifacts, downloadable starter PMTiles v3 MVT artifacts, optional capped GeoNB feature ingestion for CLI/API release generation, community sounding upload, governed community observation upload, community track-point aggregation, community hazard upload, hazard review/history, review-operator API key identity, accepted hazard GeoJSON/MBTiles/PMTiles artifacts, privacy-preserving aggregate GeoJSON, persisted aggregate release manifests/cells, optional aggregate release approval, and starter community aggregate GeoJSON/MBTiles/PMTiles artifact manifests/downloads. It still does not have a production chart engine, hardware ingest proof, AI runtime, weather-routing engine, full hydrography vector tile products, fleet/team authorization, broader per-account/fleet access policies, or production cloud mesh. The next goal is not a public launch. The next goal is a stable NB pilot foundation that is honest about what is implemented, legally clean around chart data, and ready for real vessel telemetry.
 
 The product ambition is correct: a boat-first operating layer where charts, vessel telemetry, sonar soundings, radar-derived observations, hazards, weather, maintenance, and community-contributed local knowledge can become useful together. The implementation has to be phased carefully because official navigation charts, user-generated bathymetry, privacy, liability, and sensor quality are separate problems that should not be mixed into one ungoverned data pool.
 
@@ -43,14 +43,14 @@ Observed state:
 
 Last light checks:
 
-- `npm run test:run`: passing, 166 web tests.
-- `npm test` in `server`: passing, 49 server tests.
+- `npm run test:run`: passing, 169 web tests.
+- `npm test` in `server`: passing, 50 server tests.
 - `npm run type-check`: passing.
 - `npm run type-check` in `server`: passing.
 - `npm run lint`: passing with 0 warnings.
 - `npm audit --json`: 0 vulnerabilities.
 - `npm run build`: passing for the web app.
-- `npm run build`: section-level code splitting is active; the initial app JS chunk is 286.94 kB / 90.41 kB gzip, the Navigation section chunk is 41.36 kB / 10.17 kB gzip, the Settings section chunk is 53.47 kB / 10.79 kB gzip, the Community section chunk is 85.45 kB / 13.41 kB gzip, the pilot API credential chunk is 10.46 kB / 3.61 kB gzip, the checkbox chunk is 4.24 kB / 1.82 kB gzip, and the prior Vite oversized chunk warning is gone.
+- `npm run build`: section-level code splitting is active; the initial app JS chunk is 286.94 kB / 90.41 kB gzip, the Navigation section chunk is 41.36 kB / 10.17 kB gzip, the Settings section chunk is 59.68 kB / 12.10 kB gzip, the Community section chunk is 85.45 kB / 13.41 kB gzip, the pilot API credential chunk is 10.47 kB / 3.61 kB gzip, the checkbox chunk is 4.24 kB / 1.82 kB gzip, and the prior Vite oversized chunk warning is gone.
 - `npm run build` in `server`: passing.
 - `npm audit --json` in `server`: 0 vulnerabilities.
 - Cloudflare Pages config exists at `app/wrangler.toml` with `pages_build_output_dir = "./dist"` and a manual GitHub deploy workflow at `.github/workflows/cloudflare-pages.yml`; no live Cloudflare deployment was run in this snapshot.
@@ -72,6 +72,7 @@ Last light checks:
 - Server API auth tests cover SHA-256 hash-backed write keys and review-operator keys while clients continue sending normal API keys.
 - Server account auth tests cover invite-gated registration, PBKDF2-HMAC-SHA256 password hashing, duplicate account rejection, invalid credential rejection, HMAC-SHA256 signed account sessions, tampered/expired session rejection, `/api/auth/me`, public account serialization, and fail-closed missing signing-key config.
 - Server account ownership tests cover optional account session metadata on community sounding, observation, hazard, review, and aggregate release records; invalid/disabled account sessions fail closed; and public overlay/aggregate products omit owner, reviewer, and publisher account identifiers.
+- Server account contribution-history tests cover `/api/account/community/contributions`, missing-session 401, invalid-session 403, owner-only filtering across soundings/hazards/observations/aggregate releases, and no cross-account leakage in private responses.
 - Server hazard review tests cover pending hazards being withheld from public GeoJSON until accepted, accepted hazards becoming overlay-eligible, privacy-scrubbed public overlay identifiers, review history listing, and unknown hazard review returning 404.
 - Server aggregate GeoJSON tests cover cell polygons, sounding depth averages, positioned observation counts, track-point counts, accepted-hazard counts, official chart exclusion, and raw vessel/source ID omission.
 - Server sounding review tests cover review-scoped rejection of bad depth points, review-operator identity override, review history listing, and rejected soundings being removed from public overlays and aggregate cells.
@@ -87,6 +88,7 @@ Last light checks:
 - Web local persistence tests cover vessel/items, documents, logs, and tasks writing to named local-first stores.
 - Web local data portability tests cover export/import round trips, local chart library metadata, and verify AI provider, pilot API credential, and account session secret stores are excluded.
 - Web account session tests cover register/login client calls, fresh/expired/malformed session storage, current-account Bearer refresh, invalid-session clearing, local account replacement after `/api/auth/me`, and local sign-out.
+- Web account contribution-history tests cover stored account-session headers, local no-fetch failure when no account session exists, invalid-session clearing, and malformed response rejection.
 - Web community client tests cover attaching account-session ownership context through `X-HarbourMesh-Account-Session` while preserving existing pilot API keys and short-lived review Bearer sessions.
 - Web pilot API credential tests cover local secret-store save/clear, trim behavior, explicit override precedence, stored API key resolution, and stored review-operator identity resolution.
 - Web telemetry health tests cover fresh/stale/missing channel classification, compact age formatting, and `receivedAt`-based feed freshness while preserving observed telemetry timestamps.
@@ -136,6 +138,8 @@ Last light checks:
 - Browser smoke on port 5186: Navigation Chart View rendered the Routes card with `Import GPX`, `Export GPX`, the NB Pilot Reference Route, and 0 console errors or warnings.
 - Browser smoke on port 5187: Navigation Chart View rendered the Local Chart Library at 1280x900 and 360x800, accepted a PMTiles file as metadata only, persisted `fileBytesStoredByHarbourMesh: false`, `uploadToCommunityMeshAllowed: false`, and `sharedTileGenerationAllowed: false`, and reported 0 console errors or warnings.
 - Browser smoke on port 5188 with a temporary API on port 3135: Settings Account registered `captain-smoke-20260506@example.com`, refreshed `/api/auth/me`, signed out, signed back in, observed `POST /api/auth/register => 201`, `GET /api/auth/me => 200`, and `POST /api/auth/login => 201`, verified `harbormesh-account-session` did not contain the password, checked 1280x900 and 360x800 containment with body/document width equal to viewport width, captured `output/playwright/settings-account-1280.png` plus `output/playwright/settings-account-360.png`, and reported 0 console errors or warnings.
+- Local API smoke on port 3137: account registration returned 201, owner and other-account contributions were written through account-session plus scoped write keys, aggregate release publish returned 201 through review key plus account session, `/api/account/community/contributions` returned missing-session 401 and invalid-session 403, owner history returned 4 private records, other-account records did not appear, and public overlay/release payloads omitted owner/publisher account identifiers.
+- Browser smoke on port 5189 with a temporary API on port 3137: Settings Account signed in as `captain-smoke-contrib-20260506@example.com`, loaded `/api/account/community/contributions` with 200 responses, rendered Total 4 / Soundings 1 / Hazards 1 / Observations 1 / Releases 1 plus recent owner items at 1280x900 and 360x800, checked body/document width equal to viewport width, captured `output/playwright/settings-account-contributions-1280.png` plus `output/playwright/settings-account-contributions-360.png`, and reported 0 console errors or warnings.
 - No live Signal K hardware test or real-vessel API load test was run for this snapshot.
 
 ## Implementation Progress On 2026-05-06
@@ -189,6 +193,7 @@ Completed in the active checkout:
 - Added invite-gated API account registration, login, current-account lookup, PBKDF2-HMAC-SHA256 password storage, HMAC-SHA256 account session tokens, and fail-closed account-session signing-key checks.
 - Added browser account session helpers plus a Settings Account tab for invite-gated registration, sign-in, `/api/auth/me` refresh, sign-out, local account-session storage, and account-session exclusion from local data exports.
 - Added optional account-session ownership context for community sounding, observation, hazard, review, and aggregate release operations using `X-HarbourMesh-Account-Session`, private JSONL/PostGIS account metadata, fail-closed invalid account sessions, and public overlay/aggregate omission of owner/reviewer/publisher account IDs.
+- Added account-scoped private contribution history at `/api/account/community/contributions`, JSONL/PostGIS publisher filtering for aggregate releases, a web account-contributions client, and a Settings Account contribution panel showing private totals and recent activity while keeping public overlays/releases account-free.
 - Added an operator hazard moderation surface in Community with protected review-queue loading and accept/reject actions against the pilot API.
 - Split pilot API keys into backward-compatible legacy keys plus scoped write keys and review keys so intake/device access can be separated from hazard moderation.
 - Added `HARBOURMESH_REVIEW_OPERATOR_KEYS` support so review-scoped API keys can carry server-side operator IDs and override client-supplied reviewer names before moderation audit history is written.
@@ -213,7 +218,7 @@ Completed in the active checkout:
 
 Still not done:
 
-- No fleet/team authorization, per-account/fleet access policies, uncapped/full hydrography vector tile generation, permanent signed artifact object storage, local official-chart rendering/parser path, or multi-step production release approval workflow exists.
+- No fleet/team authorization, broader per-account/fleet access policies beyond private contribution history, uncapped/full hydrography vector tile generation, permanent signed artifact object storage, local official-chart rendering/parser path, or multi-step production release approval workflow exists.
 - No full route-by-route browser/mobile visual verification has been run in this session.
 - No real Signal K server, sonar, radar, AIS receiver, or Boat Node hardware has been tested.
 - Community hazards can now be queued, uploaded to the pilot backend, reviewed through the API/UI with review-scoped keys or review-operator keys, listed through review history, included in the raw reference overlay only after acceptance, counted in privacy-preserving aggregates, and published as accepted-hazard GeoJSON/MBTiles/PMTiles reference products without raw hazard IDs, vessel IDs, or source-device IDs.

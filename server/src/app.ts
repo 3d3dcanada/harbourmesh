@@ -12,6 +12,7 @@ import {
   verifyAccountSessionToken,
   type UserAccountRepository,
 } from './account-auth.js';
+import { buildAccountCommunityContributions } from './account-contributions.js';
 import {
   resolveOptionalAccountOwnershipContext,
   sendAccountOwnershipError,
@@ -286,6 +287,40 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     };
   }
 
+  async function getRequiredAccountOwnershipContext(
+    request: FastifyRequest,
+    reply: FastifyReply
+  ): Promise<{ ok: true; context: AccountOwnershipContext } | { ok: false }> {
+    if (!accountAuth.sessionSigningKey) {
+      await reply.code(503).send({
+        ok: false,
+        error: 'account_session_signing_not_configured',
+      });
+      return { ok: false };
+    }
+
+    const resolution = await resolveOptionalAccountOwnershipContext(request, accountAuth, userAccountRepository);
+    if (!resolution.ok) {
+      await sendAccountOwnershipError(reply, resolution);
+      return { ok: false };
+    }
+    if (!resolution.context) {
+      await reply
+        .code(401)
+        .header('WWW-Authenticate', 'Bearer realm="harbourmesh-account"')
+        .send({
+          ok: false,
+          error: 'account_session_required',
+        });
+      return { ok: false };
+    }
+
+    return {
+      ok: true,
+      context: resolution.context,
+    };
+  }
+
   function normalizeAggregateReleaseApproval(
     approval: AggregateReleaseApprovalRequest,
     approvedByOverride?: string
@@ -482,6 +517,18 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
         keyId: session.keyId,
       },
     };
+  });
+
+  app.get('/api/account/community/contributions', async (request, reply) => {
+    const accountOwnership = await getRequiredAccountOwnershipContext(request, reply);
+    if (!accountOwnership.ok) return reply;
+
+    return buildAccountCommunityContributions(accountOwnership.context.accountId, {
+      soundings: repository,
+      hazards: hazardRepository,
+      observations: observationRepository,
+      aggregateReleases: aggregateReleaseRepository,
+    });
   });
 
   app.post('/api/auth/operator-session', async (request, reply) => {

@@ -1041,6 +1041,20 @@ function createPostgisAggregateReleaseRepository(pool: Pool): CommunityAggregate
     return result.rows.map((row) => mapReleaseManifest(row.manifest));
   }
 
+  async function listAggregateReleasesByPublisher(accountId: string): Promise<CommunityAggregateReleaseManifest[]> {
+    const result = await pool.query<{ manifest: unknown }>(
+      `SELECT manifest
+      FROM dataset_release_manifests
+      WHERE region = 'NB_PILOT'
+        AND product_kind = 'aggregate_geojson'
+        AND published_by_account_id = $1
+      ORDER BY generated_at DESC, release_id DESC`,
+      [accountId]
+    );
+
+    return result.rows.map((row) => mapReleaseManifest(row.manifest));
+  }
+
   return {
     async publishAggregateRelease(input) {
       return withTransaction(pool, async (client) => {
@@ -1151,6 +1165,7 @@ function createPostgisAggregateReleaseRepository(pool: Pool): CommunityAggregate
     },
 
     listAggregateReleases,
+    listAggregateReleasesByPublisher,
 
     async listAggregateCells(releaseId) {
       const release = await pool.query<{ generated_at: unknown }>(

@@ -19,20 +19,20 @@ Treat docs/ARCHITECTURE_AUDIT.md, docs/SECURITY_AUDIT.md, docs/DEPLOYMENT_GUIDE.
 Current snapshot from the documentation handoff:
 
 - HarbourMesh is a strong NB pilot foundation, not a public launch.
-- Current verification after the account-session and ownership slices recorded app lint, app type-check, full app tests, app build, app audit, server tests, server type-check, server build, server audit, Settings account browser smoke, and local API ownership smoke as passing; rerun checks after your changes before claiming current success.
-- Account/session/export/settings and ownership work exists across `app/src/lib/account-session.ts`, `app/src/lib/community-*`, `server/src/account-ownership.ts`, server community repositories, and the PostGIS migration. Preserve and build on it.
-- Remaining launch blockers include fleet/team authorization, per-account/fleet access policies, full browser/mobile route sweep, real Signal K/hardware proof, full hydrography/offline chart products, production deployment/monitoring/backups, official-chart legal handling, and security/privacy launch review.
+- Current verification after the account-session, ownership, and contribution-history slices recorded app lint, app type-check, full app tests, app build, app audit, server tests, server type-check, server build, server audit, Settings account browser smokes, local API ownership smoke, and local API contribution-history smoke as passing; rerun checks after your changes before claiming current success.
+- Account/session/export/settings, ownership, and account-private contribution history work exists across `app/src/lib/account-session.ts`, `app/src/lib/account-contributions.ts`, `app/src/lib/community-*`, `server/src/account-ownership.ts`, `server/src/account-contributions.ts`, server community repositories, and the PostGIS migration. Preserve and build on it.
+- Remaining launch blockers include fleet/team authorization, broader per-account/fleet access policies, full browser/mobile route sweep, real Signal K/hardware proof, full hydrography/offline chart products, production deployment/monitoring/backups, official-chart legal handling, and security/privacy launch review.
 
 Recommended first implementation target:
 
-Add per-account/fleet access policy controls on top of the new ownership metadata while keeping the existing pilot API key path compatible. Start with the safest boundary: owner-scoped private reads or account-scoped contribution history, with tests proving public/shared products still omit raw account IDs unless intentionally scoped.
+Extend the new account-scoped private reads into real fleet/team access policy controls while keeping the existing pilot API key path compatible. The first safe boundary, account-scoped contribution history, now exists; the next slice should prove shared/team access without leaking raw account IDs into public products.
 
 Verification expectations:
 
 - app: npm run lint, npm run type-check, npm run test:run, npm audit --omit=dev --audit-level=high, npm run build
 - server: npm test, npm run type-check, npm audit --omit=dev --audit-level=high, npm run build
 - browser: verify the affected Settings/Community/Navigation flows at 1280px and 360px, with console errors/warnings reported honestly
-- API smoke: verify account register/login/me with HARBOURMESH_ACCOUNT_SESSION_SIGNING_KEY and invite-code settings if account/session behavior changed
+- API smoke: verify account register/login/me with HARBOURMESH_ACCOUNT_SESSION_SIGNING_KEY and invite-code settings if account/session behavior changed; verify `/api/account/community/contributions` if contribution or ownership behavior changed
 
 Do not claim NB beta readiness until current-source checks pass, account/session/export behavior is verified, browser/mobile checks pass, live Signal K or real vessel telemetry has been exercised, and two users/devices can contribute and receive privacy-scrubbed aggregate community data.
 

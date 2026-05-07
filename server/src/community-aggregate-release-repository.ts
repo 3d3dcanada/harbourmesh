@@ -48,6 +48,7 @@ export type CommunityAggregateReleaseRepository = {
   ) => Promise<CommunityAggregateReleaseManifest>;
   getLatestAggregateRelease: () => Promise<CommunityAggregateReleaseManifest | null>;
   listAggregateReleases: () => Promise<CommunityAggregateReleaseManifest[]>;
+  listAggregateReleasesByPublisher: (accountId: string) => Promise<CommunityAggregateReleaseManifest[]>;
   listAggregateCells: (releaseId: string) => Promise<StoredCommunityAggregateCell[]>;
 };
 
@@ -200,6 +201,20 @@ export function createCommunityAggregateReleaseRepository(dataDir: string): Comm
       const releases = await readJsonLines<StoredCommunityAggregateRelease>(releasesFile);
       return releases
         .filter((release) => release.productKind === 'aggregate_geojson')
+        .sort((left, right) => (
+          right.generatedAt.localeCompare(left.generatedAt) ||
+          right.releaseId.localeCompare(left.releaseId)
+        ))
+        .map((release) => release.manifest);
+    },
+
+    async listAggregateReleasesByPublisher(accountId) {
+      const releases = await readJsonLines<StoredCommunityAggregateRelease>(releasesFile);
+      return releases
+        .filter((release) => (
+          release.productKind === 'aggregate_geojson' &&
+          release.publishedByAccountId === accountId
+        ))
         .sort((left, right) => (
           right.generatedAt.localeCompare(left.generatedAt) ||
           right.releaseId.localeCompare(left.releaseId)
