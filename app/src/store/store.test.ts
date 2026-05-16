@@ -499,6 +499,8 @@ describe('Log & Task Store', () => {
 describe('Settings Store', () => {
   beforeEach(() => {
     useSettingsStore.setState({
+      consent: null,
+      demoModeEnabled: false,
       boatNode: DEFAULT_BOAT_NODE_SETTINGS,
     });
   });
@@ -533,6 +535,18 @@ describe('Settings Store', () => {
       deviceRegisteredAt: '2026-05-06T12:00:00.000Z',
     });
   });
+
+  it('keeps demo mode disabled until explicitly enabled', () => {
+    const { result } = renderHook(() => useSettingsStore());
+
+    expect(result.current.demoModeEnabled).toBe(false);
+
+    act(() => {
+      result.current.setDemoModeEnabled(true);
+    });
+
+    expect(result.current.demoModeEnabled).toBe(true);
+  });
 });
 
 describe('Navigation Plan Store', () => {
@@ -541,6 +555,13 @@ describe('Navigation Plan Store', () => {
       routes: [],
       activeRouteId: null,
     });
+  });
+
+  it('starts without seeded reference routes in launch mode', () => {
+    const { result } = renderHook(() => useNavigationPlanStore());
+
+    expect(result.current.routes).toEqual([]);
+    expect(result.current.activeRouteId).toBeNull();
   });
 
   it('seeds the NB pilot reference route without duplicating it', () => {

@@ -3,10 +3,12 @@ import { Layout } from '@/components/Layout';
 import { useAppStore, useOnboardingStore } from '@/store';
 import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/utils';
+import { meshSyncClient } from '@/lib/mesh-sync';
+import { communityMeshSync } from '@/lib/community-mesh-sync';
 
 const Dashboard = lazy(() => import('@/sections/Dashboard').then((module) => ({ default: module.Dashboard })));
 const VesselView = lazy(() => import('@/sections/VesselView').then((module) => ({ default: module.VesselView })));
-const BoatMap = lazy(() => import('@/sections/BoatMap').then((module) => ({ default: module.BoatMap })));
+const BoatMap = lazy(() => import('@/sections/boatmap/BoatMap').then((module) => ({ default: module.BoatMap })));
 const Inventory = lazy(() => import('@/sections/Inventory').then((module) => ({ default: module.Inventory })));
 const Documents = lazy(() => import('@/sections/Documents').then((module) => ({ default: module.Documents })));
 const LogsTasks = lazy(() => import('@/sections/LogsTasks').then((module) => ({ default: module.LogsTasks })));
@@ -73,6 +75,12 @@ function App() {
       localStorage.setItem('harbormesh-visited', 'true');
     }
   }, [startOnboarding]);
+
+  useEffect(() => {
+    meshSyncClient.start();
+    communityMeshSync.init(meshSyncClient.getGun());
+    return () => meshSyncClient.stop();
+  }, []);
 
   return (
     <div className={cn('min-h-screen', effectiveTheme === 'night' ? 'dark' : '')}>

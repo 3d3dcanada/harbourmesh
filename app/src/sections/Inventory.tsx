@@ -2,17 +2,18 @@
  * HarborMesh - Inventory Section
  * Manage vessel items, spare parts, safety equipment, and supplies
  */
-import React, { useState, useMemo } from 'react';
-import { Package, Search, Plus, AlertTriangle, ArrowUpDown, BarChart3, Clock } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useMemo } from 'react';
+import { Package, Search, Plus, ArrowUpDown, Edit3, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DataSourceNotice } from '@/components/DataSourceNotice';
 import { cn } from '@/lib/utils';
-import { useVesselStore } from '@/store';
-import { ItemCategory } from '@/types';
+import { useAppStore, useSettingsStore, useVesselStore } from '@/store';
+import { ItemCategory, type Item } from '@/types';
 
 const categoryConfig: Record<string, { label: string; color: string }> = {
   [ItemCategory.SAFETY]: { label: 'Safety', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
@@ -53,18 +54,55 @@ const mockItems = [
   { id: '10', vesselId: 'v1', spaceId: 's2', category: ItemCategory.ELECTRONICS, name: 'VHF Handheld - Backup', description: 'Standard Horizon HX890', quantity: 1, unit: 'pcs', manufacturer: 'Standard Horizon', partNumber: 'HX890', tags: ['communication', 'safety'], relatedSystemIds: [], createdAt: '2024-01-01', updatedAt: '2024-01-01' },
 ];
 
+function createBlankItem(vesselId: string, spaceId = 'unassigned'): Item {
+  const now = new Date().toISOString();
+
+  return {
+    id: crypto.randomUUID(),
+    vesselId,
+    spaceId,
+    category: ItemCategory.SAFETY,
+    name: '',
+    description: '',
+    quantity: 1,
+    unit: 'each',
+    tags: [],
+    relatedSystemIds: [],
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
 export function Inventory() {
-  const { items } = useVesselStore();
+  const {
+    currentVessel,
+    spaces,
+    items,
+    addItem,
+    updateItem,
+    deleteItem,
+  } = useVesselStore();
+  const { setActiveView, modalData, closeModal } = useAppStore();
+  const demoModeEnabled = useSettingsStore((state) => state.demoModeEnabled);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [filterSpaceId, setFilterSpaceId] = useState<string | null>(
+    (modalData as { spaceId?: string } | undefined)?.spaceId ?? null
+  );
   const [sortBy, setSortBy] = useState<'name' | 'category' | 'quantity' | 'expiry'>('category');
   const [sortAsc, setSortAsc] = useState(true);
+  const [itemDialogOpen, setItemDialogOpen] = useState(false);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [itemDraft, setItemDraft] = useState<Item | null>(null);
 
-  const usingDemoItems = items.length === 0;
-  const displayItems = usingDemoItems ? mockItems : items;
+  const usingDemoItems = items.length === 0 && demoModeEnabled;
+  const displayItems = (usingDemoItems ? mockItems : items) as Item[];
 
   const filteredItems = useMemo(() => {
     let result = displayItems;
+    if (filterSpaceId) {
+      result = result.filter((item) => item.spaceId === filterSpaceId);
+    }
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       result = result.filter((item) =>
@@ -93,7 +131,7 @@ export function Inventory() {
       }
     });
     return result;
-  }, [displayItems, searchQuery, selectedCategory, sortBy, sortAsc]);
+  }, [displayItems, filterSpaceId, searchQuery, selectedCategory, sortBy, sortAsc]);
 
   const totalItems = displayItems.length;
   const lowStock = displayItems.filter((i) => i.reorderThreshold && i.quantity <= i.reorderThreshold).length;
@@ -105,15 +143,42 @@ export function Inventory() {
     return exp <= cutoff && exp >= new Date();
   }).length;
 
-  const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    displayItems.forEach((i) => { counts[i.category] = (counts[i.category] || 0) + 1; });
-    return Object.entries(counts).sort(([, a], [, b]) => b - a);
-  }, [displayItems]);
 
   const toggleSort = (field: typeof sortBy) => {
     if (sortBy === field) setSortAsc(!sortAsc);
     else { setSortBy(field); setSortAsc(true); }
+  };
+
+  const openAddItem = () => {
+    if (!currentVessel) return;
+    setEditingItemId(null);
+    setItemDraft(createBlankItem(currentVessel.id, spaces[0]?.id ?? 'unassigned'));
+    setItemDialogOpen(true);
+  };
+
+  const openEditItem = (item: Item) => {
+    setEditingItemId(item.id);
+    setItemDraft(item);
+    setItemDialogOpen(true);
+  };
+
+  const saveItem = () => {
+    if (!itemDraft) return;
+    const now = new Date().toISOString();
+    const nextItem: Item = {
+      ...itemDraft,
+      name: itemDraft.name.trim() || 'Untitled Item',
+      unit: itemDraft.unit.trim() || 'each',
+      description: itemDraft.description?.trim() || undefined,
+      updatedAt: now,
+    };
+
+    if (editingItemId) updateItem(editingItemId, nextItem);
+    else addItem(nextItem);
+
+    setItemDialogOpen(false);
+    setEditingItemId(null);
+    setItemDraft(null);
   };
 
   const isLowStock = (item: typeof displayItems[0]) => !!(item.reorderThreshold && item.quantity <= item.reorderThreshold);
@@ -127,105 +192,216 @@ export function Inventory() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <Package className="h-6 w-6 text-primary" /> Inventory
+    <div className="flex h-[calc(100vh-4.5rem)] flex-col gap-2">
+      {/* Compact toolbar */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <h1 className="text-lg font-semibold tracking-tight flex items-center gap-2">
+            <Package className="h-5 w-5 text-primary" /> Inventory
           </h1>
-          <p className="text-muted-foreground mt-1">Track everything on your vessel — parts, supplies, safety gear</p>
+          <div className="hidden sm:flex items-center gap-3 text-xs text-muted-foreground">
+            <span>{totalItems} items</span>
+            {lowStock > 0 && <span className="text-amber-500 font-medium">{lowStock} low</span>}
+            {expiringSoon > 0 && <span className="text-orange-500 font-medium">{expiringSoon} expiring</span>}
+          </div>
         </div>
-        <Button><Plus className="h-4 w-4 mr-2" /> Add Item</Button>
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1 sm:w-64">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-8 h-8 text-sm" />
+          </div>
+          <Select value={selectedCategory ?? 'all'} onValueChange={(v) => setSelectedCategory(v === 'all' ? null : v)}>
+            <SelectTrigger className="h-8 w-[130px] text-xs"><SelectValue placeholder="All categories" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All categories</SelectItem>
+              {Object.entries(categoryConfig).map(([value, config]) => (
+                <SelectItem key={value} value={value}>{config.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {spaces.filter((s) => s.vesselId === currentVessel?.id).length > 0 && (
+            <Select
+              value={filterSpaceId ?? 'all'}
+              onValueChange={(v) => {
+                setFilterSpaceId(v === 'all' ? null : v);
+                if (v === 'all') closeModal();
+              }}
+            >
+              <SelectTrigger className="h-8 w-[120px] text-xs"><SelectValue placeholder="All spaces" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All spaces</SelectItem>
+                {spaces.filter((s) => s.vesselId === currentVessel?.id).map((s) => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <Button size="sm" className="h-8" onClick={openAddItem} disabled={!currentVessel}>
+            <Plus className="h-3.5 w-3.5 mr-1.5" /> Add
+          </Button>
+        </div>
       </div>
 
       {usingDemoItems && (
-        <DataSourceNotice title="Demo inventory">
-          These inventory rows are sample records and have not been saved for a vessel.
-        </DataSourceNotice>
+        <DataSourceNotice title="Demo inventory">Sample records — not saved for a vessel.</DataSourceNotice>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-sm text-muted-foreground">Total Items</p><p className="text-2xl font-bold">{totalItems}</p></div><Package className="h-8 w-8 text-muted-foreground/30" /></div></CardContent></Card>
-        <Card><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-sm text-muted-foreground">Low Stock</p><p className="text-2xl font-bold text-amber-500">{lowStock}</p></div><AlertTriangle className="h-8 w-8 text-amber-500/30" /></div></CardContent></Card>
-        <Card><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-sm text-muted-foreground">Expiring Soon</p><p className="text-2xl font-bold text-orange-500">{expiringSoon}</p></div><Clock className="h-8 w-8 text-orange-500/30" /></div></CardContent></Card>
-        <Card><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-sm text-muted-foreground">Categories</p><p className="text-2xl font-bold">{categoryCounts.length}</p></div><BarChart3 className="h-8 w-8 text-muted-foreground/30" /></div></CardContent></Card>
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search items by name, part number, tag..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          <Button variant={selectedCategory === null ? 'default' : 'outline'} size="sm" onClick={() => setSelectedCategory(null)}>All</Button>
-          {categoryCounts.slice(0, 6).map(([cat]) => {
-            const config = categoryConfig[cat];
-            return (
-              <Button key={cat} variant={selectedCategory === cat ? 'default' : 'outline'} size="sm" onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)} className="text-xs">
-                {config?.label || cat} ({categoryCounts.find(([c]) => c === cat)?.[1] ?? 0})
-              </Button>
-            );
-          })}
-          {categoryCounts.length > 6 && <Button variant="outline" size="sm" className="text-xs">+{categoryCounts.length - 6} more</Button>}
-        </div>
-      </div>
-
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base">Items ({filteredItems.length})</CardTitle>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              {(['category', 'name', 'quantity', 'expiry'] as const).map((field) => (
-                <React.Fragment key={field}>
-                  {field !== 'category' && <span>•</span>}
-                  <button onClick={() => toggleSort(field)} className={cn('flex items-center gap-1 hover:text-foreground transition-colors', sortBy === field && 'text-foreground font-medium')}>
-                    {field.charAt(0).toUpperCase() + field.slice(1)} <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </React.Fragment>
-              ))}
-            </div>
+      {!currentVessel && !demoModeEnabled ? (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <Package className="h-12 w-12 mx-auto mb-3 text-muted-foreground/30" />
+            <h2 className="text-lg font-semibold">Create a vessel first</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Inventory is saved against the active vessel.</p>
+            <Button className="mt-4" onClick={() => setActiveView('vessel')}>Go to Vessel</Button>
           </div>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[calc(100vh-440px)] min-h-[400px]">
-            <div className="space-y-2">
+        </div>
+      ) : (
+        <div className="flex-1 overflow-auto rounded-lg border bg-card">
+          <table className="w-full text-sm">
+            <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm border-b">
+              <tr>
+                {(['category', 'name', 'quantity', 'expiry'] as const).map((field) => (
+                  <th key={field} className={cn('px-3 py-2 font-medium', field === 'quantity' ? 'text-right' : 'text-left', field === 'expiry' && 'hidden lg:table-cell')}>
+                    <button onClick={() => toggleSort(field)} className={cn('flex items-center gap-1', field === 'quantity' && 'ml-auto', sortBy === field && 'text-foreground')}>
+                      {field.charAt(0).toUpperCase() + field.slice(1)} <ArrowUpDown className="h-3 w-3" />
+                    </button>
+                  </th>
+                ))}
+                <th className="px-3 py-2 text-left font-medium hidden md:table-cell">Description</th>
+                <th className="px-3 py-2 text-left font-medium hidden lg:table-cell">Part #</th>
+                <th className="px-3 py-2 text-left font-medium hidden xl:table-cell">Status</th>
+                {!usingDemoItems && <th className="px-3 py-2 w-20" />}
+              </tr>
+            </thead>
+            <tbody className="divide-y">
               {filteredItems.length === 0 ? (
-                <div className="text-center py-12">
-                  <Package className="h-12 w-12 mx-auto mb-3 text-muted-foreground/30" />
-                  <p className="text-muted-foreground">No items found</p>
-                </div>
-              ) : (
-                filteredItems.map((item) => {
-                  const config = categoryConfig[item.category];
-                  const low = isLowStock(item);
-                  const expired = isExpired(item);
-                  const expiring = isExpiringSoon(item);
-                  return (
-                    <div key={item.id} className={cn('flex items-center gap-4 p-3 rounded-lg border hover:bg-muted/50 transition-colors', low && 'border-amber-200 dark:border-amber-900/50', expired && 'border-red-200 dark:border-red-900/50')}>
-                      <span className={cn('inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium', config?.color || 'bg-gray-100 text-gray-800')}>
-                        {config?.label || item.category}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-sm truncate">{item.name}</p>
-                          {expired && <Badge variant="destructive" className="text-[10px] px-1.5">EXPIRED</Badge>}
-                          {expiring && !expired && <Badge variant="outline" className="text-[10px] px-1.5 border-orange-400 text-orange-600">EXPIRING</Badge>}
-                          {low && <Badge variant="outline" className="text-[10px] px-1.5 border-amber-400 text-amber-600">LOW</Badge>}
+                <tr><td colSpan={8} className="py-16 text-center text-muted-foreground">
+                  <Package className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                  {displayItems.length === 0 ? 'No inventory saved yet' : 'No items match'}
+                </td></tr>
+              ) : filteredItems.map((item) => {
+                const config = categoryConfig[item.category];
+                const low = isLowStock(item);
+                const expired = isExpired(item);
+                const expiring = isExpiringSoon(item);
+                return (
+                  <tr key={item.id} className={cn('hover:bg-muted/50 transition-colors cursor-pointer', low && 'bg-amber-50/50 dark:bg-amber-950/10', expired && 'bg-red-50/50 dark:bg-red-950/10')} onClick={() => !usingDemoItems && openEditItem(item)}>
+                    <td className="px-3 py-2.5"><span className={cn('inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium', config?.color || 'bg-gray-100 text-gray-800')}>{config?.label || item.category}</span></td>
+                    <td className="px-3 py-2.5 font-medium">{item.name}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums font-medium">{item.quantity} <span className="text-muted-foreground font-normal">{item.unit}</span></td>
+                    <td className="px-3 py-2.5 text-muted-foreground text-xs hidden lg:table-cell">{item.expiryDate?.slice(0, 10) || '—'}</td>
+                    <td className="px-3 py-2.5 text-muted-foreground truncate max-w-[200px] hidden md:table-cell">{item.description || item.manufacturer || '—'}</td>
+                    <td className="px-3 py-2.5 text-muted-foreground text-xs hidden lg:table-cell">{item.partNumber || '—'}</td>
+                    <td className="px-3 py-2.5 hidden xl:table-cell">
+                      <div className="flex gap-1">
+                        {expired && <Badge variant="destructive" className="text-[10px] px-1.5">EXPIRED</Badge>}
+                        {expiring && !expired && <Badge variant="outline" className="text-[10px] px-1.5 border-orange-400 text-orange-600">EXPIRING</Badge>}
+                        {low && <Badge variant="outline" className="text-[10px] px-1.5 border-amber-400 text-amber-600">LOW</Badge>}
+                      </div>
+                    </td>
+                    {!usingDemoItems && (
+                      <td className="px-3 py-2.5">
+                        <div className="flex gap-0.5" onClick={(e) => e.stopPropagation()}>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditItem(item)}><Edit3 className="h-3.5 w-3.5" /></Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteItem(item.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
                         </div>
-                        <p className="text-xs text-muted-foreground truncate">{item.description || item.manufacturer || '—'}</p>
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <p className="font-medium text-sm">{item.quantity} {item.unit}</p>
-                        {item.partNumber && <p className="text-xs text-muted-foreground">{item.partNumber}</p>}
-                      </div>
-                    </div>
-                  );
-                })
-              )}
+                      </td>
+                    )}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <Dialog open={itemDialogOpen} onOpenChange={setItemDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingItemId ? 'Edit Item' : 'Add Item'}</DialogTitle>
+            <DialogDescription>
+              Save an item to the active vessel inventory.
+            </DialogDescription>
+          </DialogHeader>
+          {itemDraft && (
+            <div className="space-y-4 py-2">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Name</Label>
+                  <Input value={itemDraft.name} onChange={(event) => setItemDraft((draft) => draft ? { ...draft, name: event.target.value } : draft)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Category</Label>
+                  <Select value={itemDraft.category} onValueChange={(value) => setItemDraft((draft) => draft ? { ...draft, category: value as ItemCategory } : draft)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(categoryConfig).map(([value, config]) => (
+                        <SelectItem key={value} value={value}>{config.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Description</Label>
+                <Input value={itemDraft.description || ''} onChange={(event) => setItemDraft((draft) => draft ? { ...draft, description: event.target.value } : draft)} />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="space-y-2">
+                  <Label>Quantity</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={itemDraft.quantity}
+                    onChange={(event) => {
+                      const quantity = Number(event.target.value);
+                      setItemDraft((draft) => draft && Number.isFinite(quantity) ? { ...draft, quantity } : draft);
+                    }}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Unit</Label>
+                  <Input value={itemDraft.unit} onChange={(event) => setItemDraft((draft) => draft ? { ...draft, unit: event.target.value } : draft)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Reorder At</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={itemDraft.reorderThreshold ?? ''}
+                    onChange={(event) => {
+                      const value = event.target.value === '' ? undefined : Number(event.target.value);
+                      setItemDraft((draft) => draft ? { ...draft, reorderThreshold: Number.isFinite(value) ? value : undefined } : draft);
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Space</Label>
+                  <Select value={itemDraft.spaceId} onValueChange={(value) => setItemDraft((draft) => draft ? { ...draft, spaceId: value } : draft)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unassigned">Unassigned</SelectItem>
+                      {spaces.map((space) => (
+                        <SelectItem key={space.id} value={space.id}>{space.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Part Number</Label>
+                  <Input value={itemDraft.partNumber || ''} onChange={(event) => setItemDraft((draft) => draft ? { ...draft, partNumber: event.target.value || undefined } : draft)} />
+                </div>
+              </div>
             </div>
-          </ScrollArea>
-        </CardContent>
-      </Card>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setItemDialogOpen(false)}>Cancel</Button>
+            <Button onClick={saveItem}>Save Item</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

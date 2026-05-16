@@ -62,6 +62,7 @@ import {
 } from '@/lib/community-overlay';
 import { prepareSoundingForCommunityUpload, type RawDepthSounding } from '@/lib/community-soundings';
 import { uploadCommunityHazardBatch, uploadCommunityObservationBatch, uploadCommunitySoundingBatch } from '@/lib/community-sync';
+import { communityMeshSync } from '@/lib/community-mesh-sync';
 import { buildLocalCommunityOverlayFeatures } from '@/lib/local-community-overlay';
 import { resolvePilotOperatorId } from '@/lib/pilot-api-credentials';
 import { cn } from '@/lib/utils';
@@ -69,6 +70,7 @@ import {
   useCommunityDataStore,
   useSettingsStore,
   useTelemetryStore,
+  useVesselStore,
   type CommunityHazard,
   type CommunityHazardSyncBatch,
   type CommunityObservationSyncBatch,
@@ -116,6 +118,7 @@ function formatOptionalNumber(value: number | undefined, suffix: string): string
 
 export function Community() {
   const { consent, setConsent, boatNode } = useSettingsStore();
+  const currentVessel = useVesselStore((state) => state.currentVessel);
   const { aisTargets, latestPosition, latestMotion } = useTelemetryStore();
   const {
     hazards,
@@ -296,7 +299,11 @@ export function Community() {
   };
 
   const handleQueueSoundings = () => {
-    queueShareableSoundingBatch();
+    const batch = queueShareableSoundingBatch();
+    // Dual transport: also publish to P2P mesh when enabled
+    if (batch && boatNode.meshEnabled) {
+      communityMeshSync.publishSoundings(batch);
+    }
   };
 
   const handleQueueHazards = () => {
@@ -333,14 +340,18 @@ export function Community() {
   };
 
   const handleReportHazard = () => {
-    reportHazard({
-      vesselId: consent?.vesselId ?? 'demo-vessel',
+    const hazard = reportHazard({
+      vesselId: consent?.vesselId ?? currentVessel?.id ?? `local-vessel-${boatNode.deviceId}`,
       sourceDeviceId: boatNode.deviceId,
       type: 'debris',
       severity: 'medium',
       description: 'Local hazard report',
       position: latestPosition ?? undefined,
     });
+    // Dual transport: hazards are urgent, publish to mesh immediately
+    if (boatNode.meshEnabled) {
+      communityMeshSync.publishHazard(hazard);
+    }
   };
 
   const handleSyncNextObservationBatch = async () => {

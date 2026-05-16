@@ -17,7 +17,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { useAIStore } from '@/store';
+import { useAIStore, useAppStore } from '@/store';
+import { AIProviderType, type AIProviderConfig } from '@/types';
 
 // Quick action suggestions
 const quickActions = [
@@ -29,25 +30,6 @@ const quickActions = [
   { id: 'troubleshoot', title: 'Troubleshoot an issue', description: 'Get help diagnosing and fixing problems', icon: AlertTriangle },
 ];
 
-// Example conversation
-const exampleConversation = [
-  {
-    role: 'assistant' as const,
-    content: 'Hello! I\'m your HarborMesh AI companion. I can help you with:\n\n• Understanding your vessel systems\n• Creating maintenance schedules\n• Planning voyages and routes\n• Answering questions about boating\n• Summarizing documents and logs\n\nWhat would you like to know about your vessel today?',
-    timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-  },
-  {
-    role: 'user' as const,
-    content: 'What maintenance should I do on my Yanmar 3YM30 engine?',
-    timestamp: new Date(Date.now() - 4 * 60 * 1000).toISOString(),
-  },
-  {
-    role: 'assistant' as const,
-    content: `Based on your Yanmar 3YM30 engine manual, here are the key maintenance tasks:\n\n**Every 50 hours or monthly:** • Check engine oil level • Inspect raw water strainer • Check coolant level\n\n**Every 250 hours or annually:** • Change engine oil and filter • Replace fuel filter • Inspect and adjust drive belts • Check zinc anodes\n\n**Every 500 hours or 2 years:** • Replace raw water pump impeller • Change coolant • Inspect heat exchanger\n\nYour engine currently shows 1,250.5 hours. Would you like me to create scheduled tasks for upcoming maintenance?`,
-    timestamp: new Date(Date.now() - 3 * 60 * 1000).toISOString(),
-  },
-];
-
 interface Message {
   role: 'user' | 'assistant';
   content: string;
@@ -55,10 +37,60 @@ interface Message {
   isStreaming?: boolean;
 }
 
+async function requestProviderChat(provider: AIProviderConfig, messages: Message[]): Promise<string> {
+  const baseUrl = provider.apiUrl.replace(/\/+$/, '');
+  const latestMessages = messages.slice(-12).map((message) => ({
+    role: message.role,
+    content: message.content,
+  }));
+
+  if (provider.providerType === AIProviderType.LOCAL) {
+    const response = await fetch(`${baseUrl}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: provider.chatModel || provider.capabilities.find((capability) => capability.type === 'chat')?.modelName || 'llama3.1',
+        messages: latestMessages,
+        stream: false,
+      }),
+    });
+
+    const body = await response.json().catch(() => null) as { message?: { content?: string }; response?: string; error?: string } | null;
+    if (!response.ok) throw new Error(body?.error || response.statusText);
+    const content = body?.message?.content || body?.response;
+    if (!content) throw new Error('Provider returned no assistant message');
+    return content;
+  }
+
+  const response = await fetch(`${baseUrl}/v1/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(provider.apiKey ? { Authorization: `Bearer ${provider.apiKey}` } : {}),
+    },
+    body: JSON.stringify({
+      model: provider.chatModel || 'gpt-4o-mini',
+      messages: latestMessages,
+      temperature: provider.temperature ?? 0.2,
+      max_tokens: provider.maxTokens,
+    }),
+  });
+
+  const body = await response.json().catch(() => null) as { choices?: Array<{ message?: { content?: string } }>; error?: { message?: string } | string } | null;
+  if (!response.ok) {
+    const error = typeof body?.error === 'string' ? body.error : body?.error?.message;
+    throw new Error(error || response.statusText);
+  }
+  const content = body?.choices?.[0]?.message?.content;
+  if (!content) throw new Error('Provider returned no assistant message');
+  return content;
+}
+
 export function AICompanion() {
-  const { addMessage, clearConversation, isProcessing, setProcessing } = useAIStore();
+  const { activeProvider, addMessage, clearConversation, isProcessing, setProcessing } = useAIStore();
+  const setActiveView = useAppStore((s) => s.setActiveView);
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<Message[]>(exampleConversation);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [streamingMessage, setStreamingMessage] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -76,39 +108,27 @@ export function AICompanion() {
   useEffect(() => { inputRef.current?.focus(); }, []);
 
   const handleSend = async () => {
-    if (!input.trim() || isProcessing) return;
+    if (!input.trim() || isProcessing || !activeProvider) return;
     const userMessage: Message = { role: 'user', content: input.trim(), timestamp: new Date().toISOString() };
-    setMessages((prev) => [...prev, userMessage]);
+    const nextMessages = [...messages, userMessage];
+    setMessages(nextMessages);
     setInput('');
     setProcessing(true);
-
-    const responses: Record<string, string> = {
-      'onboard': `I'd be happy to help you onboard your vessel! Let's start with the basics:\n\n1. **Vessel Details**: First, let's confirm your vessel information in the Vessel section\n2. **Create Spaces**: Map out your boat's compartments and storage areas\n3. **Add Inventory**: Track safety equipment, spares, and supplies\n4. **Upload Documents**: Store manuals, registrations, and certificates\n5. **Set Up Systems**: Document your engine, electrical, and plumbing systems\n\nWould you like me to guide you through any of these steps?`,
-      'systems': `Your vessel has several key systems:\n\n**Propulsion**: Yanmar 3YM30 diesel engine with saildrive\n**Electrical**: 12V DC system with house and start batteries\n**Plumbing**: Fresh water, black water, and bilge systems\n**Navigation**: GPS, chart plotter, VHF radio, AIS\n**Safety**: Life jackets, fire extinguishers, flares, EPIRB\n\nWhich system would you like to learn more about?`,
-      'maintenance': `I'll create a maintenance schedule based on your vessel's systems:\n\n**Engine (Yanmar 3YM30)** - Oil change (every 250 hrs) - Due in 4.5 hours\n- Fuel filter replacement (every 500 hrs) - Due in 249.5 hours\n- Raw water impeller (every 1000 hrs) - Due in 749.5 hours\n\n**Safety Equipment** - Fire extinguisher inspection (annual) - Due in 3 months\n- Flare expiration check - Due in 18 months\n- EPIRB battery test (annual) - Due in 2 months\n\nI've added these to your Tasks. Would you like me to set up reminders?`,
-      'default': `I understand you're asking about "${input.trim()}". As your AI companion, I can help with:\n\n• Explaining vessel systems and procedures\n• Creating maintenance schedules\n• Summarizing documents and logs\n• Providing boating best practices\n• Troubleshooting common issues\n\nCould you provide more details about what you'd like to know?`,
-    };
-
-    const lowerInput = input.toLowerCase();
-    let responseKey = 'default';
-    if (lowerInput.includes('onboard') || lowerInput.includes('setup')) responseKey = 'onboard';
-    else if (lowerInput.includes('system') || lowerInput.includes('engine')) responseKey = 'systems';
-    else if (lowerInput.includes('maintenance') || lowerInput.includes('schedule')) responseKey = 'maintenance';
-
-    const response = responses[responseKey];
     setStreamingMessage('');
-    const words = response.split(' ');
-    for (let i = 0; i < words.length; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 30));
-      setStreamingMessage((prev) => prev + (i > 0 ? ' ' : '') + words[i]);
+
+    try {
+      const response = await requestProviderChat(activeProvider, nextMessages);
+      const assistantMessage: Message = { role: 'assistant', content: response, timestamp: new Date().toISOString() };
+      setMessages((prev) => [...prev, assistantMessage]);
+      addMessage('user', userMessage.content);
+      addMessage('assistant', response);
+    } catch (error) {
+      const content = error instanceof Error ? error.message : 'AI provider request failed.';
+      setMessages((prev) => [...prev, { role: 'assistant', content, timestamp: new Date().toISOString() }]);
+    } finally {
+      setStreamingMessage('');
+      setProcessing(false);
     }
-
-    const assistantMessage: Message = { role: 'assistant', content: response, timestamp: new Date().toISOString() };
-    setMessages((prev) => [...prev, assistantMessage]);
-    setStreamingMessage('');
-    setProcessing(false);
-    addMessage('user', userMessage.content);
-    addMessage('assistant', response);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -116,6 +136,7 @@ export function AICompanion() {
   };
 
   const handleQuickAction = (actionId: string) => {
+    if (!activeProvider) return;
     const action = quickActions.find((a) => a.id === actionId);
     if (action) { setInput(action.title); inputRef.current?.focus(); }
   };
@@ -135,13 +156,26 @@ export function AICompanion() {
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-xs">
-            <Zap className="h-3 w-3 mr-1" /> Local AI Active
+            <Zap className="h-3 w-3 mr-1" /> {activeProvider ? activeProvider.name : 'No Provider'}
           </Badge>
           <Button variant="outline" size="sm">
             <Settings className="h-4 w-4 mr-2" /> AI Settings
           </Button>
         </div>
       </div>
+
+      {/* No-provider banner */}
+      {!activeProvider && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 p-4 flex items-center justify-between gap-4">
+          <div>
+            <p className="font-medium text-sm text-amber-900 dark:text-amber-100">No AI provider configured</p>
+            <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">Add a local Ollama instance or API key in Settings to enable AI features.</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={() => setActiveView('settings')}>
+            Configure AI
+          </Button>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="grid lg:grid-cols-4 gap-6">
@@ -154,11 +188,12 @@ export function AICompanion() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {quickActions.map((action) => {
-                const Icon = action.icon;
-                return (
-                  <button key={action.id} onClick={() => handleQuickAction(action.id)}
-                    className="w-full text-left p-3 rounded-lg border hover:bg-muted/50 transition-colors group">
+                  {quickActions.map((action) => {
+                    const Icon = action.icon;
+                    return (
+                      <button key={action.id} onClick={() => handleQuickAction(action.id)}
+                    disabled={!activeProvider}
+                    className="w-full text-left p-3 rounded-lg border hover:bg-muted/50 transition-colors group disabled:cursor-not-allowed disabled:opacity-50">
                     <div className="flex items-start gap-3">
                       <div className="p-2 rounded-md bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                         <Icon className="h-4 w-4" />
@@ -178,10 +213,14 @@ export function AICompanion() {
             <CardHeader className="pb-3"><CardTitle className="text-sm">Capabilities</CardTitle></CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500" /><span>Local processing (offline)</span></div>
-                <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500" /><span>Document analysis</span></div>
-                <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500" /><span>System explanations</span></div>
-                <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500" /><span>Maintenance guidance</span></div>
+                {activeProvider ? (
+                  <>
+                    <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500" /><span>{activeProvider.providerType} provider selected</span></div>
+                    <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500" /><span>Chat endpoint configured</span></div>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-amber-500" /><span>Add a provider in Settings</span></div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -199,7 +238,8 @@ export function AICompanion() {
                   <div>
                     <CardTitle className="text-base">HarborMesh AI</CardTitle>
                     <CardDescription className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500" /> Online • Local Model
+                      <span className={cn('w-2 h-2 rounded-full', activeProvider ? 'bg-emerald-500' : 'bg-amber-500')} />
+                      {activeProvider ? `${activeProvider.providerType} provider ready` : 'Provider not configured'}
                     </CardDescription>
                   </div>
                 </div>
@@ -217,8 +257,14 @@ export function AICompanion() {
                     {messages.length === 0 ? (
                       <div className="text-center py-12">
                         <Bot className="h-16 w-16 mx-auto mb-4 text-muted-foreground/30" />
-                        <h3 className="font-medium text-lg">How can I help you today?</h3>
-                        <p className="text-muted-foreground mt-1">Ask me about your vessel, maintenance, or navigation</p>
+                        <h3 className="font-medium text-lg">
+                          {activeProvider ? 'How can I help you today?' : 'Connect an AI provider first'}
+                        </h3>
+                        <p className="text-muted-foreground mt-1">
+                          {activeProvider
+                            ? 'Ask me about your vessel, maintenance, or navigation'
+                            : 'The companion stays inactive until Settings has a selected provider.'}
+                        </p>
                       </div>
                     ) : (
                       messages.map((message, index) => (
@@ -286,15 +332,17 @@ export function AICompanion() {
                 <Button variant="outline" size="icon" className="flex-shrink-0"><Mic className="h-4 w-4" /></Button>
                 <div className="flex-1 relative">
                   <Input ref={inputRef} placeholder="Ask about your vessel..." value={input}
-                    onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyDown} className="pr-12" disabled={isProcessing} />
+                    onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyDown} className="pr-12" disabled={isProcessing || !activeProvider} />
                   <Button size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
-                    onClick={handleSend} disabled={!input.trim() || isProcessing}>
+                    onClick={handleSend} disabled={!input.trim() || isProcessing || !activeProvider}>
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
               <p className="text-xs text-muted-foreground text-center mt-2">
-                AI responses are generated locally. Never sends sensitive data to cloud without permission.
+                {activeProvider
+                  ? 'Messages are sent only to the selected provider endpoint.'
+                  : 'No AI requests are made until a provider is selected in Settings.'}
               </p>
             </CardContent>
           </Card>

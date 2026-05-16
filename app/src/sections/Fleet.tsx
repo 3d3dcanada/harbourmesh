@@ -3,7 +3,7 @@
  * Enterprise/Charter tier multi-vessel console
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Ship,
   Users,
@@ -15,7 +15,6 @@ import {
   ClipboardList,
   Activity,
   Anchor,
-  Navigation,
   Plus,
   Filter,
   Search,
@@ -37,59 +36,61 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';
 import { cn, formatDate } from '@/lib/utils';
 import { DataSourceNotice } from '@/components/DataSourceNotice';
+import { useSettingsStore, useVesselStore, useLogTaskStore, useDocumentStore, useAppStore } from '@/store';
+import { VesselType } from '@/types';
 
 // Demo fleet data
 const demoFleet = [
   {
     id: 'v1',
-    name: 'Sea Venture',
+    name: 'Bay of Fundy Runner',
     type: 'Sailboat Cruiser',
     status: 'underway',
-    position: { lat: 37.7749, lon: -122.4194 },
+    position: { lat: 45.2733, lon: -66.0633 },
     lastUpdate: '2 min ago',
     crew: 2,
     passengers: 0,
-    nextMaintenance: '2024-03-15',
-    certificateExpiry: '2024-06-01',
+    nextMaintenance: '2026-06-15',
+    certificateExpiry: '2026-09-01',
     alerts: [],
   },
   {
     id: 'v2',
-    name: 'Coastal Dream',
+    name: 'Shediac Surveyor',
     type: 'Motor Cruiser',
     status: 'in_port',
-    position: { lat: 37.8044, lon: -122.4078 },
+    position: { lat: 46.2192, lon: -64.5418 },
     lastUpdate: '15 min ago',
     crew: 1,
     passengers: 0,
-    nextMaintenance: '2024-02-28',
-    certificateExpiry: '2024-05-15',
+    nextMaintenance: '2026-06-28',
+    certificateExpiry: '2026-09-15',
     alerts: [{ type: 'maintenance', message: 'Maintenance due in 3 days' }],
   },
   {
     id: 'v3',
-    name: 'Wind Dancer II',
+    name: 'Fundy Cat',
     type: 'Catamaran',
     status: 'anchored',
-    position: { lat: 37.7983, lon: -122.3778 },
+    position: { lat: 44.7131, lon: -66.7931 },
     lastUpdate: '5 min ago',
     crew: 2,
     passengers: 4,
-    nextMaintenance: '2024-04-01',
-    certificateExpiry: '2024-07-20',
+    nextMaintenance: '2026-07-01',
+    certificateExpiry: '2026-10-20',
     alerts: [],
   },
   {
     id: 'v4',
-    name: 'Bay Explorer',
+    name: 'Miramichi Explorer',
     type: 'Trawler',
     status: 'offline',
     position: null,
     lastUpdate: '2 hours ago',
     crew: 0,
     passengers: 0,
-    nextMaintenance: '2024-03-01',
-    certificateExpiry: '2024-04-30',
+    nextMaintenance: '2026-07-15',
+    certificateExpiry: '2026-11-30',
     alerts: [{ type: 'offline', message: 'No telemetry received' }],
   },
 ];
@@ -98,19 +99,19 @@ const demoManifests = [
   {
     id: 'm1',
     vesselId: 'v3',
-    vesselName: 'Wind Dancer II',
-    departure: '2024-02-15T09:00:00',
-    return: '2024-02-15T17:00:00',
+    vesselName: 'Fundy Cat',
+    departure: '2026-06-15T09:00:00',
+    return: '2026-06-15T17:00:00',
     status: 'underway',
     crew: [
-      { name: 'Capt. Sarah Johnson', role: 'Captain', checkedIn: true },
-      { name: 'Mike Chen', role: 'Deckhand', checkedIn: true },
+      { name: 'Demo Master', role: 'Master', checkedIn: true },
+      { name: 'Demo Deckhand', role: 'Deckhand', checkedIn: true },
     ],
     passengers: [
-      { name: 'John Smith', checkedIn: true },
-      { name: 'Jane Doe', checkedIn: true },
-      { name: 'Bob Wilson', checkedIn: true },
-      { name: 'Alice Brown', checkedIn: false },
+      { name: 'Demo Passenger 1', checkedIn: true },
+      { name: 'Demo Passenger 2', checkedIn: true },
+      { name: 'Demo Passenger 3', checkedIn: true },
+      { name: 'Demo Passenger 4', checkedIn: false },
     ],
   },
 ];
@@ -120,9 +121,9 @@ const demoProcedures = [
     id: 'p1',
     name: 'Pre-Departure Checklist',
     category: 'Safety',
-    assignedTo: 'All Captains',
+    assignedTo: 'All Operators',
     frequency: 'Per Voyage',
-    lastCompleted: '2024-02-14',
+    lastCompleted: '2026-05-01',
   },
   {
     id: 'p2',
@@ -130,7 +131,7 @@ const demoProcedures = [
     category: 'Maintenance',
     assignedTo: 'Engineers',
     frequency: 'Monthly',
-    lastCompleted: '2024-01-20',
+    lastCompleted: '2026-04-20',
   },
   {
     id: 'p3',
@@ -143,18 +144,60 @@ const demoProcedures = [
 ];
 
 export function Fleet() {
+  const demoModeEnabled = useSettingsStore((state) => state.demoModeEnabled);
+  const { vessels, addVessel, deleteVessel, setCurrentVessel } = useVesselStore();
+  const { tasks } = useLogTaskStore();
+  const { getExpiringDocuments } = useDocumentStore();
+  const { setActiveView } = useAppStore();
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedVessel, setSelectedVessel] = useState<string | null>(null);
   const [showAddVessel, setShowAddVessel] = useState(false);
-  
+  const [newVesselName, setNewVesselName] = useState('');
+  const [newVesselType, setNewVesselType] = useState<VesselType>(VesselType.SAILBOAT_CRUISER);
+
+  const realVessels = vessels.length > 0;
+
+  const vesselStats = realVessels ? vessels.map((v) => ({
+    vessel: v,
+    openTasks: tasks.filter((t) => t.vesselId === v.id && t.status !== 'complete').length,
+    overdueTasks: tasks.filter((t) => t.vesselId === v.id && t.status !== 'complete' && t.dueDate && new Date(t.dueDate) < new Date()).length,
+    expiringDocs: getExpiringDocuments(30).filter((d) => d.vesselId === v.id).length,
+  })) : [];
+
+  const totalOpenTasks = tasks.filter((t) => t.status !== 'complete').length;
+  const totalOverdue = tasks.filter((t) => t.status !== 'complete' && t.dueDate && new Date(t.dueDate) < new Date()).length;
+  const totalExpiringDocs = getExpiringDocuments(30).length;
+
   const statusCounts = {
-    underway: demoFleet.filter((v) => v.status === 'underway').length,
-    anchored: demoFleet.filter((v) => v.status === 'anchored').length,
-    inPort: demoFleet.filter((v) => v.status === 'in_port').length,
-    offline: demoFleet.filter((v) => v.status === 'offline').length,
+    underway: (demoFleet as typeof demoFleet).filter((v) => v.status === 'underway').length,
+    anchored: (demoFleet as typeof demoFleet).filter((v) => v.status === 'anchored').length,
+    inPort: (demoFleet as typeof demoFleet).filter((v) => v.status === 'in_port').length,
+    offline: (demoFleet as typeof demoFleet).filter((v) => v.status === 'offline').length,
   };
-  
+
   const totalAlerts = demoFleet.reduce((acc, v) => acc + v.alerts.length, 0);
+
+  const handleAddVessel = () => {
+    if (!newVesselName.trim()) return;
+    const vessel = {
+      id: crypto.randomUUID(),
+      ownerId: 'local',
+      name: newVesselName.trim(),
+      type: newVesselType,
+      lengthOverall: 0,
+      lengthWaterline: 0,
+      beam: 0,
+      draft: 0,
+      engines: [],
+      tanks: [],
+      operationalProfile: { primaryUse: 'recreational' as const, typicalCrewSize: 2, maxPassengers: 6 },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    addVessel(vessel);
+    setNewVesselName('');
+    setShowAddVessel(false);
+  };
   
   const getStatusBadge = (status: string) => {
     const configs = {
@@ -170,6 +213,57 @@ export function Fleet() {
       </Badge>
     );
   };
+
+  if (!realVessels && !demoModeEnabled) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Fleet Management</h1>
+          <p className="text-muted-foreground mt-1">Manage all your vessels from one place.</p>
+        </div>
+        <Card>
+          <CardContent className="py-10 text-center">
+            <Ship className="h-14 w-14 mx-auto mb-3 text-muted-foreground/30" />
+            <h2 className="text-lg font-semibold">No vessels yet</h2>
+            <p className="mx-auto mt-1 max-w-xl text-sm text-muted-foreground">
+              Add your first vessel to start tracking your fleet.
+            </p>
+            <Button className="mt-4" onClick={() => setShowAddVessel(true)}>
+              <Plus className="h-4 w-4 mr-2" /> Add Vessel
+            </Button>
+          </CardContent>
+        </Card>
+        <Dialog open={showAddVessel} onOpenChange={setShowAddVessel}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Vessel</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Vessel Name</Label>
+                <Input value={newVesselName} onChange={(e) => setNewVesselName(e.target.value)} placeholder="e.g., Bay of Fundy Runner" autoFocus />
+              </div>
+              <div className="space-y-2">
+                <Label>Vessel Type</Label>
+                <Select value={newVesselType} onValueChange={(v) => setNewVesselType(v as VesselType)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Object.values(VesselType).map((t) => (
+                      <SelectItem key={t} value={t}>{t.replace(/_/g, ' ')}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowAddVessel(false)}>Cancel</Button>
+              <Button onClick={handleAddVessel} disabled={!newVesselName.trim()}>Add</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-6">
@@ -203,11 +297,11 @@ export function Fleet() {
           <CardContent className="py-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-blue-50 text-blue-500 dark:bg-blue-950/30">
-                <Navigation className="h-5 w-5" />
+                <Ship className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Underway</p>
-                <p className="text-2xl font-bold">{statusCounts.underway}</p>
+                <p className="text-sm text-muted-foreground">Vessels</p>
+                <p className="text-2xl font-bold">{realVessels ? vessels.length : statusCounts.underway + statusCounts.anchored + statusCounts.inPort + statusCounts.offline}</p>
               </div>
             </div>
           </CardContent>
@@ -219,21 +313,8 @@ export function Fleet() {
                 <Anchor className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Anchored</p>
-                <p className="text-2xl font-bold">{statusCounts.anchored}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="py-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-slate-50 text-slate-500 dark:bg-slate-950/30">
-                <MapPin className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">In Port</p>
-                <p className="text-2xl font-bold">{statusCounts.inPort}</p>
+                <p className="text-sm text-muted-foreground">{realVessels ? 'Open Tasks' : 'Anchored'}</p>
+                <p className="text-2xl font-bold">{realVessels ? totalOpenTasks : statusCounts.anchored}</p>
               </div>
             </div>
           </CardContent>
@@ -245,8 +326,8 @@ export function Fleet() {
                 <Activity className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Offline</p>
-                <p className="text-2xl font-bold">{statusCounts.offline}</p>
+                <p className="text-sm text-muted-foreground">{realVessels ? 'Overdue' : 'Offline'}</p>
+                <p className="text-2xl font-bold">{realVessels ? totalOverdue : statusCounts.offline}</p>
               </div>
             </div>
           </CardContent>
@@ -258,8 +339,21 @@ export function Fleet() {
                 <Bell className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Alerts</p>
-                <p className="text-2xl font-bold">{totalAlerts}</p>
+                <p className="text-sm text-muted-foreground">{realVessels ? 'Expiring Docs' : 'Alerts'}</p>
+                <p className="text-2xl font-bold">{realVessels ? totalExpiringDocs : totalAlerts}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="py-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-slate-50 text-slate-500 dark:bg-slate-950/30">
+                <MapPin className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">{realVessels ? 'In Port' : 'In Port'}</p>
+                <p className="text-2xl font-bold">{statusCounts.inPort}</p>
               </div>
             </div>
           </CardContent>
@@ -308,8 +402,45 @@ export function Fleet() {
             <CardContent className="p-0">
               <ScrollArea className="h-[400px]">
                 <div className="divide-y">
-                  {demoFleet.map((vessel) => (
-                    <div 
+                  {realVessels ? vesselStats.map(({ vessel, openTasks, overdueTasks, expiringDocs }) => (
+                    <div
+                      key={vessel.id}
+                      className={cn(
+                        'flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer transition-colors',
+                        selectedVessel === vessel.id && 'bg-muted'
+                      )}
+                      onClick={() => { setSelectedVessel(vessel.id); setCurrentVessel(vessel); setActiveView('vessel'); }}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="p-2 rounded-lg bg-blue-50 text-blue-500 dark:bg-blue-950/30">
+                          <Ship className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-medium">{vessel.name}</h4>
+                            {overdueTasks > 0 && (
+                              <Badge variant="destructive" className="text-xs">
+                                <AlertTriangle className="h-3 w-3 mr-1" />{overdueTasks} overdue
+                              </Badge>
+                            )}
+                            {expiringDocs > 0 && (
+                              <Badge variant="outline" className="text-xs text-amber-500 border-amber-200">{expiringDocs} expiring</Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {vessel.type.replace(/_/g, ' ')} • {openTasks} open tasks
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                        onClick={(e) => { e.stopPropagation(); deleteVessel(vessel.id); }}
+                      >×</Button>
+                    </div>
+                  )) : (demoFleet as typeof demoFleet).map((vessel) => (
+                    <div
                       key={vessel.id}
                       className={cn(
                         'flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer transition-colors',
@@ -547,39 +678,35 @@ export function Fleet() {
       <Dialog open={showAddVessel} onOpenChange={setShowAddVessel}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Vessel to Fleet</DialogTitle>
-            <DialogDescription>
-              Add a new vessel to your fleet management system
-            </DialogDescription>
+            <DialogTitle>Add Vessel</DialogTitle>
+            <DialogDescription>Add a vessel to your fleet.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Vessel Name</Label>
-              <Input placeholder="e.g., Sea Venture" />
+              <Input
+                value={newVesselName}
+                onChange={(e) => setNewVesselName(e.target.value)}
+                placeholder="e.g., Bay of Fundy Runner"
+                onKeyDown={(e) => { if (e.key === 'Enter') handleAddVessel(); }}
+                autoFocus
+              />
             </div>
             <div className="space-y-2">
               <Label>Vessel Type</Label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sailboat">Sailboat</SelectItem>
-                  <SelectItem value="motorboat">Motorboat</SelectItem>
-                  <SelectItem value="catamaran">Catamaran</SelectItem>
-                  <SelectItem value="trawler">Trawler</SelectItem>
-                  <SelectItem value="yacht">Yacht</SelectItem>
+              <Select value={newVesselType} onValueChange={(v) => setNewVesselType(v as VesselType)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent className="max-h-52">
+                  {Object.values(VesselType).map((t) => (
+                    <SelectItem key={t} value={t}>{t.replace(/_/g, ' ')}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>MMSI (optional)</Label>
-              <Input placeholder="9-digit MMSI number" />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowAddVessel(false)}>Cancel</Button>
-            <Button onClick={() => setShowAddVessel(false)}>Add Vessel</Button>
+            <Button onClick={handleAddVessel} disabled={!newVesselName.trim()}>Add Vessel</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

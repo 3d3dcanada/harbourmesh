@@ -23,6 +23,7 @@ import {
   Info,
   KeyRound,
   LogOut,
+  FlaskConical,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -63,13 +64,26 @@ import {
   savePilotApiCredentials,
   savePilotReviewSession,
 } from '@/lib/pilot-api-credentials';
-import { useSettingsStore, useAIStore, useAppStore, type TelemetryMode } from '@/store';
+import { useSettingsStore, useAIStore, useAppStore, useVesselStore, type TelemetryMode } from '@/store';
+import { useMeshStore } from '@/store/meshStore';
 import { ThemeMode, UnitSystem, AIProviderType, SharePositionLevel } from '@/types';
 
 export function Settings() {
-  const { userPreferences, updateUserPreferences, consent, setConsent, boatNode, updateBoatNodeSettings } = useSettingsStore();
+  const {
+    userPreferences,
+    updateUserPreferences,
+    consent,
+    setConsent,
+    demoModeEnabled,
+    setDemoModeEnabled,
+    boatNode,
+    updateBoatNodeSettings,
+  } = useSettingsStore();
   const { providers, activeProvider, setActiveProvider, addProvider } = useAIStore();
   const { connectionStatus, addNotification } = useAppStore();
+  const currentVessel = useVesselStore((state) => state.currentVessel);
+  const { relayStatuses, isConnected: meshConnected } = useMeshStore();
+  const [relayUrlInput, setRelayUrlInput] = useState('');
   const [showAddAI, setShowAddAI] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [registeringDevice, setRegisteringDevice] = useState(false);
@@ -100,9 +114,10 @@ export function Settings() {
   // Initialize default consent if not set
   React.useEffect(() => {
     if (!consent) {
+      const localUserId = accountSession?.session.account.id ?? `local-user-${crypto.randomUUID()}`;
       setConsent({
-        vesselId: 'demo-vessel',
-        userId: 'demo-user',
+        vesselId: currentVessel?.id ?? `local-vessel-${crypto.randomUUID()}`,
+        userId: localUserId,
         shareLivePosition: SharePositionLevel.NONE,
         shareTelemetryForCommunity: false,
         shareTelemetryForTraining: false,
@@ -114,10 +129,10 @@ export function Settings() {
         allowAICloudProcessing: false,
         allowAITrainingUse: false,
         lastUpdated: new Date().toISOString(),
-        updatedBy: 'demo-user',
+        updatedBy: localUserId,
       });
     }
-  }, [consent, setConsent]);
+  }, [accountSession?.session.account.id, consent, currentVessel?.id, setConsent]);
   
   const handleAddProvider = () => {
     const provider = {
@@ -133,6 +148,9 @@ export function Settings() {
       isActive: true,
     };
     addProvider(provider as never);
+    if (providers.length === 0) {
+      setActiveProvider(provider as never);
+    }
     setShowAddAI(false);
     setNewProvider({
       name: '',
@@ -474,6 +492,37 @@ export function Settings() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
+                <FlaskConical className="h-5 w-5" />
+                Demo Mode
+              </CardTitle>
+              <CardDescription>
+                Demo records are hidden from the launch workspace unless this is enabled.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <div>
+                  <p className="font-medium">Show demo data and generated simulation</p>
+                  <p className="text-sm text-muted-foreground">
+                    Keeps sample vessels, inventory, documents, logs, fleet rows, seeded routes, and generated telemetry behind an explicit local toggle.
+                  </p>
+                </div>
+                <Switch
+                  checked={demoModeEnabled}
+                  onCheckedChange={(checked) => {
+                    setDemoModeEnabled(checked);
+                    if (!checked && boatNode.telemetryMode === 'simulated') {
+                      updateBoatNodeSettings({ telemetryMode: 'replay' });
+                    }
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5" />
                 User Profile
               </CardTitle>
@@ -482,16 +531,16 @@ export function Settings() {
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Display Name</Label>
-                  <Input placeholder="Your name" defaultValue="Captain" />
+                  <Input placeholder="Display name" defaultValue={accountSession?.session.account.displayName ?? ''} />
                 </div>
                 <div className="space-y-2">
                   <Label>Email</Label>
-                  <Input type="email" placeholder="your@email.com" />
+                  <Input type="email" placeholder="Email address" defaultValue={accountSession?.session.account.email ?? ''} />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label>Phone</Label>
-                <Input placeholder="+1 (555) 000-0000" />
+                <Input placeholder="Phone number" />
               </div>
             </CardContent>
           </Card>
@@ -695,7 +744,7 @@ export function Settings() {
                   <Input
                     value={accountDisplayNameInput}
                     onChange={(event) => setAccountDisplayNameInput(event.target.value)}
-                    placeholder="Captain"
+                    placeholder="Display name"
                     autoComplete="name"
                   />
                 </div>
@@ -1150,8 +1199,123 @@ export function Settings() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
+                <Globe className="h-5 w-5" />
+                Mesh Networking
+              </CardTitle>
+              <CardDescription>
+                Synchronize telemetry with nearby vessels over Starlink or available P2P links.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Enable HarbourMesh</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Connect to the local mesh relay to share and receive vessel state.
+                  </p>
+                </div>
+                <Switch 
+                  checked={boatNode.meshEnabled} 
+                  onCheckedChange={(checked) => updateBoatNodeSettings({ meshEnabled: checked })}
+                />
+              </div>
+              <Separator />
+              <div className="space-y-2">
+                <Label>Broadcast Privacy</Label>
+                <Select
+                  value={boatNode.meshBroadcastMode}
+                  onValueChange={(value) => updateBoatNodeSettings({ meshBroadcastMode: value as any })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="always">Always (Persistent sync)</SelectItem>
+                    <SelectItem value="active">Active (Only while navigating)</SelectItem>
+                    <SelectItem value="never">Never (Listen only)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Controls when your vessel's telemetry is shared with the mesh.
+                </p>
+              </div>
+              <Separator />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>P2P Relay URLs</Label>
+                  <Badge variant={meshConnected ? 'default' : 'secondary'}>
+                    {meshConnected ? 'Connected' : 'Offline'}
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Optional WebSocket relay URLs (e.g. <code>wss://relay.example.com/gun</code>). Leave empty to use local P2P only.
+                </p>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="wss://relay.example.com/gun"
+                    value={relayUrlInput}
+                    onChange={(e) => setRelayUrlInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && relayUrlInput.trim()) {
+                        const urls = boatNode.meshRelayUrls ?? [];
+                        if (!urls.includes(relayUrlInput.trim())) {
+                          updateBoatNodeSettings({ meshRelayUrls: [...urls, relayUrlInput.trim()] });
+                        }
+                        setRelayUrlInput('');
+                      }
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      if (!relayUrlInput.trim()) return;
+                      const urls = boatNode.meshRelayUrls ?? [];
+                      if (!urls.includes(relayUrlInput.trim())) {
+                        updateBoatNodeSettings({ meshRelayUrls: [...urls, relayUrlInput.trim()] });
+                      }
+                      setRelayUrlInput('');
+                    }}
+                  >
+                    Add
+                  </Button>
+                </div>
+                {(boatNode.meshRelayUrls ?? []).length > 0 && (
+                  <div className="space-y-1">
+                    {(boatNode.meshRelayUrls ?? []).map((url) => {
+                      const status = relayStatuses.find((r) => r.url === url);
+                      return (
+                        <div key={url} className="flex items-center justify-between rounded border px-2 py-1 text-xs">
+                          <span className="font-mono truncate flex-1">{url}</span>
+                          <Badge variant={status?.connected ? 'default' : 'secondary'} className="ml-2 shrink-0">
+                            {status?.connected ? 'live' : 'pending'}
+                          </Badge>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="ml-1 h-5 w-5 p-0 text-muted-foreground hover:text-destructive shrink-0"
+                            onClick={() =>
+                              updateBoatNodeSettings({
+                                meshRelayUrls: (boatNode.meshRelayUrls ?? []).filter((u) => u !== url),
+                              })
+                            }
+                          >
+                            ×
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
                 <Wifi className="h-5 w-5" />
-                Boat Node Connection
+                Advanced Signal K Configuration
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1187,7 +1351,10 @@ export function Settings() {
 	                <Label>Telemetry Source</Label>
 	                <Select
 	                  value={boatNode.telemetryMode}
-	                  onValueChange={(value) => updateBoatNodeSettings({ telemetryMode: value as TelemetryMode })}
+	                  onValueChange={(value) => {
+                      if (value === 'simulated' && !demoModeEnabled) return;
+                      updateBoatNodeSettings({ telemetryMode: value as TelemetryMode });
+                    }}
 	                >
 	                  <SelectTrigger>
 	                    <SelectValue />
@@ -1195,9 +1362,14 @@ export function Settings() {
 	                  <SelectContent>
 	                    <SelectItem value="replay">Recorded Signal K replay</SelectItem>
 	                    <SelectItem value="signalk">Live Signal K Boat Node</SelectItem>
-	                    <SelectItem value="simulated">Generated simulation</SelectItem>
+	                    <SelectItem value="simulated" disabled={!demoModeEnabled}>Generated simulation</SelectItem>
 	                  </SelectContent>
 	                </Select>
+                  {!demoModeEnabled && (
+                    <p className="text-xs text-muted-foreground">
+                      Generated simulation is available only when Demo Mode is enabled in General settings.
+                    </p>
+                  )}
 	              </div>
 	              <div className="space-y-2">
 	                <Label>Boat Node URL</Label>

@@ -30,11 +30,13 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import { cn, formatCoordinate, formatHeading } from '@/lib/utils';
 import { useTelemetry } from '@/hooks/useTelemetry';
 import { NBPilotChart } from '@/components/NBPilotChart';
-import { useNavigationPlanStore, useTelemetryStore } from '@/store';
+import { useNavigationPlanStore, useSettingsStore, useTelemetryStore } from '@/store';
+import { useMeshStore } from '@/store/meshStore';
+import { ChartBuilderDrawer } from '@/components/ChartBuilderDrawer';
 import {
   fetchNBPilotChartPackageArtifacts,
   type NBPilotChartPackageArtifactManifest,
@@ -246,6 +248,7 @@ export function Navigation() {
   
   const [activeView, setActiveView] = useState('hud');
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isChartBuilderOpen, setIsChartBuilderOpen] = useState(false);
   const [chartArtifacts, setChartArtifacts] = useState<NBPilotChartPackageArtifactManifest | null>(null);
   const [chartArtifactsLoading, setChartArtifactsLoading] = useState(false);
   const [chartArtifactsError, setChartArtifactsError] = useState<string | null>(null);
@@ -255,6 +258,8 @@ export function Navigation() {
   const gpxInputRef = useRef<HTMLInputElement>(null);
   const localChartInputRef = useRef<HTMLInputElement>(null);
   const telemetryMessages = useTelemetryStore((state) => state.messages);
+  const demoModeEnabled = useSettingsStore((state) => state.demoModeEnabled);
+  const boatNode = useSettingsStore((state) => state.boatNode);
   const telemetryHealth = getTelemetryHealth(telemetryMessages);
   const {
     routes,
@@ -264,9 +269,19 @@ export function Navigation() {
     seedNBPilotReferenceRoute,
   } = useNavigationPlanStore();
   
+  const { meshVessels, isConnected: isMeshConnected } = useMeshStore();
+  const meshVesselsList = Object.values(meshVessels);
+  
   // Get first engine data
   const engineData = Object.entries(latestEngine)[0]?.[1];
   const activeRoute = routes.find((route) => route.id === activeRouteId) ?? null;
+  const telemetrySourceLabel = !isConnected
+    ? 'Offline'
+    : boatNode.telemetryMode === 'replay'
+      ? 'Recorded Replay'
+      : boatNode.telemetryMode === 'simulated'
+        ? 'Demo Simulation'
+        : 'Live Signal K';
   const chartArtifactCounts = chartArtifacts?.artifacts.reduce<Record<string, number>>((counts, artifact) => {
     counts[artifact.format] = (counts[artifact.format] ?? 0) + 1;
     return counts;
@@ -489,452 +504,338 @@ export function Navigation() {
   
   return (
     <div className={cn(
-      'space-y-4',
-      isFullscreen && 'fixed inset-0 z-50 bg-background p-4'
+      'flex h-[calc(100vh-4.5rem)] w-full overflow-hidden',
+      isFullscreen && 'fixed inset-0 z-50 bg-background'
     )}>
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Navigation & HUD</h1>
-          <p className="text-muted-foreground mt-1">
-            Real-time vessel telemetry and navigation display
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant={isConnected ? 'default' : 'destructive'} className="text-xs">
-            <Activity className="h-3 w-3 mr-1" />
-            {isConnected ? 'Live Data' : 'Offline'}
-          </Badge>
-          <Button 
-            variant="outline" 
-            size="icon"
-            onClick={() => setIsFullscreen(!isFullscreen)}
-          >
-            {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-          </Button>
-        </div>
-      </div>
-      
-      {/* Connection Warning */}
-      {!isConnected && (
-        <Card className="border-red-200 bg-red-50 dark:bg-red-950/20">
-          <CardContent className="py-3">
-            <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
-              <AlertTriangle className="h-5 w-5" />
-              <span className="font-medium">No telemetry connection</span>
-              <span className="text-sm">- Displaying simulated data</span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Activity className="h-5 w-5" />
-            Sensor Health
-          </CardTitle>
-          <CardDescription>
-            Live instruments are marked stale or missing when updates stop.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      {/* Main Chart Area */}
+      <div className="flex-1 relative flex flex-col min-w-0 bg-muted/20">
+        
+        {/* Top Compact Sensor Bar */}
+        <div className="absolute top-0 left-0 right-0 z-10 flex items-start justify-between p-4 pointer-events-none">
+          <div className="flex flex-wrap gap-2 pointer-events-auto max-w-[60%]">
             {telemetryHealth.map((item) => (
-              <div key={item.channel} className={cn('rounded-lg border p-3', getTelemetryHealthClass(item.status))}>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="font-medium">{item.label}</span>
-                  <Badge variant="outline" className="capitalize">
-                    {item.status}
-                  </Badge>
-                </div>
-                <p className="mt-1 text-xs opacity-80">
-                  {formatTelemetryAge(item.ageSeconds)}
-                </p>
-              </div>
+              <Badge key={item.channel} variant="outline" className={cn("bg-background/80 backdrop-blur-sm shadow-sm border-muted-foreground/20", getTelemetryHealthClass(item.status))}>
+                <span className="opacity-70 mr-1">{item.label}:</span>
+                <span className="capitalize">{item.status}</span>
+              </Badge>
             ))}
           </div>
-        </CardContent>
-      </Card>
-      
-      {/* View Tabs */}
-      <Tabs value={activeView} onValueChange={setActiveView}>
-        <TabsList>
-          <TabsTrigger value="hud">Heads-Up Display</TabsTrigger>
-          <TabsTrigger value="chart">Chart View</TabsTrigger>
-          <TabsTrigger value="engine">Engine</TabsTrigger>
-          <TabsTrigger value="ais">AIS Targets</TabsTrigger>
-        </TabsList>
-        
-        {/* HUD View */}
-        <TabsContent value="hud" className="mt-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {/* Primary Instruments */}
-            <Card className="col-span-2 row-span-2">
-              <CardContent className="p-6 flex flex-col items-center justify-center h-full">
-                <CompassRose 
-                  heading={latestMotion?.yaw || 0} 
-                  course={latestPosition?.cog}
-                  size={180}
-                />
-                <div className="mt-4 text-center">
-                  <p className="text-3xl font-bold">{Math.round(latestMotion?.yaw || 0)}°</p>
-                  <p className="text-sm text-muted-foreground">
-                    {formatHeading(latestMotion?.yaw || 0).split(' ').slice(1).join(' ')}
+          <div className="flex items-center gap-2 pointer-events-auto">
+            {!isConnected && (
+              <Badge variant="destructive" className="shadow-sm">
+                <AlertTriangle className="h-3 w-3 mr-1" />
+                No connection
+              </Badge>
+            )}
+            <Badge variant={isMeshConnected ? 'default' : 'outline'} className="shadow-sm bg-background/80 backdrop-blur-sm">
+              <Ship className="h-3 w-3 mr-1" />
+              Mesh: {isMeshConnected ? 'Live' : 'Offline'}
+            </Badge>
+            <Badge variant={isConnected ? (boatNode.telemetryMode === 'replay' ? 'secondary' : 'default') : 'outline'} className="shadow-sm bg-background/80 backdrop-blur-sm">
+              <Activity className="h-3 w-3 mr-1" />
+              {telemetrySourceLabel}
+            </Badge>
+            <Button 
+              variant="outline" 
+              size="icon"
+              className="h-7 w-7 bg-background/80 backdrop-blur-sm shadow-sm"
+              onClick={() => setIsChartBuilderOpen(true)}
+              title="Community Chart Builder"
+            >
+              <Droplets className="h-4 w-4 text-emerald-500" />
+            </Button>
+            <Button 
+              variant="outline" 
+              size="icon"
+              className="h-7 w-7 bg-background/80 backdrop-blur-sm shadow-sm"
+              onClick={() => setIsFullscreen(!isFullscreen)}
+            >
+              {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            </Button>
+          </div>
+        </div>
+
+        {/* Chart Background */}
+        <div className="absolute inset-0 z-0">
+          <NBPilotChart
+            position={latestPosition ? {
+              latitude: latestPosition.latitude,
+              longitude: latestPosition.longitude,
+            } : null}
+            heading={latestMotion?.yaw || 0}
+            aisTargets={aisTargets}
+            meshVessels={meshVesselsList}
+            routes={routes}
+            activeRouteId={activeRouteId}
+          />
+        </div>
+
+        {/* Floating Instruments (Left Side) */}
+        <div className="absolute top-16 left-4 bottom-4 w-64 z-10 overflow-y-auto pointer-events-none custom-scrollbar pb-4 pr-2 space-y-4 hidden sm:block">
+          <Card className="pointer-events-auto bg-background/80 backdrop-blur-md border-muted-foreground/20 shadow-lg">
+            <CardContent className="p-4 flex flex-col items-center justify-center">
+              <CompassRose 
+                heading={latestMotion?.yaw || 0} 
+                course={latestPosition?.cog}
+                size={160}
+              />
+              <div className="mt-4 text-center">
+                <p className="text-2xl font-bold">{Math.round(latestMotion?.yaw || 0)}°</p>
+                <p className="text-xs text-muted-foreground">
+                  {formatHeading(latestMotion?.yaw || 0).split(' ').slice(1).join(' ')}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="pointer-events-auto bg-background/80 backdrop-blur-md border-muted-foreground/20 shadow-lg">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                <MapPin className="h-4 w-4" />
+                <span className="text-xs uppercase tracking-wider">Position</span>
+              </div>
+              {latestPosition ? (
+                <div className="space-y-1">
+                  <p className="font-mono text-base">
+                    {formatCoordinate(latestPosition.latitude, 'lat')}
+                  </p>
+                  <p className="font-mono text-base">
+                    {formatCoordinate(latestPosition.longitude, 'lon')}
                   </p>
                 </div>
-              </CardContent>
-            </Card>
-            
-            {/* Speed */}
-            <DigitalGauge
-              label="Speed"
-              value={latestPosition?.sog}
-              unit="kn"
-              icon={NavigationIcon}
-            />
-            
-            {/* Depth */}
-            <DigitalGauge
-              label="Depth"
-              value={latestEnvironment?.depth}
-              unit="m"
-              min={0}
-              max={50}
-              warning={5}
-              danger={3}
-              icon={Droplets}
-            />
-            
-            {/* Wind */}
-            <DigitalGauge
-              label="Wind"
-              value={latestEnvironment?.windSpeed}
-              unit="kn"
-              icon={Wind}
-            />
-            
-            {/* Water Temp */}
-            <DigitalGauge
-              label="Water Temp"
-              value={latestEnvironment?.waterTemp}
-              unit="°C"
-              icon={Thermometer}
-            />
-            
-            {/* Engine RPM */}
-            <DigitalGauge
-              label="Engine RPM"
-              value={engineData?.rpm}
-              unit=""
-              min={0}
-              max={4000}
-              warning={3500}
-              danger={3800}
-              icon={Gauge}
-            />
-            
-            {/* Engine Temp */}
-            <DigitalGauge
-              label="Engine Temp"
-              value={engineData?.temp}
-              unit="°C"
-              min={50}
-              max={120}
-              warning={95}
-              danger={105}
-              icon={Thermometer}
-            />
-            
-            {/* Position */}
-            <Card className="col-span-2">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                  <MapPin className="h-4 w-4" />
-                  <span className="text-xs uppercase tracking-wider">Position</span>
-                </div>
-                {latestPosition ? (
-                  <div className="space-y-1">
-                    <p className="font-mono text-lg">
-                      {formatCoordinate(latestPosition.latitude, 'lat')}
-                    </p>
-                    <p className="font-mono text-lg">
-                      {formatCoordinate(latestPosition.longitude, 'lon')}
-                    </p>
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground">--</p>
-                )}
-              </CardContent>
-            </Card>
-            
-            {/* Attitude */}
-            <Card>
-              <CardContent className="p-4 flex flex-col items-center">
-                <span className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Attitude</span>
-                <AttitudeIndicator 
-                  roll={latestMotion?.roll || 0} 
-                  pitch={latestMotion?.pitch || 0} 
-                />
-                <div className="flex gap-4 mt-2 text-xs">
-                  <span>Roll: {(latestMotion?.roll || 0).toFixed(1)}°</span>
-                  <span>Pitch: {(latestMotion?.pitch || 0).toFixed(1)}°</span>
-                </div>
-              </CardContent>
-            </Card>
-            
-            {/* Barometer */}
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                  <TrendingUp className="h-4 w-4" />
-                  <span className="text-xs uppercase tracking-wider">Pressure</span>
-                </div>
-                <p className="text-2xl font-bold">
-                  {latestEnvironment?.barometricPressure?.toFixed(0) || '--'}
-                </p>
-                <p className="text-sm text-muted-foreground">hPa</p>
-              </CardContent>
-            </Card>
+              ) : (
+                <p className="text-muted-foreground">--</p>
+              )}
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-2 gap-2 pointer-events-auto">
+            <DigitalGauge label="Speed" value={latestPosition?.sog} unit="kn" icon={NavigationIcon} />
+            <DigitalGauge label="Depth" value={latestEnvironment?.depth} unit="m" min={0} max={50} warning={5} danger={3} icon={Droplets} />
+            <DigitalGauge label="Wind" value={latestEnvironment?.windSpeed} unit="kn" icon={Wind} />
+            <DigitalGauge label="Water" value={latestEnvironment?.waterTemp} unit="°C" icon={Thermometer} />
           </div>
-        </TabsContent>
-        
-        {/* Chart View */}
-        <TabsContent value="chart" className="mt-4">
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
-            <Card className="h-[560px]">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between gap-3">
-                  <CardTitle className="flex items-center gap-2">
-                    <Layers className="h-5 w-5" />
-                    Chart View
-                  </CardTitle>
-                  <div className="flex flex-wrap items-center justify-end gap-2">
-                    <Badge variant="outline">
-                      <Ship className="h-3 w-3 mr-1" />
-                      Own Vessel
-                    </Badge>
-                    <Badge variant="outline" className="text-red-500 border-red-200">
-                      <Ship className="h-3 w-3 mr-1" />
-                      AIS Target
-                    </Badge>
-                    <Badge variant="outline" className="text-emerald-500 border-emerald-200">
-                      <MapPin className="h-3 w-3 mr-1" />
-                      {routes.length} Route{routes.length === 1 ? '' : 's'}
-                    </Badge>
-                  </div>
-                </div>
+
+          <Card className="pointer-events-auto bg-background/80 backdrop-blur-md border-muted-foreground/20 shadow-lg">
+            <CardContent className="p-3 flex flex-col items-center">
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">Attitude</span>
+              <div className="scale-75 origin-top">
+                <AttitudeIndicator roll={latestMotion?.roll || 0} pitch={latestMotion?.pitch || 0} />
+              </div>
+              <div className="flex gap-4 mt-1 text-[10px] text-muted-foreground">
+                <span>R: {(latestMotion?.roll || 0).toFixed(1)}°</span>
+                <span>P: {(latestMotion?.pitch || 0).toFixed(1)}°</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {Object.entries(latestEngine).map(([engineId, data]) => (
+            <Card key={engineId} className="pointer-events-auto bg-background/80 backdrop-blur-md border-muted-foreground/20 shadow-lg">
+              <CardHeader className="p-3 pb-0">
+                <CardTitle className="text-xs flex items-center gap-2">
+                  <Zap className="h-3 w-3" /> Engine {engineId}
+                </CardTitle>
               </CardHeader>
-              <CardContent className="h-[calc(100%-60px)]">
-                <NBPilotChart
-                  position={latestPosition ? {
-                    latitude: latestPosition.latitude,
-                    longitude: latestPosition.longitude,
-                  } : null}
-                  heading={latestMotion?.yaw || 0}
-                  aisTargets={aisTargets}
-                  routes={routes}
-                  activeRouteId={activeRouteId}
-                />
+              <CardContent className="p-3 pt-2">
+                <div className="flex justify-between text-xs">
+                  <span>{data.rpm} RPM</span>
+                  <span className={cn(data.temp && data.temp > 95 ? 'text-red-500' : '')}>{data.temp}°C</span>
+                </div>
               </CardContent>
             </Card>
+          ))}
+        </div>
+      </div>
 
-            <div className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <div className="flex flex-col gap-3 sm:flex-row xl:flex-col sm:items-start sm:justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2 text-base">
-                        <MapPin className="h-5 w-5" />
-                        Routes
-                      </CardTitle>
-                      <CardDescription>
-                        Local planning routes render as reference overlays on the NB pilot chart.
-                      </CardDescription>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <input
-                        ref={gpxInputRef}
-                        type="file"
-                        accept=".gpx,application/gpx+xml,application/xml,text/xml"
-                        className="hidden"
-                        onChange={(event) => void handleImportRouteGpx(event)}
-                      />
-                      <Button size="sm" variant="outline" onClick={() => gpxInputRef.current?.click()}>
-                        <Upload className="h-4 w-4" />
-                        Import GPX
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={handleExportActiveRouteGpx} disabled={!activeRoute}>
-                        <Download className="h-4 w-4" />
-                        Export GPX
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {routeImportError && (
-                    <div className="mb-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-200">
-                      {routeImportError}
-                    </div>
-                  )}
+      {/* Right Sidebar */}
+      <div className="w-80 border-l bg-card hidden xl:flex flex-col shrink-0">
+        <div className="h-12 border-b bg-muted/30 flex items-center px-4 shrink-0">
+          <NavigationIcon className="h-4 w-4 mr-2" />
+          <span className="font-medium text-sm">Navigation Manager</span>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+          {/* Routes Section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <MapPin className="h-4 w-4" /> Routes
+              </h3>
+              <div className="flex gap-1">
+                <input
+                  ref={gpxInputRef}
+                  type="file"
+                  accept=".gpx,application/gpx+xml,application/xml,text/xml"
+                  className="hidden"
+                  onChange={(event) => void handleImportRouteGpx(event)}
+                />
+                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => gpxInputRef.current?.click()} title="Import GPX">
+                  <Upload className="h-3 w-3" />
+                </Button>
+                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleExportActiveRouteGpx} disabled={!activeRoute} title="Export active GPX">
+                  <Download className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+            
+            {routeImportError && (
+              <div className="rounded border border-red-200 bg-red-50 p-2 text-xs text-red-700 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-200">
+                {routeImportError}
+              </div>
+            )}
 
-                  {routes.length === 0 ? (
-                    <div className="rounded-lg border border-dashed p-6 text-center">
-                      <p className="text-sm text-muted-foreground">No local routes saved.</p>
-                      <Button size="sm" className="mt-3" onClick={seedNBPilotReferenceRoute}>
-                        Add NB Reference Route
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {routes.map((route) => (
-                        <button
-                          key={route.id}
-                          type="button"
-                          onClick={() => setActiveRoute(route.id)}
-                          className={cn(
-                            'w-full rounded-lg border p-3 text-left transition-colors hover:bg-muted',
-                            route.id === activeRouteId && 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20'
-                          )}
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <p className="font-medium">{route.name}</p>
-                              <p className="mt-1 text-xs text-muted-foreground">
-                                {route.waypoints.length} waypoints · {route.totalDistance.toFixed(1)} nm
-                              </p>
-                            </div>
-                            <Badge variant={route.id === activeRouteId ? 'default' : 'outline'}>
-                              {route.status}
-                            </Badge>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {activeRoute && (
-                    <div className="mt-4 rounded-lg bg-muted p-3 text-sm">
-                      <div className="flex items-center gap-2 font-medium">
-                        <Clock className="h-4 w-4" />
-                        {activeRoute.estimatedDuration} min
+            {routes.length === 0 ? (
+              <div className="rounded border border-dashed p-4 text-center">
+                <p className="text-xs text-muted-foreground">No routes saved.</p>
+                {demoModeEnabled && (
+                  <Button size="sm" variant="secondary" className="mt-2 text-xs h-7" onClick={seedNBPilotReferenceRoute}>
+                    Add Reference Route
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {routes.map((route) => (
+                  <button
+                    key={route.id}
+                    type="button"
+                    onClick={() => setActiveRoute(route.id)}
+                    className={cn(
+                      'w-full text-left rounded border p-2 transition-colors hover:bg-muted text-xs',
+                      route.id === activeRouteId && 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20'
+                    )}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-medium truncate">{route.name}</p>
+                        <p className="text-muted-foreground mt-0.5">
+                          {route.waypoints.length} pts · {route.totalDistance.toFixed(1)} nm
+                        </p>
                       </div>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Distance and duration are planning estimates only.
+                      <Badge variant={route.id === activeRouteId ? 'default' : 'outline'} className="text-[10px] px-1 h-4 font-normal">
+                        {route.status}
+                      </Badge>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+            {activeRoute && (
+              <div className="rounded bg-muted p-2 text-xs flex items-center justify-between">
+                <span className="text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" /> Est. Duration</span>
+                <span className="font-medium">{activeRoute.estimatedDuration} min</span>
+              </div>
+            )}
+          </div>
+
+          {/* AIS Targets Section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <Ship className="h-4 w-4" /> AIS Targets
+              </h3>
+              <Badge variant="secondary" className="text-[10px]">{aisTargets.length}</Badge>
+            </div>
+            
+            {aisTargets.length === 0 ? (
+              <div className="text-center py-4 rounded border border-dashed">
+                <p className="text-xs text-muted-foreground">No targets in range</p>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-1">
+                {aisTargets.map((target) => (
+                  <div key={target.mmsi} className="flex items-center justify-between p-2 rounded border bg-card text-xs">
+                    <div className="flex items-center gap-2 overflow-hidden">
+                      <div className="p-1.5 rounded bg-red-50 text-red-500 dark:bg-red-950/30 shrink-0">
+                        <Ship className="h-3 w-3" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium truncate">{target.name || `MMSI ${target.mmsi}`}</p>
+                        {target.name && <p className="text-muted-foreground truncate">{target.mmsi}</p>}
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="font-medium">{target.sog.toFixed(1)} kn</p>
+                      <p className="text-muted-foreground">
+                        {Math.round(target.cog)}°
                       </p>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
+          {/* Mesh Network Section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <Ship className="h-4 w-4 text-amber-500" /> Mesh Network
+              </h3>
+              <Badge variant={isMeshConnected ? "default" : "secondary"} className="text-[10px]">
+                {meshVesselsList.length} Online
+              </Badge>
+            </div>
+            
+            {meshVesselsList.length === 0 ? (
+              <div className="text-center py-4 rounded border border-dashed">
+                <p className="text-xs text-muted-foreground">{isMeshConnected ? 'No mesh vessels nearby' : 'Mesh offline'}</p>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar pr-1">
+                {meshVesselsList.map((vessel) => (
+                  <div key={vessel.vesselId} className="flex flex-col p-2 rounded border bg-card text-xs">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <div className="p-1.5 rounded bg-amber-50 text-amber-500 dark:bg-amber-950/30 shrink-0">
+                          <Ship className="h-3 w-3" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">{vessel.name || 'Unknown'}</p>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        {vessel.windSpeed !== null && (
+                          <span className="font-medium">{vessel.windSpeed.toFixed(1)} kn wind</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-muted-foreground text-[10px]">
+                      <span>{vessel.position ? `${formatCoordinate(vessel.position.latitude, 'lat')} ${formatCoordinate(vessel.position.longitude, 'lon')}` : 'No Pos'}</span>
+                      <span>{Math.round((Date.now() - new Date(vessel.lastUpdate).getTime()) / 1000)}s ago</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Chart Packages Section */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold flex items-center gap-2">
+              <Layers className="h-4 w-4" /> Chart Packages
+            </h3>
+            <div className="space-y-4">
               {chartPackageCard}
               {localChartLibraryCard}
             </div>
           </div>
-        </TabsContent>
-        
-        {/* Engine View */}
-        <TabsContent value="engine" className="mt-4">
-          <div className="grid md:grid-cols-2 gap-4">
-            {Object.entries(latestEngine).map(([engineId, data]) => (
-              <Card key={engineId}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Zap className="h-5 w-5" />
-                    Engine {engineId}
-                  </CardTitle>
-                  <CardDescription>
-                    Runtime: {data.hours.toFixed(1)} hours
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4">
-                    <DigitalGauge
-                      label="RPM"
-                      value={data.rpm}
-                      unit=""
-                      min={0}
-                      max={4000}
-                    />
-                    <DigitalGauge
-                      label="Temperature"
-                      value={data.temp}
-                      unit="°C"
-                      min={50}
-                      max={120}
-                      warning={95}
-                      danger={105}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            
-            {Object.keys(latestEngine).length === 0 && (
-              <Card className="col-span-2">
-                <CardContent className="py-12 text-center">
-                  <Zap className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
-                  <p className="text-muted-foreground">No engine data available</p>
-                </CardContent>
-              </Card>
-            )}
+
+        </div>
+
+        {/* Footer Disclaimer */}
+        <div className="p-3 border-t bg-muted/20">
+          <div className="flex items-start gap-2 text-[10px] text-muted-foreground leading-tight">
+            <Info className="h-3 w-3 shrink-0 mt-0.5" />
+            <span>
+              Navigation display is for reference only. Always use approved navigation equipment 
+              and maintain proper lookout.
+            </span>
           </div>
-        </TabsContent>
-        
-        {/* AIS View */}
-        <TabsContent value="ais" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Ship className="h-5 w-5" />
-                AIS Targets
-              </CardTitle>
-              <CardDescription>
-                {aisTargets.length} vessel(s) in range
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {aisTargets.length === 0 ? (
-                <div className="text-center py-12">
-                  <Ship className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
-                  <p className="text-muted-foreground">No AIS targets detected</p>
-                </div>
-              ) : (
-                <div className="divide-y">
-                  {aisTargets.map((target) => (
-                    <div key={target.mmsi} className="flex items-center justify-between py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-red-50 text-red-500 dark:bg-red-950/30">
-                          <Ship className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <p className="font-medium">{target.name || `Vessel ${target.mmsi}`}</p>
-                          <p className="text-sm text-muted-foreground">MMSI: {target.mmsi}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">{target.sog.toFixed(1)} kn</p>
-                        <p className="text-sm text-muted-foreground">
-                          {formatHeading(target.cog)}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-      
-      {/* Disclaimer */}
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Info className="h-4 w-4" />
-        <span>
-          HarborMesh navigation display is for reference only. Always use approved navigation equipment 
-          and maintain proper lookout. Autopilot control is read-only in this version.
-        </span>
+        </div>
       </div>
+      
+      <ChartBuilderDrawer open={isChartBuilderOpen} onOpenChange={setIsChartBuilderOpen} />
     </div>
   );
 }

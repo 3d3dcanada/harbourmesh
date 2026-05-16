@@ -245,6 +245,15 @@ export interface Vessel {
   // Operational
   operationalProfile: OperationalProfile;
   
+  // Deck plan / boat map
+  deckPlan?: {
+    hullPoints: Array<{ x: number; y: number }>;
+    secondaryHullPoints?: Array<{ x: number; y: number }>; // catamaran port hull
+    templateId?: string;
+    blueprintImageUrl?: string;
+    blueprintOpacity?: number; // 0-1, default 0.3
+  };
+
   // Metadata
   createdAt: string;
   updatedAt: string;
@@ -286,21 +295,33 @@ export interface OperationalProfile {
   typicalTripDuration?: number; // hours
 }
 
+// Geometry types for Space deck plan — discriminated union, backward-compat
+export type RectGeometry = {
+  kind: 'rect';
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation?: number;
+};
+
+export type PolygonGeometry = {
+  kind: 'polygon';
+  points: Array<{ x: number; y: number }>;
+  rotation?: number;
+};
+
+export type SpaceGeometry = RectGeometry | PolygonGeometry;
+
 export interface Space {
   id: string;
   vesselId: string;
   name: string;
   type: SpaceType;
   parentSpaceId?: string;
-  
+
   // Geometry for deck plan
-  geometry?: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    rotation?: number;
-  };
+  geometry?: SpaceGeometry;
   
   // Location
   deck?: number; // 0 = main, positive = up, negative = down

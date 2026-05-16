@@ -3,42 +3,34 @@
  * Document vault for manuals, certificates, and identity documents
  */
 
-import React, { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   FileText,
   Upload,
   Search,
-  Filter,
   MoreHorizontal,
   Download,
   Eye,
   Trash2,
   Shield,
-  AlertTriangle,
-  Clock,
   CheckCircle2,
-  Folder,
   Image,
   File,
   FileSpreadsheet,
-  Calendar,
-  Lock,
   User,
   CreditCard,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DataSourceNotice } from '@/components/DataSourceNotice';
-import { cn, formatDate, formatFileSize, truncate } from '@/lib/utils';
-import { useDocumentStore } from '@/store';
+import { cn, formatDate, formatFileSize } from '@/lib/utils';
+import { useAppStore, useDocumentStore, useSettingsStore, useVesselStore } from '@/store';
 import { DocumentType, UserRole, type Document } from '@/types';
 
 // Document type display names
@@ -102,7 +94,7 @@ const demoDocuments: Document[] = [
       issueDate: '2023-01-15',
       expiryDate: '2026-01-15',
       documentNumber: 'CF-1234-AB',
-      authority: 'US Coast Guard',
+      authority: 'Transport Canada',
     },
     sensitivity: {
       level: 'internal',
@@ -128,7 +120,7 @@ const demoDocuments: Document[] = [
       issueDate: '2024-01-01',
       expiryDate: '2025-01-01',
       documentNumber: 'POL-987654321',
-      authority: 'BoatUS Insurance',
+      authority: 'Marine Insurance Provider',
     },
     sensitivity: {
       level: 'confidential',
@@ -192,7 +184,7 @@ const demoDocuments: Document[] = [
     vesselId: 'demo-vessel',
     subjectId: 'user-001',
     type: DocumentType.PASSPORT,
-    title: 'Captain Passport',
+    title: 'Crew Passport',
     description: 'Personal passport document',
     storagePath: '/documents/passport.pdf',
     fileName: 'passport_redacted.pdf',
@@ -243,15 +235,64 @@ const demoDocuments: Document[] = [
 ];
 
 export function Documents() {
-  const { documents, selectedDocument, selectDocument } = useDocumentStore();
+  const { documents, selectedDocument, addDocument, deleteDocument, selectDocument } = useDocumentStore();
+  const currentVessel = useVesselStore((state) => state.currentVessel);
+  const setActiveView = useAppStore((state) => state.setActiveView);
+  const demoModeEnabled = useSettingsStore((state) => state.demoModeEnabled);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
   const [filterSensitivity, setFilterSensitivity] = useState<string>('all');
   const [showUpload, setShowUpload] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState('all');
+  const [uploadDraft, setUploadDraft] = useState({
+    type: DocumentType.MANUAL,
+    title: '',
+    sensitivity: 'internal' as Document['sensitivity']['level'],
+    neverForTraining: true,
+  });
   
-  const usingDemoDocuments = documents.length === 0;
+  const usingDemoDocuments = documents.length === 0 && demoModeEnabled;
   const currentDocuments = usingDemoDocuments ? demoDocuments : documents;
+
+  const handleSaveDocument = () => {
+    if (!currentVessel) return;
+
+    const now = new Date().toISOString();
+    const documentId = crypto.randomUUID();
+    const title = uploadDraft.title.trim() || 'Untitled Document';
+    const fileName = `${title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'document'}.metadata.json`;
+    const document: Document = {
+      id: documentId,
+      vesselId: currentVessel.id,
+      type: uploadDraft.type,
+      title,
+      description: 'Metadata record only; file bytes are not stored in this local beta vault.',
+      storagePath: `local-metadata://${documentId}`,
+      fileName,
+      fileSize: 0,
+      mimeType: 'application/json',
+      hash: `metadata-only:${documentId}`,
+      metadata: {},
+      sensitivity: {
+        level: uploadDraft.sensitivity,
+        neverForTraining: uploadDraft.neverForTraining,
+        encryptionRequired: uploadDraft.sensitivity === 'confidential' || uploadDraft.sensitivity === 'restricted',
+        allowedRoles: [UserRole.OWNER, UserRole.CAPTAIN, UserRole.ADMIN],
+      },
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    addDocument(document);
+    setShowUpload(false);
+    setUploadDraft({
+      type: DocumentType.MANUAL,
+      title: '',
+      sensitivity: 'internal',
+      neverForTraining: true,
+    });
+  };
   
   // Filter documents
   const filteredDocuments = currentDocuments.filter((doc) => {
@@ -300,280 +341,146 @@ export function Documents() {
   };
   
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Documents & Identity</h1>
-          <p className="text-muted-foreground mt-1">
-            Secure vault for manuals, certificates, and personal documents
-          </p>
+    <div className="flex h-[calc(100vh-4.5rem)] flex-col gap-2">
+      {/* Compact toolbar */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <h1 className="text-lg font-semibold tracking-tight flex items-center gap-2">
+            <FileText className="h-5 w-5 text-primary" /> Documents
+          </h1>
+          <div className="hidden sm:flex items-center gap-3 text-xs text-muted-foreground">
+            <span>{currentDocuments.length} docs</span>
+            <span>{formatFileSize(currentDocuments.reduce((acc, d) => acc + d.fileSize, 0))}</span>
+            {expiringDocs.length > 0 && <span className="text-amber-500 font-medium">{expiringDocs.length} expiring</span>}
+          </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
-            <Folder className="h-4 w-4 mr-2" />
-            Organize
-          </Button>
-          <Button size="sm" onClick={() => setShowUpload(true)}>
-            <Upload className="h-4 w-4 mr-2" />
-            Upload
+          <div className="relative flex-1 sm:w-56">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-8 h-8 text-sm" />
+          </div>
+          <Select value={filterType} onValueChange={setFilterType}>
+            <SelectTrigger className="h-8 w-[120px] text-xs"><SelectValue placeholder="All types" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All types</SelectItem>
+              {Object.entries(DocumentType).map(([key, value]) => (
+                <SelectItem key={key} value={value}>{documentTypeNames[value]}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={filterSensitivity} onValueChange={setFilterSensitivity}>
+            <SelectTrigger className="h-8 w-[110px] text-xs"><SelectValue placeholder="All levels" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All levels</SelectItem>
+              <SelectItem value="public">Public</SelectItem>
+              <SelectItem value="internal">Internal</SelectItem>
+              <SelectItem value="confidential">Confidential</SelectItem>
+              <SelectItem value="restricted">Restricted</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button size="sm" className="h-8" onClick={() => setShowUpload(true)} disabled={!currentVessel}>
+            <Upload className="h-3.5 w-3.5 mr-1.5" /> Upload
           </Button>
         </div>
       </div>
 
       {usingDemoDocuments && (
-        <DataSourceNotice title="Demo documents">
-          These document records are sample metadata and are not stored user documents.
-        </DataSourceNotice>
+        <DataSourceNotice title="Demo documents">Sample metadata — not stored user documents.</DataSourceNotice>
       )}
-      
-      {/* Expiring Documents Alert */}
-      {expiringDocs.length > 0 && (
-        <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20">
-          <CardContent className="py-4">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5" />
-              <div>
-                <h4 className="font-medium text-amber-800 dark:text-amber-200">
-                  {expiringDocs.length} document(s) expiring soon
-                </h4>
-                <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                  Review and renew documents before they expire to maintain compliance.
-                </p>
-                <div className="flex gap-2 mt-2">
-                  {expiringDocs.slice(0, 3).map((doc) => (
-                    <Badge key={doc.id} variant="outline" className="text-amber-700 border-amber-300">
-                      {truncate(doc.title, 20)}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-      
-      {/* Main Content */}
-      <div className="grid lg:grid-cols-4 gap-6">
-        {/* Left Sidebar - Filters */}
-        <div className="space-y-4">
-          {/* Search */}
-          <Card>
-            <CardContent className="pt-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search documents..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-            </CardContent>
-          </Card>
-          
-          {/* Filters */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Filter className="h-4 w-4" />
-                Filters
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-xs">Document Type</Label>
-                <Select value={filterType} onValueChange={setFilterType}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All types" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    {Object.entries(DocumentType).map(([key, value]) => (
-                      <SelectItem key={key} value={value}>
-                        {documentTypeNames[value]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label className="text-xs">Sensitivity</Label>
-                <Select value={filterSensitivity} onValueChange={setFilterSensitivity}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All levels" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Levels</SelectItem>
-                    <SelectItem value="public">Public</SelectItem>
-                    <SelectItem value="internal">Internal</SelectItem>
-                    <SelectItem value="confidential">Confidential</SelectItem>
-                    <SelectItem value="restricted">Restricted</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-          
-          {/* Stats */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Storage</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Total Documents</span>
-                <span className="font-medium">{currentDocuments.length}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Total Size</span>
-                <span className="font-medium">
-                  {formatFileSize(currentDocuments.reduce((acc, d) => acc + d.fileSize, 0))}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Expiring Soon</span>
-                <span className="font-medium text-amber-500">{expiringDocs.length}</span>
-              </div>
-            </CardContent>
-          </Card>
+
+      {!currentVessel && !demoModeEnabled ? (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <FileText className="h-12 w-12 mx-auto mb-3 text-muted-foreground/30" />
+            <h2 className="text-lg font-semibold">Create a vessel first</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Document metadata is saved against the active vessel.</p>
+            <Button className="mt-4" onClick={() => setActiveView('vessel')}>Go to Vessel</Button>
+          </div>
         </div>
-        
-        {/* Main Content - Document List */}
-        <div className="lg:col-span-3">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="mb-4">
-              <TabsTrigger value="all">All Documents</TabsTrigger>
-              <TabsTrigger value="vessel">Vessel</TabsTrigger>
-              <TabsTrigger value="personal">Personal</TabsTrigger>
-              <TabsTrigger value="expiring">
-                Expiring
-                {expiringDocs.length > 0 && (
-                  <Badge variant="destructive" className="ml-2 text-xs">{expiringDocs.length}</Badge>
-                )}
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value={activeTab} className="mt-0">
-              <Card>
-                <CardContent className="p-0">
-                  {filteredDocuments.length === 0 ? (
-                    <div className="text-center py-12">
-                      <FileText className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
-                      <p className="text-muted-foreground">No documents found</p>
-                      <Button variant="outline" className="mt-3" onClick={() => setShowUpload(true)}>
-                        <Upload className="h-4 w-4 mr-2" />
-                        Upload Document
-                      </Button>
+      ) : (
+        <>
+      
+      {/* Tab bar */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="h-8">
+          <TabsTrigger value="all" className="text-xs h-7">All</TabsTrigger>
+          <TabsTrigger value="vessel" className="text-xs h-7">Vessel</TabsTrigger>
+          <TabsTrigger value="personal" className="text-xs h-7">Personal</TabsTrigger>
+          <TabsTrigger value="expiring" className="text-xs h-7">
+            Expiring {expiringDocs.length > 0 && <Badge variant="destructive" className="ml-1.5 text-[10px] px-1 h-4">{expiringDocs.length}</Badge>}
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      {/* Full-viewport table */}
+      <div className="flex-1 overflow-auto rounded-lg border bg-card">
+        <table className="w-full text-sm">
+          <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm border-b">
+            <tr>
+              <th className="px-3 py-2 text-left font-medium w-10">Type</th>
+              <th className="px-3 py-2 text-left font-medium">Title</th>
+              <th className="px-3 py-2 text-left font-medium hidden md:table-cell">Sensitivity</th>
+              <th className="px-3 py-2 text-right font-medium hidden md:table-cell">Size</th>
+              <th className="px-3 py-2 text-left font-medium hidden lg:table-cell">Expiry</th>
+              <th className="px-3 py-2 text-left font-medium hidden xl:table-cell">Authority</th>
+              <th className="px-3 py-2 w-12" />
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {filteredDocuments.length === 0 ? (
+              <tr><td colSpan={7} className="py-16 text-center text-muted-foreground">
+                <FileText className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                No documents found
+              </td></tr>
+            ) : filteredDocuments.map((doc) => {
+              const Icon = getDocumentIcon(doc.type);
+              const isExpiring = doc.metadata.expiryDate && new Date(doc.metadata.expiryDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+              return (
+                <tr key={doc.id} className={cn('hover:bg-muted/50 transition-colors cursor-pointer', selectedDocument?.id === doc.id && 'bg-muted')} onClick={() => selectDocument(doc)}>
+                  <td className="px-3 py-2.5">
+                    <div className={cn('inline-flex p-1.5 rounded', doc.subjectId ? 'bg-purple-50 text-purple-500 dark:bg-purple-950/30' : 'bg-blue-50 text-blue-500 dark:bg-blue-950/30')}>
+                      <Icon className="h-4 w-4" />
                     </div>
-                  ) : (
-                    <ScrollArea className="h-[600px]">
-                      <div className="divide-y">
-                        {filteredDocuments.map((doc) => {
-                          const Icon = getDocumentIcon(doc.type);
-                          const isExpiring = doc.metadata.expiryDate && 
-                            new Date(doc.metadata.expiryDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-                          
-                          return (
-                            <div
-                              key={doc.id}
-                              className={cn(
-                                'flex items-start gap-4 p-4 hover:bg-muted/50 cursor-pointer transition-colors',
-                                selectedDocument?.id === doc.id && 'bg-muted'
-                              )}
-                              onClick={() => selectDocument(doc)}
-                            >
-                              <div className={cn(
-                                'p-3 rounded-lg',
-                                doc.subjectId ? 'bg-purple-50 text-purple-500 dark:bg-purple-950/30' : 'bg-blue-50 text-blue-500 dark:bg-blue-950/30'
-                              )}>
-                                <Icon className="h-6 w-6" />
-                              </div>
-                              
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-start justify-between">
-                                  <div>
-                                    <h4 className="font-medium flex items-center gap-2">
-                                      {doc.title}
-                                      {doc.subjectId && (
-                                        <Badge variant="outline" className="text-xs">
-                                          <User className="h-3 w-3 mr-1" />
-                                          Personal
-                                        </Badge>
-                                      )}
-                                      {isExpiring && (
-                                        <Badge variant="destructive" className="text-xs">
-                                          <Clock className="h-3 w-3 mr-1" />
-                                          Expiring
-                                        </Badge>
-                                      )}
-                                    </h4>
-                                    <p className="text-sm text-muted-foreground mt-0.5">
-                                      {doc.description}
-                                    </p>
-                                  </div>
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                      <Button variant="ghost" size="icon">
-                                        <MoreHorizontal className="h-4 w-4" />
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                      <DropdownMenuItem>
-                                        <Eye className="h-4 w-4 mr-2" />
-                                        View
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem>
-                                        <Download className="h-4 w-4 mr-2" />
-                                        Download
-                                      </DropdownMenuItem>
-                                      <DropdownMenuSeparator />
-                                      <DropdownMenuItem className="text-red-500">
-                                        <Trash2 className="h-4 w-4 mr-2" />
-                                        Delete
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </div>
-                                
-                                <div className="flex flex-wrap items-center gap-3 mt-2">
-                                  <Badge variant="outline" className="text-xs capitalize">
-                                    {documentTypeNames[doc.type]}
-                                  </Badge>
-                                  {getSensitivityBadge(doc.sensitivity.level)}
-                                  <span className="text-xs text-muted-foreground">
-                                    {formatFileSize(doc.fileSize)}
-                                  </span>
-                                  {doc.metadata.expiryDate && (
-                                    <span className={cn(
-                                      'text-xs flex items-center gap-1',
-                                      isExpiring ? 'text-red-500' : 'text-muted-foreground'
-                                    )}>
-                                      <Calendar className="h-3 w-3" />
-                                      Expires {formatDate(doc.metadata.expiryDate)}
-                                    </span>
-                                  )}
-                                  {doc.sensitivity.neverForTraining && (
-                                    <span className="text-xs text-emerald-500 flex items-center gap-1">
-                                      <Lock className="h-3 w-3" />
-                                      Never for AI training
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </ScrollArea>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <div className="font-medium flex items-center gap-2">
+                      {doc.title}
+                      {doc.subjectId && <Badge variant="outline" className="text-[10px] px-1"><User className="h-2.5 w-2.5 mr-0.5" />Personal</Badge>}
+                      {isExpiring && <Badge variant="destructive" className="text-[10px] px-1">Expiring</Badge>}
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate max-w-[250px]">{doc.description}</p>
+                  </td>
+                  <td className="px-3 py-2.5 hidden md:table-cell">{getSensitivityBadge(doc.sensitivity.level)}</td>
+                  <td className="px-3 py-2.5 text-right text-muted-foreground text-xs hidden md:table-cell">{formatFileSize(doc.fileSize)}</td>
+                  <td className="px-3 py-2.5 text-xs hidden lg:table-cell">
+                    {doc.metadata.expiryDate ? (
+                      <span className={isExpiring ? 'text-red-500' : 'text-muted-foreground'}>{formatDate(doc.metadata.expiryDate)}</span>
+                    ) : <span className="text-muted-foreground">—</span>}
+                  </td>
+                  <td className="px-3 py-2.5 text-xs text-muted-foreground hidden xl:table-cell">{doc.metadata.authority || '—'}</td>
+                  <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="h-3.5 w-3.5" /></Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem><Eye className="h-4 w-4 mr-2" />View</DropdownMenuItem>
+                        <DropdownMenuItem><Download className="h-4 w-4 mr-2" />Download</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-red-500" disabled={usingDemoDocuments} onClick={() => deleteDocument(doc.id)}>
+                          <Trash2 className="h-4 w-4 mr-2" />Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
+      </>)
+      }
       
       {/* Upload Dialog */}
       <Dialog open={showUpload} onOpenChange={setShowUpload}>
@@ -589,15 +496,28 @@ export function Documents() {
               <Upload className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
               <p className="text-sm font-medium">Drag and drop files here</p>
               <p className="text-xs text-muted-foreground mt-1">or click to browse</p>
-              <Input type="file" className="hidden" />
-              <Button variant="outline" size="sm" className="mt-3">
+              <Input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setUploadDraft((draft) => ({ ...draft, title: draft.title || file.name, fileName: file.name, fileSizeBytes: file.size }));
+                  }
+                }}
+              />
+              <Button variant="outline" size="sm" className="mt-3" onClick={() => fileInputRef.current?.click()}>
                 Browse Files
               </Button>
             </div>
             
             <div className="space-y-2">
               <Label>Document Type</Label>
-              <Select>
+              <Select
+                value={uploadDraft.type}
+                onValueChange={(value) => setUploadDraft((draft) => ({ ...draft, type: value as DocumentType }))}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
@@ -613,12 +533,22 @@ export function Documents() {
             
             <div className="space-y-2">
               <Label>Title</Label>
-              <Input placeholder="Document title" />
+              <Input
+                placeholder="Document title"
+                value={uploadDraft.title}
+                onChange={(event) => setUploadDraft((draft) => ({ ...draft, title: event.target.value }))}
+              />
             </div>
             
             <div className="space-y-2">
               <Label>Sensitivity Level</Label>
-              <Select defaultValue="internal">
+              <Select
+                value={uploadDraft.sensitivity}
+                onValueChange={(value) => setUploadDraft((draft) => ({
+                  ...draft,
+                  sensitivity: value as Document['sensitivity']['level'],
+                }))}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -632,7 +562,16 @@ export function Documents() {
             </div>
             
             <div className="flex items-center gap-2">
-              <input type="checkbox" id="no-ai" className="rounded" />
+              <input
+                type="checkbox"
+                id="no-ai"
+                className="rounded"
+                checked={uploadDraft.neverForTraining}
+                onChange={(event) => setUploadDraft((draft) => ({
+                  ...draft,
+                  neverForTraining: event.target.checked,
+                }))}
+              />
               <Label htmlFor="no-ai" className="text-sm">
                 Never use for AI training
               </Label>
@@ -640,7 +579,7 @@ export function Documents() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowUpload(false)}>Cancel</Button>
-            <Button onClick={() => setShowUpload(false)}>Upload</Button>
+            <Button onClick={handleSaveDocument} disabled={!currentVessel}>Save Metadata</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

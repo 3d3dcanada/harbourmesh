@@ -3,7 +3,7 @@
  * Digital twin and vessel details management
  */
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Ship,
   Ruler,
@@ -28,7 +28,7 @@ import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DataSourceNotice } from '@/components/DataSourceNotice';
 import { cn } from '@/lib/utils';
-import { useVesselStore } from '@/store';
+import { useAppStore, useSettingsStore, useVesselStore } from '@/store';
 import { VesselType, type Vessel } from '@/types';
 
 // Vessel type display names
@@ -60,7 +60,7 @@ const vesselTypeNames: Record<string, string> = {
 const demoVessel: Vessel = {
   id: 'demo-vessel',
   ownerId: 'demo-user',
-  name: 'Sea Venture',
+  name: 'Bay of Fundy Surveyor',
   type: VesselType.SAILBOAT_CRUISER,
   lengthOverall: 12.5,
   lengthWaterline: 10.8,
@@ -68,12 +68,12 @@ const demoVessel: Vessel = {
   draft: 2.1,
   displacement: 8500,
   tonnage: 15,
-  mmsi: '123456789',
-  callSign: 'ABC123',
-  hin: 'XYZ123456789',
-  registrationNumber: 'CF 1234 AB',
-  flag: 'US',
-  portOfRegistry: 'San Francisco, CA',
+  mmsi: '316123456',
+  callSign: 'CFA123',
+  hin: 'CA3D3DNB0001',
+  registrationNumber: 'NB 1234 AB',
+  flag: 'CA',
+  portOfRegistry: 'Saint John, NB',
   engines: [
     {
       id: 'engine-001',
@@ -123,14 +123,40 @@ const demoVessel: Vessel = {
     primaryUse: 'recreational',
     typicalCrewSize: 2,
     maxPassengers: 6,
-    homePort: 'San Francisco, CA',
+    homePort: 'Saint John, NB',
     typicalCruisingRange: 100,
     typicalTripDuration: 48,
   },
-  createdAt: '2023-01-01',
-  updatedAt: '2024-01-15',
+  createdAt: '2026-01-01',
+  updatedAt: '2026-05-01',
   photoUrl: undefined,
 };
+
+function createBlankVessel(): Vessel {
+  const now = new Date().toISOString();
+  const vesselId = crypto.randomUUID();
+
+  return {
+    id: vesselId,
+    ownerId: 'local-owner',
+    name: '',
+    type: VesselType.MOTORBOAT_CENTER_CONSOLE,
+    lengthOverall: 0,
+    lengthWaterline: 0,
+    beam: 0,
+    draft: 0,
+    engines: [],
+    tanks: [],
+    operationalProfile: {
+      primaryUse: 'recreational',
+      typicalCrewSize: 1,
+      maxPassengers: 1,
+      homePort: '',
+    },
+    createdAt: now,
+    updatedAt: now,
+  };
+}
 
 interface EditableFieldProps {
   label: string;
@@ -192,26 +218,51 @@ function EditableField({ label, value, onChange, isEditing, type = 'text', optio
 }
 
 export function VesselView() {
-  const { currentVessel, setCurrentVessel } = useVesselStore();
+  const { currentVessel, addVessel, updateVessel, setCurrentVessel } = useVesselStore();
+  const setCurrentVesselId = useAppStore((state) => state.setCurrentVessel);
+  const demoModeEnabled = useSettingsStore((state) => state.demoModeEnabled);
+  const blankVessel = useMemo(() => createBlankVessel(), []);
   const [isEditing, setIsEditing] = useState(false);
-  const [editedVessel, setEditedVessel] = useState<Vessel>(demoVessel);
+  const [editedVessel, setEditedVessel] = useState<Vessel>(blankVessel);
   const [activeTab, setActiveTab] = useState('general');
   
-  const usingDemoVessel = !currentVessel;
-  const vessel = currentVessel || demoVessel;
+  const usingDemoVessel = !currentVessel && demoModeEnabled && !isEditing;
+  const vessel = isEditing ? editedVessel : currentVessel || (usingDemoVessel ? demoVessel : blankVessel);
+  const hasSavedVessel = Boolean(currentVessel);
   
   const handleSave = () => {
-    setCurrentVessel(editedVessel);
+    const now = new Date().toISOString();
+    const nextVessel = {
+      ...editedVessel,
+      name: editedVessel.name.trim() || 'Untitled Vessel',
+      updatedAt: now,
+      createdAt: editedVessel.createdAt || now,
+    };
+
+    if (hasSavedVessel) {
+      updateVessel(nextVessel.id, nextVessel);
+    } else {
+      addVessel(nextVessel);
+    }
+    setCurrentVessel(nextVessel);
+    setCurrentVesselId(nextVessel.id);
     setIsEditing(false);
   };
   
   const handleCancel = () => {
-    setEditedVessel(vessel);
+    setEditedVessel(currentVessel ?? blankVessel);
     setIsEditing(false);
   };
   
   const updateVesselField = (field: keyof Vessel, value: unknown) => {
     setEditedVessel((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const updateOperationalProfile = (field: keyof typeof editedVessel.operationalProfile, value: unknown) => {
+    setEditedVessel((prev) => ({
+      ...prev,
+      operationalProfile: { ...prev.operationalProfile, [field]: value },
+    }));
   };
   
   return (
@@ -223,7 +274,7 @@ export function VesselView() {
             <Ship className="h-8 w-8 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">{vessel.name}</h1>
+            <h1 className="text-2xl font-bold tracking-tight">{vessel.name || 'No Vessel Configured'}</h1>
             <div className="flex items-center gap-2 mt-1">
               <Badge variant="secondary">{vesselTypeNames[vessel.type]}</Badge>
               <span className="text-sm text-muted-foreground">
@@ -245,9 +296,16 @@ export function VesselView() {
               </Button>
             </>
           ) : (
-            <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setEditedVessel(currentVessel ?? createBlankVessel());
+                setIsEditing(true);
+              }}
+            >
               <Edit3 className="h-4 w-4 mr-2" />
-              Edit Vessel
+              {currentVessel ? 'Edit Vessel' : 'Create Vessel'}
             </Button>
           )}
         </div>
@@ -258,8 +316,31 @@ export function VesselView() {
           This vessel profile is sample data and has not been saved as your active vessel.
         </DataSourceNotice>
       )}
+
+      {!currentVessel && !demoModeEnabled && !isEditing && (
+        <Card>
+          <CardContent className="py-10 text-center">
+            <Ship className="h-14 w-14 mx-auto mb-3 text-muted-foreground/30" />
+            <h2 className="text-lg font-semibold">Create your first vessel</h2>
+            <p className="mx-auto mt-1 max-w-xl text-sm text-muted-foreground">
+              The launch workspace starts empty. Add a vessel to unlock real inventory, spaces, documents, logs, and telemetry ownership.
+            </p>
+            <Button
+              className="mt-4"
+              onClick={() => {
+                setEditedVessel(createBlankVessel());
+                setIsEditing(true);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create Vessel
+            </Button>
+          </CardContent>
+        </Card>
+      )}
       
       {/* Tabs */}
+      {(currentVessel || demoModeEnabled || isEditing) && (
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-flex">
           <TabsTrigger value="general">General</TabsTrigger>
@@ -320,27 +401,38 @@ export function VesselView() {
               <CardContent className="space-y-4">
                 <EditableField
                   label="Primary Use"
-                  value={vessel.operationalProfile.primaryUse}
-                  onChange={() => {}}
-                  isEditing={false}
+                  value={isEditing ? editedVessel.operationalProfile.primaryUse : vessel.operationalProfile.primaryUse}
+                  onChange={(v) => updateOperationalProfile('primaryUse', v as 'recreational' | 'charter' | 'commercial' | 'racing' | 'fishing' | 'expedition')}
+                  isEditing={isEditing}
+                  options={[
+                    { label: 'Recreational', value: 'recreational' },
+                    { label: 'Charter', value: 'charter' },
+                    { label: 'Commercial', value: 'commercial' },
+                    { label: 'Racing', value: 'racing' },
+                    { label: 'Fishing', value: 'fishing' },
+                    { label: 'Expedition', value: 'expedition' },
+                  ]}
                 />
                 <EditableField
                   label="Typical Crew Size"
-                  value={String(vessel.operationalProfile.typicalCrewSize)}
-                  onChange={() => {}}
-                  isEditing={false}
+                  value={isEditing ? String(editedVessel.operationalProfile.typicalCrewSize) : String(vessel.operationalProfile.typicalCrewSize)}
+                  onChange={(v) => updateOperationalProfile('typicalCrewSize', Number(v))}
+                  isEditing={isEditing}
+                  type="number"
                 />
                 <EditableField
                   label="Max Passengers"
-                  value={String(vessel.operationalProfile.maxPassengers)}
-                  onChange={() => {}}
-                  isEditing={false}
+                  value={isEditing ? String(editedVessel.operationalProfile.maxPassengers) : String(vessel.operationalProfile.maxPassengers)}
+                  onChange={(v) => updateOperationalProfile('maxPassengers', Number(v))}
+                  isEditing={isEditing}
+                  type="number"
                 />
                 <EditableField
                   label="Typical Range"
-                  value={String(vessel.operationalProfile.typicalCruisingRange || '')}
-                  onChange={() => {}}
-                  isEditing={false}
+                  value={isEditing ? String(editedVessel.operationalProfile.typicalCruisingRange || '') : String(vessel.operationalProfile.typicalCruisingRange || '')}
+                  onChange={(v) => updateOperationalProfile('typicalCruisingRange', Number(v))}
+                  isEditing={isEditing}
+                  type="number"
                   unit="NM"
                 />
               </CardContent>
@@ -611,6 +703,7 @@ export function VesselView() {
           </Card>
         </TabsContent>
       </Tabs>
+      )}
     </div>
   );
 }

@@ -3,17 +3,15 @@
  * Voyage logs, maintenance records, and task management
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   ClipboardList,
   Plus,
   Search,
-  Filter,
   MapPin,
   Navigation,
   AlertTriangle,
   CheckCircle2,
-  Clock,
   MoreHorizontal,
   Edit3,
   Trash2,
@@ -26,21 +24,21 @@ import {
   FileText,
   CheckSquare,
 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DataSourceNotice } from '@/components/DataSourceNotice';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Separator } from '@/components/ui/separator';
 import { cn, formatRelativeTime, formatCoordinate } from '@/lib/utils';
-import { useLogTaskStore } from '@/store';
+import { useAppStore, useLogTaskStore, useSettingsStore, useVesselStore } from '@/store';
 import { LogEntryType, TaskType, TaskStatus, Severity, type LogEntry, type Task } from '@/types';
 
 // Log type icons
@@ -77,10 +75,10 @@ const demoLogs: LogEntry[] = [
     vesselId: 'demo-vessel',
     type: LogEntryType.VOYAGE,
     timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    timezone: 'America/Los_Angeles',
+    timezone: 'America/Moncton',
     position: {
-      latitude: 37.7749,
-      longitude: -122.4194,
+      latitude: 45.2733,
+      longitude: -66.0633,
       heading: 180,
       speed: 6.5,
       cog: 185,
@@ -88,11 +86,11 @@ const demoLogs: LogEntry[] = [
       source: 'gps',
       timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
     },
-    summary: 'Day sail to Angel Island',
-    details: 'Departed from Marina at 09:00. Light winds 8-12 knots from NW. Arrived at Angel Island at 11:30. Spent afternoon exploring. Departed at 16:00, returned to marina by 18:30.',
+    summary: 'Saint John harbour pilot run',
+    details: 'Departed from Saint John at 09:00. Light winds 8-12 knots from NW. Completed a short harbour validation loop and returned before the afternoon tide change.',
     engineHours: { 'engine-001': 1248.5 },
     createdBy: 'user-001',
-    createdByName: 'Captain Smith',
+    createdByName: 'Demo Operator',
     weatherSnapshot: {
       windSpeed: 10,
       windDirection: 315,
@@ -114,7 +112,7 @@ const demoLogs: LogEntry[] = [
     relatedSystemIds: ['system-001'],
     engineHours: { 'engine-001': 1245.0 },
     createdBy: 'user-002',
-    createdByName: 'Engineer Jones',
+    createdByName: 'Demo Engineer',
     createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
     updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
   },
@@ -126,7 +124,7 @@ const demoLogs: LogEntry[] = [
     summary: 'Monthly safety inspection',
     details: 'Checked all safety equipment. Fire extinguishers charged and within date. Flares current. Life jackets in good condition. First aid kit stocked. EPIRB tested OK.',
     createdBy: 'user-001',
-    createdByName: 'Captain Smith',
+    createdByName: 'Demo Operator',
     createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
     updatedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
   },
@@ -138,14 +136,14 @@ const demoLogs: LogEntry[] = [
     summary: 'Strong wind warning',
     details: 'Observed winds increasing to 25-30 knots in the afternoon. Seas building to 6-8 feet. Decided to return to port early.',
     position: {
-      latitude: 37.8,
-      longitude: -122.4,
+      latitude: 45.31,
+      longitude: -66.02,
       source: 'manual',
       timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
     },
     severity: 'medium' as Severity,
     createdBy: 'user-001',
-    createdByName: 'Captain Smith',
+    createdByName: 'Demo Operator',
     weatherSnapshot: {
       windSpeed: 28,
       windDirection: 280,
@@ -164,10 +162,10 @@ const demoLogs: LogEntry[] = [
     type: LogEntryType.FUELING,
     timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
     summary: 'Diesel fueling',
-    details: 'Added 85 liters of diesel at SF Marina fuel dock. Tank now at 95% full.',
+    details: 'Added 85 liters of diesel at a Saint John fuel dock. Tank now at 95% full.',
     engineHours: { 'engine-001': 1246.2 },
     createdBy: 'user-001',
-    createdByName: 'Captain Smith',
+    createdByName: 'Demo Operator',
     createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
     updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
   },
@@ -250,19 +248,82 @@ const demoTasks: Task[] = [
 ];
 
 export function LogsTasks() {
-  const { logs, tasks, completeTask } = useLogTaskStore();
+  const { logs, tasks, addLog, addTask, deleteLog, deleteTask, completeTask } = useLogTaskStore();
+  const currentVessel = useVesselStore((state) => state.currentVessel);
+  const demoModeEnabled = useSettingsStore((state) => state.demoModeEnabled);
+  const setActiveView = useAppStore((state) => state.setActiveView);
   const [activeTab, setActiveTab] = useState('logs');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
   const [showAddLog, setShowAddLog] = useState(false);
   const [showAddTask, setShowAddTask] = useState(false);
-  const [, setSelectedLog] = useState<LogEntry | null>(null);
-  const [, setSelectedTask] = useState<Task | null>(null);
+  const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [logDraft, setLogDraft] = useState({
+    type: LogEntryType.VOYAGE,
+    summary: '',
+    details: '',
+    engineHours: '',
+  });
+  const [taskDraft, setTaskDraft] = useState({
+    type: TaskType.MAINTENANCE,
+    title: '',
+    description: '',
+    dueDate: '',
+    requiresApproval: false,
+  });
   
-  const usingDemoLogs = logs.length === 0;
-  const usingDemoTasks = tasks.length === 0;
+  const usingDemoLogs = logs.length === 0 && demoModeEnabled;
+  const usingDemoTasks = tasks.length === 0 && demoModeEnabled;
   const currentLogs = usingDemoLogs ? demoLogs : logs;
   const currentTasks = usingDemoTasks ? demoTasks : tasks;
+
+  const handleSaveLog = () => {
+    if (!currentVessel) return;
+    const now = new Date().toISOString();
+    const engineHours = Number(logDraft.engineHours);
+    const log: LogEntry = {
+      id: crypto.randomUUID(),
+      vesselId: currentVessel.id,
+      type: logDraft.type,
+      timestamp: now,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      summary: logDraft.summary.trim() || 'Untitled Log',
+      details: logDraft.details.trim() || undefined,
+      engineHours: Number.isFinite(engineHours) ? { main: engineHours } : undefined,
+      createdBy: 'local-user',
+      createdByName: 'Local Operator',
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    addLog(log);
+    setShowAddLog(false);
+    setLogDraft({ type: LogEntryType.VOYAGE, summary: '', details: '', engineHours: '' });
+  };
+
+  const handleSaveTask = () => {
+    if (!currentVessel) return;
+    const now = new Date().toISOString();
+    const task: Task = {
+      id: crypto.randomUUID(),
+      vesselId: currentVessel.id,
+      title: taskDraft.title.trim() || 'Untitled Task',
+      description: taskDraft.description.trim() || undefined,
+      type: taskDraft.type,
+      status: TaskStatus.OPEN,
+      dueDate: taskDraft.dueDate ? new Date(`${taskDraft.dueDate}T12:00:00`).toISOString() : undefined,
+      createdBy: 'local-user',
+      assignedTo: 'local-user',
+      requiresApproval: taskDraft.requiresApproval,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    addTask(task);
+    setShowAddTask(false);
+    setTaskDraft({ type: TaskType.MAINTENANCE, title: '', description: '', dueDate: '', requiresApproval: false });
+  };
   
   // Filter logs
   const filteredLogs = currentLogs.filter((log) => {
@@ -311,323 +372,145 @@ export function LogsTasks() {
   };
   
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Logs & Tasks</h1>
-          <p className="text-muted-foreground mt-1">
-            Voyage records, maintenance logs, and task management
-          </p>
+    <div className="flex h-[calc(100vh-4.5rem)] flex-col gap-2">
+      {/* Compact toolbar */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <h1 className="text-lg font-semibold tracking-tight flex items-center gap-2">
+            <ClipboardList className="h-5 w-5 text-primary" /> Logs & Tasks
+          </h1>
+          <div className="hidden sm:flex items-center gap-3 text-xs text-muted-foreground">
+            <span>{currentLogs.length} logs</span>
+            <span>{openTasks.length} open</span>
+            {overdueTasks.length > 0 && <span className="text-red-500 font-medium">{overdueTasks.length} overdue</span>}
+            <span className="text-emerald-500">{completedTasks.length} done</span>
+          </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setShowAddLog(true)}>
-            <ClipboardList className="h-4 w-4 mr-2" />
-            New Log
+          <div className="relative flex-1 sm:w-56">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-8 h-8 text-sm" />
+          </div>
+          <Select value={filterType} onValueChange={setFilterType}>
+            <SelectTrigger className="h-8 w-[120px] text-xs"><SelectValue placeholder="All types" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All types</SelectItem>
+              {Object.values(TaskType).map((t) => (
+                <SelectItem key={t} value={t}>{t.replace(/_/g, ' ')}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="sm" className="h-8" onClick={() => setShowAddLog(true)} disabled={!currentVessel}>
+            <ClipboardList className="h-3.5 w-3.5 mr-1.5" /> Log
           </Button>
-          <Button size="sm" onClick={() => setShowAddTask(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Task
+          <Button size="sm" className="h-8" onClick={() => setShowAddTask(true)} disabled={!currentVessel}>
+            <Plus className="h-3.5 w-3.5 mr-1.5" /> Task
           </Button>
         </div>
       </div>
 
       {(usingDemoLogs || usingDemoTasks) && (
-        <DataSourceNotice title="Demo logs and tasks">
-          Sample records are displayed until vessel-owned logs and tasks are created.
-        </DataSourceNotice>
+        <DataSourceNotice title="Demo data">Sample records until vessel-owned data is created.</DataSourceNotice>
       )}
-      
-      {/* Task Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="py-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Open Tasks</p>
-                <p className="text-2xl font-bold">{openTasks.length}</p>
-              </div>
-              <div className="p-2 rounded-lg bg-amber-50 text-amber-500 dark:bg-amber-950/30">
-                <ClipboardList className="h-5 w-5" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="py-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Overdue</p>
-                <p className="text-2xl font-bold text-red-500">{overdueTasks.length}</p>
-              </div>
-              <div className="p-2 rounded-lg bg-red-50 text-red-500 dark:bg-red-950/30">
-                <AlertTriangle className="h-5 w-5" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="py-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Completed</p>
-                <p className="text-2xl font-bold">{completedTasks.length}</p>
-              </div>
-              <div className="p-2 rounded-lg bg-emerald-50 text-emerald-500 dark:bg-emerald-950/30">
-                <CheckCircle2 className="h-5 w-5" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="py-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Logs</p>
-                <p className="text-2xl font-bold">{currentLogs.length}</p>
-              </div>
-              <div className="p-2 rounded-lg bg-blue-50 text-blue-500 dark:bg-blue-950/30">
-                <FileText className="h-5 w-5" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      
-      {/* Main Content */}
+
+      {!currentVessel && !demoModeEnabled ? (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <ClipboardList className="h-12 w-12 mx-auto mb-3 text-muted-foreground/30" />
+            <h2 className="text-lg font-semibold">Create a vessel first</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Operational records need an active vessel context.</p>
+            <Button className="mt-4" onClick={() => setActiveView('vessel')}>Go to Vessel</Button>
+          </div>
+        </div>
+      ) : (
+      <>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="logs">Voyage Logs</TabsTrigger>
-          <TabsTrigger value="tasks">
-            Tasks
-            {openTasks.length > 0 && (
-              <Badge variant="secondary" className="ml-2 text-xs">{openTasks.length}</Badge>
-            )}
+        <TabsList className="h-8">
+          <TabsTrigger value="logs" className="text-xs h-7">Logs</TabsTrigger>
+          <TabsTrigger value="tasks" className="text-xs h-7">
+            Tasks {openTasks.length > 0 && <Badge variant="secondary" className="ml-1.5 text-[10px] px-1 h-4">{openTasks.length}</Badge>}
           </TabsTrigger>
         </TabsList>
-        
-        {/* Logs Tab */}
-        <TabsContent value="logs" className="mt-0 space-y-4">
-          {/* Filters */}
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search logs..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="w-[150px]">
-                <Filter className="h-4 w-4 mr-2" />
-                <span>Type</span>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                {Object.entries(LogEntryType).map(([key, value]) => (
-                  <SelectItem key={key} value={value}>
-                    {value.replace(/_/g, ' ')}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Logs List */}
-          <Card>
-            <CardContent className="p-0">
-              <ScrollArea className="h-[500px]">
-                <div className="divide-y">
-                  {filteredLogs.map((log) => {
-                    const Icon = logTypeIcons[log.type] || FileText;
-                    
-                    return (
-                      <div
-                        key={log.id}
-                        className="flex items-start gap-4 p-4 hover:bg-muted/50 cursor-pointer transition-colors"
-                        onClick={() => setSelectedLog(log)}
-                      >
-                        <div className={cn(
-                          'p-2.5 rounded-lg',
-                          log.severity === 'critical' ? 'bg-red-50 text-red-500 dark:bg-red-950/30' :
-                          log.severity === 'high' ? 'bg-orange-50 text-orange-500 dark:bg-orange-950/30' :
-                          log.severity === 'medium' ? 'bg-amber-50 text-amber-500 dark:bg-amber-950/30' :
-                          'bg-blue-50 text-blue-500 dark:bg-blue-950/30'
-                        )}>
-                          <Icon className="h-5 w-5" />
-                        </div>
-                        
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h4 className="font-medium">{log.summary}</h4>
-                              <p className="text-sm text-muted-foreground mt-0.5 line-clamp-1">
-                                {log.details}
-                              </p>
-                            </div>
-                            <span className="text-xs text-muted-foreground whitespace-nowrap">
-                              {formatRelativeTime(log.timestamp)}
-                            </span>
-                          </div>
-                          
-                          <div className="flex flex-wrap items-center gap-2 mt-2">
-                            <Badge variant="outline" className="text-xs capitalize">
-                              {log.type.replace(/_/g, ' ')}
-                            </Badge>
-                            {log.position && (
-                              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                <MapPin className="h-3 w-3" />
-                                {formatCoordinate(log.position.latitude, 'lat').split(' ')[0]}
-                              </span>
-                            )}
-                            {log.engineHours && Object.entries(log.engineHours).map(([engineId, hours]) => (
-                              <span key={engineId} className="text-xs text-muted-foreground flex items-center gap-1">
-                                <Zap className="h-3 w-3" />
-                                {hours.toFixed(1)} hrs
-                              </span>
-                            ))}
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
-                              <User className="h-3 w-3" />
-                              {log.createdByName}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        {/* Tasks Tab */}
-        <TabsContent value="tasks" className="mt-0 space-y-4">
-          {/* Filters */}
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search tasks..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="w-[150px]">
-                <Filter className="h-4 w-4 mr-2" />
-                <span>Type</span>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                {Object.entries(TaskType).map(([key, value]) => (
-                  <SelectItem key={key} value={value}>
-                    {value.replace(/_/g, ' ')}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Tasks List */}
-          <Card>
-            <CardContent className="p-0">
-              <ScrollArea className="h-[500px]">
-                <div className="divide-y">
-                  {filteredTasks.map((task) => {
-                    const Icon = taskTypeIcons[task.type] || ClipboardList;
-                    
-                    return (
-                      <div
-                        key={task.id}
-                        className="flex items-start gap-4 p-4 hover:bg-muted/50 cursor-pointer transition-colors"
-                        onClick={() => setSelectedTask(task)}
-                      >
-                        <div className={cn(
-                          'p-2.5 rounded-lg',
-                          task.status === TaskStatus.COMPLETE ? 'bg-emerald-50 text-emerald-500 dark:bg-emerald-950/30' :
-                          task.status === TaskStatus.IN_PROGRESS ? 'bg-blue-50 text-blue-500 dark:bg-blue-950/30' :
-                          'bg-amber-50 text-amber-500 dark:bg-amber-950/30'
-                        )}>
-                          <Icon className="h-5 w-5" />
-                        </div>
-                        
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between">
-                            <div className="flex items-center gap-2">
-                              <h4 className={cn(
-                                'font-medium',
-                                task.status === TaskStatus.COMPLETE && 'line-through text-muted-foreground'
-                              )}>
-                                {task.title}
-                              </h4>
-                              {getTaskStatusBadge(task)}
-                            </div>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                <Button variant="ghost" size="icon">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                {task.status !== TaskStatus.COMPLETE && (
-                                  <DropdownMenuItem onClick={() => completeTask(task.id, 'user-001')}>
-                                    <CheckCircle2 className="h-4 w-4 mr-2" />
-                                    Mark Complete
-                                  </DropdownMenuItem>
-                                )}
-                                <DropdownMenuItem>
-                                  <Edit3 className="h-4 w-4 mr-2" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-red-500">
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                          
-                          <p className="text-sm text-muted-foreground mt-0.5 line-clamp-1">
-                            {task.description}
-                          </p>
-                          
-                          <div className="flex flex-wrap items-center gap-2 mt-2">
-                            <Badge variant="outline" className="text-xs capitalize">
-                              {task.type.replace(/_/g, ' ')}
-                            </Badge>
-                            {task.dueDate && (
-                              <span className={cn(
-                                'text-xs flex items-center gap-1',
-                                task.dueDate && new Date(task.dueDate) < new Date() && task.status !== TaskStatus.COMPLETE
-                                  ? 'text-red-500'
-                                  : 'text-muted-foreground'
-                              )}>
-                                <Clock className="h-3 w-3" />
-                                Due {formatRelativeTime(task.dueDate)}
-                              </span>
-                            )}
-                            {task.assignedTo && (
-                              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                <User className="h-3 w-3" />
-                                Assigned
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
+
+      <div className="flex-1 overflow-auto rounded-lg border bg-card">
+        {activeTab === 'logs' ? (
+          <table className="w-full text-sm">
+            <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm border-b">
+              <tr>
+                <th className="px-3 py-2 text-left font-medium w-10">Type</th>
+                <th className="px-3 py-2 text-left font-medium">Summary</th>
+                <th className="px-3 py-2 text-left font-medium hidden md:table-cell">Details</th>
+                <th className="px-3 py-2 text-left font-medium hidden lg:table-cell">Position</th>
+                <th className="px-3 py-2 text-right font-medium hidden lg:table-cell">Eng Hrs</th>
+                <th className="px-3 py-2 text-left font-medium">When</th>
+                {!usingDemoLogs && <th className="px-3 py-2 w-10" />}
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {filteredLogs.length === 0 ? (
+                <tr><td colSpan={7} className="py-16 text-center text-muted-foreground"><ClipboardList className="h-10 w-10 mx-auto mb-2 opacity-30" />No logs yet</td></tr>
+              ) : filteredLogs.map((log) => {
+                const Icon = logTypeIcons[log.type] || FileText;
+                return (
+                  <tr key={log.id} className="hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => setSelectedLog(log)}>
+                    <td className="px-3 py-2.5"><div className={cn('inline-flex p-1.5 rounded', log.severity === 'critical' ? 'bg-red-50 text-red-500 dark:bg-red-950/30' : log.severity === 'medium' ? 'bg-amber-50 text-amber-500 dark:bg-amber-950/30' : 'bg-blue-50 text-blue-500 dark:bg-blue-950/30')}><Icon className="h-4 w-4" /></div></td>
+                    <td className="px-3 py-2.5"><div className="font-medium">{log.summary}</div><Badge variant="outline" className="text-[10px] px-1 capitalize mt-0.5">{log.type.replace(/_/g, ' ')}</Badge></td>
+                    <td className="px-3 py-2.5 text-muted-foreground text-xs truncate max-w-[200px] hidden md:table-cell">{log.details || '—'}</td>
+                    <td className="px-3 py-2.5 text-xs text-muted-foreground hidden lg:table-cell">{log.position ? <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{formatCoordinate(log.position.latitude, 'lat').split(' ')[0]}</span> : '—'}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums text-xs text-muted-foreground hidden lg:table-cell">{log.engineHours ? Object.values(log.engineHours).map(h => h.toFixed(1)).join(', ') : '—'}</td>
+                    <td className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">{formatRelativeTime(log.timestamp)}</td>
+                    {!usingDemoLogs && <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteLog(log.id)}><Trash2 className="h-3.5 w-3.5" /></Button></td>}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        ) : (
+          <table className="w-full text-sm">
+            <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm border-b">
+              <tr>
+                <th className="px-3 py-2 text-left font-medium w-10">Type</th>
+                <th className="px-3 py-2 text-left font-medium">Task</th>
+                <th className="px-3 py-2 text-left font-medium">Status</th>
+                <th className="px-3 py-2 text-left font-medium hidden md:table-cell">Description</th>
+                <th className="px-3 py-2 text-left font-medium hidden lg:table-cell">Due</th>
+                <th className="px-3 py-2 w-12" />
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {filteredTasks.length === 0 ? (
+                <tr><td colSpan={6} className="py-16 text-center text-muted-foreground"><ClipboardList className="h-10 w-10 mx-auto mb-2 opacity-30" />No tasks yet</td></tr>
+              ) : filteredTasks.map((task) => {
+                const Icon = taskTypeIcons[task.type] || ClipboardList;
+                const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== TaskStatus.COMPLETE;
+                return (
+                  <tr key={task.id} className={cn('hover:bg-muted/50 transition-colors cursor-pointer', isOverdue && 'bg-red-50/50 dark:bg-red-950/10')} onClick={() => setSelectedTask(task)}>
+                    <td className="px-3 py-2.5"><div className={cn('inline-flex p-1.5 rounded', task.status === TaskStatus.COMPLETE ? 'bg-emerald-50 text-emerald-500 dark:bg-emerald-950/30' : task.status === TaskStatus.IN_PROGRESS ? 'bg-blue-50 text-blue-500 dark:bg-blue-950/30' : 'bg-amber-50 text-amber-500 dark:bg-amber-950/30')}><Icon className="h-4 w-4" /></div></td>
+                    <td className="px-3 py-2.5"><span className={cn('font-medium', task.status === TaskStatus.COMPLETE && 'line-through text-muted-foreground')}>{task.title}</span></td>
+                    <td className="px-3 py-2.5">{getTaskStatusBadge(task)}</td>
+                    <td className="px-3 py-2.5 text-muted-foreground text-xs truncate max-w-[200px] hidden md:table-cell">{task.description || '—'}</td>
+                    <td className="px-3 py-2.5 text-xs hidden lg:table-cell">{task.dueDate ? <span className={isOverdue ? 'text-red-500' : 'text-muted-foreground'}>{formatRelativeTime(task.dueDate)}</span> : '—'}</td>
+                    <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="h-3.5 w-3.5" /></Button></DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {task.status !== TaskStatus.COMPLETE && <DropdownMenuItem disabled={usingDemoTasks} onClick={() => completeTask(task.id, 'local-user')}><CheckCircle2 className="h-4 w-4 mr-2" />Complete</DropdownMenuItem>}
+                          <DropdownMenuItem><Edit3 className="h-4 w-4 mr-2" />Edit</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="text-red-500" disabled={usingDemoTasks} onClick={() => deleteTask(task.id)}><Trash2 className="h-4 w-4 mr-2" />Delete</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
+      </>)
+      }
       
       {/* Add Log Dialog */}
       <Dialog open={showAddLog} onOpenChange={setShowAddLog}>
@@ -641,7 +524,7 @@ export function LogsTasks() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Log Type</Label>
-              <Select>
+              <Select value={logDraft.type} onValueChange={(value) => setLogDraft((draft) => ({ ...draft, type: value as LogEntryType }))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
@@ -656,20 +539,34 @@ export function LogsTasks() {
             </div>
             <div className="space-y-2">
               <Label>Title/Summary</Label>
-              <Input placeholder="Brief description" />
+              <Input
+                placeholder="Brief description"
+                value={logDraft.summary}
+                onChange={(event) => setLogDraft((draft) => ({ ...draft, summary: event.target.value }))}
+              />
             </div>
             <div className="space-y-2">
               <Label>Details</Label>
-              <Textarea placeholder="Additional details..." rows={3} />
+              <Textarea
+                placeholder="Additional details..."
+                rows={3}
+                value={logDraft.details}
+                onChange={(event) => setLogDraft((draft) => ({ ...draft, details: event.target.value }))}
+              />
             </div>
             <div className="space-y-2">
               <Label>Engine Hours (optional)</Label>
-              <Input type="number" placeholder="Current engine hours" />
+              <Input
+                type="number"
+                placeholder="Current engine hours"
+                value={logDraft.engineHours}
+                onChange={(event) => setLogDraft((draft) => ({ ...draft, engineHours: event.target.value }))}
+              />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowAddLog(false)}>Cancel</Button>
-            <Button onClick={() => setShowAddLog(false)}>Save Log</Button>
+            <Button onClick={handleSaveLog} disabled={!currentVessel}>Save Log</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -686,7 +583,7 @@ export function LogsTasks() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Task Type</Label>
-              <Select>
+              <Select value={taskDraft.type} onValueChange={(value) => setTaskDraft((draft) => ({ ...draft, type: value as TaskType }))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
@@ -701,18 +598,35 @@ export function LogsTasks() {
             </div>
             <div className="space-y-2">
               <Label>Title</Label>
-              <Input placeholder="Task title" />
+              <Input
+                placeholder="Task title"
+                value={taskDraft.title}
+                onChange={(event) => setTaskDraft((draft) => ({ ...draft, title: event.target.value }))}
+              />
             </div>
             <div className="space-y-2">
               <Label>Description</Label>
-              <Textarea placeholder="Task details..." rows={3} />
+              <Textarea
+                placeholder="Task details..."
+                rows={3}
+                value={taskDraft.description}
+                onChange={(event) => setTaskDraft((draft) => ({ ...draft, description: event.target.value }))}
+              />
             </div>
             <div className="space-y-2">
               <Label>Due Date (optional)</Label>
-              <Input type="date" />
+              <Input
+                type="date"
+                value={taskDraft.dueDate}
+                onChange={(event) => setTaskDraft((draft) => ({ ...draft, dueDate: event.target.value }))}
+              />
             </div>
             <div className="flex items-center gap-2">
-              <Checkbox id="requires-approval" />
+              <Checkbox
+                id="requires-approval"
+                checked={taskDraft.requiresApproval}
+                onCheckedChange={(checked) => setTaskDraft((draft) => ({ ...draft, requiresApproval: checked === true }))}
+              />
               <Label htmlFor="requires-approval" className="text-sm">
                 Requires approval before completion
               </Label>
@@ -720,10 +634,109 @@ export function LogsTasks() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowAddTask(false)}>Cancel</Button>
-            <Button onClick={() => setShowAddTask(false)}>Create Task</Button>
+            <Button onClick={handleSaveTask} disabled={!currentVessel}>Create Task</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Log detail drawer */}
+      <Sheet open={!!selectedLog} onOpenChange={(open) => { if (!open) setSelectedLog(null); }}>
+        <SheetContent side="right" className="w-full sm:max-w-md flex flex-col">
+          {selectedLog && (
+            <>
+              <SheetHeader className="pb-3 border-b">
+                <SheetTitle className="flex items-center gap-2">
+                  {logTypeIcons[selectedLog.type] && (() => { const Icon = logTypeIcons[selectedLog.type]; return <Icon className="h-4 w-4" />; })()}
+                  {selectedLog.summary}
+                </SheetTitle>
+              </SheetHeader>
+              <div className="flex-1 overflow-y-auto py-4 space-y-4">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant="secondary">{selectedLog.type.replace(/_/g, ' ')}</Badge>
+                  <span className="text-xs text-muted-foreground">{new Date(selectedLog.timestamp).toLocaleString()}</span>
+                </div>
+                {selectedLog.details && (
+                  <>
+                    <Separator />
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedLog.details}</p>
+                  </>
+                )}
+                {selectedLog.engineHours && Object.keys(selectedLog.engineHours).length > 0 && (
+                  <div className="text-sm">
+                    <span className="font-medium">Engine Hours: </span>
+                    {Object.entries(selectedLog.engineHours).map(([id, h]) => `${id}: ${h}`).join(', ')}
+                  </div>
+                )}
+                {selectedLog.position && (
+                  <div className="text-sm font-mono text-muted-foreground">
+                    {selectedLog.position.latitude.toFixed(4)}°, {selectedLog.position.longitude.toFixed(4)}°
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
+
+      {/* Task detail drawer */}
+      <Sheet open={!!selectedTask} onOpenChange={(open) => { if (!open) setSelectedTask(null); }}>
+        <SheetContent side="right" className="w-full sm:max-w-md flex flex-col">
+          {selectedTask && (
+            <>
+              <SheetHeader className="pb-3 border-b">
+                <SheetTitle>{selectedTask.title}</SheetTitle>
+              </SheetHeader>
+              <div className="flex-1 overflow-y-auto py-4 space-y-4">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant={selectedTask.status === TaskStatus.COMPLETE ? 'default' : selectedTask.status === 'in_progress' ? 'secondary' : 'outline'}>
+                    {selectedTask.status.replace(/_/g, ' ')}
+                  </Badge>
+                  {selectedTask.dueDate && (
+                    <span className="text-xs text-muted-foreground">Due {new Date(selectedTask.dueDate).toLocaleDateString()}</span>
+                  )}
+                </div>
+                {selectedTask.status !== TaskStatus.COMPLETE && (
+                  <div className="flex gap-2">
+                    {selectedTask.status === 'open' && (
+                      <Button size="sm" variant="outline" onClick={() => { const { updateTask } = useLogTaskStore.getState(); updateTask(selectedTask.id, { status: 'in_progress' as Task['status'] }); setSelectedTask({ ...selectedTask, status: 'in_progress' as Task['status'] }); }}>
+                        Start
+                      </Button>
+                    )}
+                    <Button size="sm" onClick={() => { completeTask(selectedTask.id, 'local-user'); setSelectedTask(null); }}>
+                      Complete
+                    </Button>
+                  </div>
+                )}
+                {selectedTask.description && <p className="text-sm text-muted-foreground">{selectedTask.description}</p>}
+                {selectedTask.checklistItems && selectedTask.checklistItems.length > 0 && (
+                  <>
+                    <Separator />
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Checklist</p>
+                      {selectedTask.checklistItems.map((item, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <Checkbox
+                            checked={item.completed}
+                            onCheckedChange={(checked) => {
+                              const { updateTask } = useLogTaskStore.getState();
+                              const updated = selectedTask.checklistItems!.map((ci, i) =>
+                                i === idx ? { ...ci, completed: !!checked } : ci
+                              );
+                              updateTask(selectedTask.id, { checklistItems: updated });
+                              setSelectedTask({ ...selectedTask, checklistItems: updated });
+                            }}
+                          />
+                          <span className={`text-sm ${item.completed ? 'line-through text-muted-foreground' : ''}`}>{item.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

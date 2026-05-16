@@ -141,6 +141,9 @@ interface VesselStore {
   setSystems: (systems: SystemComponent[]) => void;
   addSystem: (system: SystemComponent) => void;
   updateSystem: (id: string, updates: Partial<SystemComponent>) => void;
+
+  // Replace all spaces for a vessel in one call (used by BoatMap template chooser)
+  batchSetSpaces: (vesselId: string, spaces: Space[]) => void;
 }
 
 export const useVesselStore = create<VesselStore>()(
@@ -191,6 +194,14 @@ export const useVesselStore = create<VesselStore>()(
       updateSystem: (id, updates) =>
         set((state) => ({
           systems: state.systems.map((s) => (s.id === id ? { ...s, ...updates } : s)),
+        })),
+
+      batchSetSpaces: (vesselId, spaces) =>
+        set((state) => ({
+          spaces: [
+            ...state.spaces.filter((s) => s.vesselId !== vesselId),
+            ...spaces,
+          ],
         })),
     }),
     {
@@ -559,8 +570,8 @@ interface NavigationPlanStore {
 export const useNavigationPlanStore = create<NavigationPlanStore>()(
   persist(
     (set, get) => ({
-      routes: [NB_PILOT_REFERENCE_ROUTE],
-      activeRouteId: NB_PILOT_REFERENCE_ROUTE.id,
+      routes: [],
+      activeRouteId: null,
 
       setRoutes: (routes) => set({ routes }),
       addRoute: (route) =>
@@ -696,6 +707,9 @@ export interface BoatNodeSettings {
     sonar: boolean;
     weather: boolean;
   };
+  meshEnabled: boolean;
+  meshBroadcastMode: 'always' | 'active' | 'never';
+  meshRelayUrls: string[];
 }
 
 export const DEFAULT_BOAT_NODE_SETTINGS: BoatNodeSettings = {
@@ -716,10 +730,14 @@ export const DEFAULT_BOAT_NODE_SETTINGS: BoatNodeSettings = {
     sonar: true,
     weather: false,
   },
+  meshEnabled: true,
+  meshBroadcastMode: 'active',
+  meshRelayUrls: [],
 };
 
 interface SettingsStore {
   consent: ConsentSettings | null;
+  demoModeEnabled: boolean;
   userPreferences: {
     theme: ThemeMode;
     unitSystem: 'metric' | 'imperial' | 'nautical';
@@ -733,6 +751,7 @@ interface SettingsStore {
   // Actions
   setConsent: (consent: ConsentSettings) => void;
   updateConsent: (updates: Partial<ConsentSettings>) => void;
+  setDemoModeEnabled: (enabled: boolean) => void;
   setUserPreferences: (preferences: SettingsStore['userPreferences']) => void;
   updateUserPreferences: (updates: Partial<SettingsStore['userPreferences']>) => void;
   updateBoatNodeSettings: (updates: Partial<BoatNodeSettings>) => void;
@@ -742,6 +761,7 @@ export const useSettingsStore = create<SettingsStore>()(
   persist(
     (set) => ({
       consent: null,
+      demoModeEnabled: false,
       userPreferences: {
         theme: ThemeMode.AUTO,
         unitSystem: 'nautical' as const,
@@ -752,11 +772,12 @@ export const useSettingsStore = create<SettingsStore>()(
 	      },
 	      boatNode: DEFAULT_BOAT_NODE_SETTINGS,
 
-	      setConsent: (consent) => set({ consent }),
+      setConsent: (consent) => set({ consent }),
       updateConsent: (updates) =>
         set((state) => ({
           consent: state.consent ? { ...state.consent, ...updates } : null,
         })),
+      setDemoModeEnabled: (enabled) => set({ demoModeEnabled: enabled }),
       setUserPreferences: (preferences) => set({ userPreferences: preferences }),
 	      updateUserPreferences: (updates) =>
 	        set((state) => ({
@@ -810,6 +831,10 @@ interface CommunityDataStore {
   getQueuedUploadBatches: () => CommunitySyncBatch[];
   getQueuedObservationBatches: () => CommunityObservationSyncBatch[];
   getQueuedHazardBatches: () => CommunityHazardSyncBatch[];
+
+  // P2P mesh transport — deduplicates by ID, capped at 5000 total
+  addRawSoundingsFromMesh: (soundings: RawDepthSounding[]) => void;
+  mergePeerHazard: (hazard: CommunityHazard) => void;
 }
 
 export type CommunitySyncBatchStatus = 'queued' | 'sent' | 'acknowledged' | 'failed';
@@ -1246,6 +1271,26 @@ export const useCommunityDataStore = create<CommunityDataStore>()(
       getQueuedUploadBatches: () => get().uploadBatches.filter((batch) => batch.status === 'queued'),
       getQueuedObservationBatches: () => get().observationBatches.filter((batch) => batch.status === 'queued'),
       getQueuedHazardBatches: () => get().hazardBatches.filter((batch) => batch.status === 'queued'),
+
+      addRawSoundingsFromMesh: (soundings) =>
+        set((state) => {
+          const byId = new Map(state.rawSoundings.map((s) => [s.id, s]));
+          for (const s of soundings) {
+            if (!byId.has(s.id)) byId.set(s.id, s);
+          }
+          return {
+            rawSoundings: [...byId.values()]
+              .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+              .slice(0, 5000),
+          };
+        }),
+
+      mergePeerHazard: (hazard) =>
+        set((state) => {
+          if (state.hazards.some((h) => h.id === hazard.id)) return state;
+          const entry: CommunityHazard = { ...hazard, status: 'local' };
+          return { hazards: [entry, ...state.hazards].slice(0, 500) };
+        }),
     }),
     {
       name: 'harbormesh-community-data',
@@ -1331,3 +1376,4 @@ export const useOnboardingStore = create<OnboardingStore>()((set) => ({
       ),
     })),
 }));
+export * from './meshStore';

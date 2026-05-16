@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useRef, useCallback, useState } from 'react';
-import { useTelemetryStore, useAppStore, useSettingsStore, useCommunityDataStore } from '@/store';
+import { useTelemetryStore, useAppStore, useSettingsStore, useCommunityDataStore, useVesselStore } from '@/store';
 import { createCommunityObservationsFromTelemetry } from '@/lib/community-observations';
 import { createSoundingsFromTelemetry, type SoundingSourceProtocol } from '@/lib/community-soundings';
 import { buildSignalKStreamUrl, mapSignalKDeltaToTelemetry, type SignalKDelta } from '@/lib/signalk';
@@ -45,14 +45,14 @@ interface UseTelemetryReturn {
 }
 
 // Simulated telemetry for demo purposes
-function generateSimulatedTelemetry(): TelemetryMessage {
+function generateSimulatedTelemetry(vesselId: string, sourceDeviceId: string): TelemetryMessage {
   const types = ['position', 'motion', 'environment', 'engine'] as const;
   const type = types[Math.floor(Math.random() * types.length)];
   
   const baseMessage: Partial<TelemetryMessage> = {
     id: crypto.randomUUID(),
-    vesselId: 'demo-vessel',
-    sourceDeviceId: 'boat-node-001',
+    vesselId,
+    sourceDeviceId,
     timestamp: new Date().toISOString(),
   };
   
@@ -62,8 +62,8 @@ function generateSimulatedTelemetry(): TelemetryMessage {
         ...baseMessage,
         messageType: 'position',
         payload: {
-          latitude: 37.7749 + (Math.random() - 0.5) * 0.01,
-          longitude: -122.4194 + (Math.random() - 0.5) * 0.01,
+          latitude: 45.2733 + (Math.random() - 0.5) * 0.01,
+          longitude: -66.0633 + (Math.random() - 0.5) * 0.01,
           accuracy: 5 + Math.random() * 10,
           cog: Math.random() * 360,
           sog: 5 + Math.random() * 10,
@@ -150,6 +150,8 @@ export function useTelemetry(options: UseTelemetryOptions = {}): UseTelemetryRet
   const { setConnectionStatus, addNotification } = useAppStore();
   const boatNode = useSettingsStore((state) => state.boatNode);
   const consent = useSettingsStore((state) => state.consent);
+  const demoModeEnabled = useSettingsStore((state) => state.demoModeEnabled);
+  const currentVessel = useVesselStore((state) => state.currentVessel);
   const addRawSoundings = useCommunityDataStore((state) => state.addRawSoundings);
   const addObservations = useCommunityDataStore((state) => state.addObservations);
 
@@ -188,8 +190,10 @@ export function useTelemetry(options: UseTelemetryOptions = {}): UseTelemetryRet
     }
 
     const storeMessages = useTelemetryStore.getState().messages;
+    const vesselId = consent?.vesselId ?? currentVessel?.id ?? `local-vessel-${boatNode.deviceId}`;
+
     const soundings = createSoundingsFromTelemetry([...receivedMessages, ...storeMessages], consent, {
-      vesselId: consent?.vesselId ?? 'demo-vessel',
+      vesselId,
       sourceProtocol,
       offsets: {
         surfaceToTransducerMeters: boatNode.surfaceToTransducerMeters,
@@ -202,7 +206,7 @@ export function useTelemetry(options: UseTelemetryOptions = {}): UseTelemetryRet
     }
 
     const observations = createCommunityObservationsFromTelemetry([...receivedMessages, ...storeMessages], consent, {
-      vesselId: consent?.vesselId ?? 'demo-vessel',
+      vesselId,
       sourceProtocol,
       receivedAt,
     });
@@ -214,9 +218,11 @@ export function useTelemetry(options: UseTelemetryOptions = {}): UseTelemetryRet
     addMessage,
     addObservations,
     addRawSoundings,
+    boatNode.deviceId,
     boatNode.surfaceToTransducerMeters,
     boatNode.transducerToKeelMeters,
     consent,
+    currentVessel?.id,
   ]);
 
   const startReplay = useCallback((notify = true) => {
@@ -228,7 +234,7 @@ export function useTelemetry(options: UseTelemetryOptions = {}): UseTelemetryRet
 
     simulationIntervalRef.current = setInterval(() => {
       const messages = mapRecordedSignalKDelta(replayIndexRef.current, {
-        vesselId: 'demo-vessel',
+        vesselId: consent?.vesselId ?? currentVessel?.id ?? `local-vessel-${boatNode.deviceId}`,
         sourceDeviceId: 'recorded-signalk',
       });
       replayIndexRef.current += 1;
@@ -242,7 +248,7 @@ export function useTelemetry(options: UseTelemetryOptions = {}): UseTelemetryRet
         message: 'Using recorded Signal K data for the New Brunswick pilot map.',
       });
     }
-  }, [addNotification, pushMessages, setConnectionStatus, stopStreams]);
+  }, [addNotification, boatNode.deviceId, consent?.vesselId, currentVessel?.id, pushMessages, setConnectionStatus, stopStreams]);
 
   const startSimulation = useCallback(() => {
     stopStreams();
@@ -252,7 +258,10 @@ export function useTelemetry(options: UseTelemetryOptions = {}): UseTelemetryRet
     setConnectionStatus('online');
 
     simulationIntervalRef.current = setInterval(() => {
-      pushMessages([generateSimulatedTelemetry()], 'simulated');
+      pushMessages([generateSimulatedTelemetry(
+        consent?.vesselId ?? currentVessel?.id ?? `local-vessel-${boatNode.deviceId}`,
+        boatNode.deviceId || 'generated-simulation',
+      )], 'simulated');
     }, 2000);
 
     addNotification({
@@ -260,7 +269,7 @@ export function useTelemetry(options: UseTelemetryOptions = {}): UseTelemetryRet
       title: 'Telemetry Simulation Active',
       message: 'Using generated demo telemetry.',
     });
-  }, [addNotification, pushMessages, setConnectionStatus, stopStreams]);
+  }, [addNotification, boatNode.deviceId, consent?.vesselId, currentVessel?.id, pushMessages, setConnectionStatus, stopStreams]);
   
   // Connect to WebSocket
   const connect = useCallback(() => {
@@ -278,6 +287,18 @@ export function useTelemetry(options: UseTelemetryOptions = {}): UseTelemetryRet
     }
 
     if (boatNode.telemetryMode === 'simulated') {
+      if (!demoModeEnabled) {
+        setError(new Error('Demo Mode is required for generated telemetry simulation'));
+        setIsConnected(false);
+        setIsConnecting(false);
+        setConnectionStatus('offline');
+        addNotification({
+          type: 'warning',
+          title: 'Simulation Disabled',
+          message: 'Enable Demo Mode in Settings before using generated telemetry.',
+        });
+        return;
+      }
       startSimulation();
       return;
     }
@@ -332,7 +353,7 @@ export function useTelemetry(options: UseTelemetryOptions = {}): UseTelemetryRet
           const deltas = Array.isArray(parsed) ? parsed : [parsed];
           for (const delta of deltas) {
             pushMessages(mapSignalKDeltaToTelemetry(delta, {
-              vesselId: 'demo-vessel',
+              vesselId: consent?.vesselId ?? currentVessel?.id ?? `local-vessel-${boatNode.deviceId}`,
               sourceDeviceId: 'signalk',
             }), 'signalk');
           }
@@ -377,10 +398,14 @@ export function useTelemetry(options: UseTelemetryOptions = {}): UseTelemetryRet
     }
   }, [
     boatNode.connectionTimeoutSeconds,
+    boatNode.deviceId,
     boatNode.fallbackToReplay,
     boatNode.signalKBaseUrl,
     boatNode.signalKSubscribe,
     boatNode.telemetryMode,
+    consent?.vesselId,
+    currentVessel?.id,
+    demoModeEnabled,
     addNotification,
     maxReconnectAttempts,
     pushMessages,

@@ -15,6 +15,8 @@ import {
   type MapPosition,
 } from '@/lib/nb-chart-sources';
 
+import type { MeshVessel } from '@/store/meshStore';
+
 type AisTarget = {
   mmsi: string;
   name?: string;
@@ -27,6 +29,7 @@ type NBPilotChartProps = {
   position: MapPosition | null;
   heading: number;
   aisTargets: AisTarget[];
+  meshVessels?: MeshVessel[];
   routes?: Route[];
   activeRouteId?: string | null;
   communityFeatures?: CommunityOverlayFeature[];
@@ -146,6 +149,7 @@ export function NBPilotChart({
   position,
   heading,
   aisTargets,
+  meshVessels = [],
   routes = [],
   activeRouteId = null,
   communityFeatures = [],
@@ -162,6 +166,10 @@ export function NBPilotChart({
   const visibleAisTargets = useMemo(
     () => aisTargets.filter((target) => isWithinNBPilotBounds(target.position)),
     [aisTargets],
+  );
+  const visibleMeshVessels = useMemo(
+    () => meshVessels.filter((vessel) => vessel.position && isWithinNBPilotBounds(vessel.position)),
+    [meshVessels],
   );
   const visibleCommunityFeatures = useMemo(
     () => communityFeatures.filter((feature) => isWithinNBPilotBounds(getFeaturePosition(feature))),
@@ -364,6 +372,31 @@ export function NBPilotChart({
                   <strong>{target.name || `MMSI ${target.mmsi}`}</strong>
                   <div>{target.sog.toFixed(1)} kn</div>
                   <div>{formatHeading(target.cog)}</div>
+                </div>
+              </Popup>
+            </CircleMarker>
+          ))}
+
+          {visibleMeshVessels.map((vessel) => (
+            <CircleMarker
+              key={vessel.vesselId}
+              center={toLatLng(vessel.position!)}
+              radius={6}
+              pathOptions={{ color: '#d97706', fillColor: '#f59e0b', fillOpacity: 0.8, weight: 2 }}
+            >
+              <Popup>
+                <div className="space-y-1 text-sm">
+                  <strong>{vessel.name || 'Mesh Vessel'}</strong>
+                  <div>Mesh Sync Live</div>
+                  {vessel.windSpeed !== null && (
+                    <div>Wind: {vessel.windSpeed.toFixed(1)} kn</div>
+                  )}
+                  {vessel.windDirection !== null && (
+                    <div>Wind Dir: {Math.round(vessel.windDirection)}°</div>
+                  )}
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Last update: {new Date(vessel.lastUpdate).toLocaleTimeString()}
+                  </div>
                 </div>
               </Popup>
             </CircleMarker>

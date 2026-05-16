@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/hooks/useTheme';
-import { useAppStore } from '@/store';
+import { useAppStore, useVesselStore } from '@/store';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -74,6 +74,9 @@ export function Layout({ children }: LayoutProps) {
     notifications,
     currentVesselId,
   } = useAppStore();
+  const currentVessel = useVesselStore((state) => (
+    state.currentVessel ?? state.vessels.find((vessel) => vessel.id === currentVesselId) ?? null
+  ));
   
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
@@ -314,11 +317,11 @@ export function Layout({ children }: LayoutProps) {
               </Tooltip>
             </TooltipProvider>
             
-            {/* Vessel selector (placeholder) */}
-            {currentVesselId && (
+            {/* Current vessel */}
+            {currentVessel && (
               <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted">
                 <Ship className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium truncate max-w-[120px]">Demo Vessel</span>
+                <span className="text-sm font-medium truncate max-w-[120px]">{currentVessel.name}</span>
               </div>
             )}
           </div>
@@ -326,7 +329,12 @@ export function Layout({ children }: LayoutProps) {
         
         {/* Page Content */}
         <main className="flex-1 overflow-auto">
-          <div className="p-4 lg:p-6">
+          <div className={cn(
+              'min-h-full',
+              ['navigation', 'map', 'inventory', 'documents', 'logs', 'community', 'vessel'].includes(activeView)
+                ? 'p-2 lg:p-3'
+                : 'p-4 lg:p-6',
+            )}>
             {children}
           </div>
         </main>

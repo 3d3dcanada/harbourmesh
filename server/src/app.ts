@@ -1011,5 +1011,22 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     return device;
   });
 
+  // Optional Gun P2P relay — enabled when HARBOURMESH_GUN_RELAY=true.
+  // Allows self-hosted users to act as a mesh relay for other HarbourMesh nodes.
+  // No PostGIS dependency; Gun persists to a local file store.
+  if (process.env.HARBOURMESH_GUN_RELAY === 'true') {
+    const { createRequire } = await import('node:module');
+    const req = createRequire(import.meta.url);
+    const Gun = req('gun');
+    req('gun/lib/wire'); // WebSocket wire protocol
+    req('gun/lib/radisk'); // file-based persistence
+    const gunDataDir = `${options.dataDir}/gun-data`;
+    Gun({
+      web: app.server,
+      file: gunDataDir,
+      ws: { path: '/gun' },
+    });
+  }
+
   return app;
 }

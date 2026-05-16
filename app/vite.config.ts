@@ -7,6 +7,12 @@ import { inspectAttr } from 'kimi-plugin-inspect-react'
 export default defineConfig({
   base: './',
   plugins: [inspectAttr(), react()],
+  define: {
+    global: 'globalThis',
+  },
+  optimizeDeps: {
+    include: ['gun', 'gun/sea', 'gun/lib/rindexed'],
+  },
   server: {
     proxy: {
       '/api': {

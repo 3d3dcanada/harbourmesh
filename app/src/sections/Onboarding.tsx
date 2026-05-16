@@ -31,8 +31,8 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { useOnboardingStore, useAppStore } from '@/store';
-import { VesselType, SpaceType, ItemCategory, type OnboardingStep } from '@/types';
+import { useOnboardingStore, useAppStore, useVesselStore } from '@/store';
+import { VesselType, SpaceType, ItemCategory, type Item, type OnboardingStep, type Space, type Vessel } from '@/types';
 
 const steps: { id: OnboardingStep; title: string; description: string; icon: React.ElementType }[] = [
   { id: 'welcome', title: 'Welcome', description: 'Introduction to HarborMesh', icon: Anchor },
@@ -96,7 +96,13 @@ export function Onboarding() {
     completeOnboarding,
   } = useOnboardingStore();
   
-  const { setActiveView } = useAppStore();
+  const { setActiveView, setCurrentVessel: setCurrentVesselId } = useAppStore();
+  const {
+    addVessel: saveVessel,
+    setCurrentVessel,
+    addSpace: saveSpace,
+    addItem: saveItem,
+  } = useVesselStore();
   const [activeStep, setActiveStep] = useState(0);
   
   // Calculate progress
@@ -117,6 +123,71 @@ export function Onboarding() {
   };
   
   const handleComplete = () => {
+    const now = new Date().toISOString();
+    const vesselId = vesselData.id ?? crypto.randomUUID();
+    const vessel: Vessel = {
+      id: vesselId,
+      ownerId: vesselData.ownerId ?? 'local-owner',
+      name: vesselData.name?.trim() || 'Untitled Vessel',
+      type: vesselData.type ?? VesselType.MOTORBOAT_CENTER_CONSOLE,
+      lengthOverall: vesselData.lengthOverall ?? 0,
+      lengthWaterline: vesselData.lengthWaterline ?? vesselData.lengthOverall ?? 0,
+      beam: vesselData.beam ?? 0,
+      draft: vesselData.draft ?? 0,
+      displacement: vesselData.displacement,
+      tonnage: vesselData.tonnage,
+      mmsi: vesselData.mmsi,
+      callSign: vesselData.callSign,
+      hin: vesselData.hin,
+      registrationNumber: vesselData.registrationNumber,
+      flag: vesselData.flag,
+      portOfRegistry: vesselData.portOfRegistry,
+      engines: vesselData.engines ?? [],
+      tanks: vesselData.tanks ?? [],
+      operationalProfile: vesselData.operationalProfile ?? {
+        primaryUse: 'recreational',
+        typicalCrewSize: 1,
+        maxPassengers: 1,
+        homePort: vesselData.portOfRegistry,
+      },
+      createdAt: vesselData.createdAt ?? now,
+      updatedAt: now,
+    };
+
+    saveVessel(vessel);
+    setCurrentVessel(vessel);
+    setCurrentVesselId(vessel.id);
+
+    for (const space of spaces) {
+      saveSpace({
+        id: space.id ?? crypto.randomUUID(),
+        vesselId,
+        name: space.name?.trim() || 'Untitled Space',
+        type: space.type ?? SpaceType.LOCKER,
+        description: space.description,
+        deck: space.deck ?? 0,
+        deckName: space.deckName ?? 'Main Deck',
+        geometry: space.geometry,
+        createdAt: space.createdAt ?? now,
+        updatedAt: now,
+      } as Space);
+    }
+
+    for (const item of items) {
+      saveItem({
+        id: item.id ?? crypto.randomUUID(),
+        vesselId,
+        spaceId: item.spaceId || spaces[0]?.id || 'unassigned',
+        category: item.category ?? ItemCategory.SAFETY,
+        name: item.name?.trim() || 'Untitled Item',
+        description: item.description,
+        quantity: item.quantity ?? 1,
+        unit: item.unit ?? 'each',
+        createdAt: item.createdAt ?? now,
+        updatedAt: now,
+      } as Item);
+    }
+
     completeOnboarding();
     setActiveView('dashboard');
   };
@@ -169,7 +240,7 @@ export function Onboarding() {
               <div className="space-y-2">
                 <Label>Vessel Name</Label>
                 <Input 
-                  placeholder="e.g., Sea Venture"
+                  placeholder="e.g., Bay of Fundy Runner"
                   value={vesselData.name || ''}
                   onChange={(e) => updateVesselData({ name: e.target.value })}
                 />
@@ -227,7 +298,7 @@ export function Onboarding() {
             <div className="space-y-2">
               <Label>Home Port</Label>
               <Input 
-                placeholder="e.g., San Francisco, CA"
+                placeholder="e.g., Saint John, NB"
                 value={vesselData.portOfRegistry || ''}
                 onChange={(e) => updateVesselData({ portOfRegistry: e.target.value })}
               />
@@ -295,7 +366,7 @@ export function Onboarding() {
                   <div 
                     key={index}
                     className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 cursor-pointer"
-                    onClick={() => addSpace({ ...space, vesselId: 'demo-vessel' })}
+                    onClick={() => addSpace({ ...space, vesselId: vesselData.id ?? 'onboarding-vessel' })}
                   >
                     <div>
                       <p className="font-medium text-sm">{space.name}</p>
@@ -355,7 +426,7 @@ export function Onboarding() {
                     className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 cursor-pointer"
                     onClick={() => addItem({ 
                       ...item, 
-                      vesselId: 'demo-vessel',
+                      vesselId: vesselData.id ?? 'onboarding-vessel',
                       spaceId: '',
                       quantity: 1,
                       unit: 'each',
@@ -629,10 +700,6 @@ export function Onboarding() {
               <Button variant="outline" onClick={() => setActiveView('vessel')}>
                 View Vessel
               </Button>
-              <Button onClick={handleComplete}>
-                Go to Dashboard
-                <Compass className="h-4 w-4 ml-2" />
-              </Button>
             </div>
           </div>
         );
@@ -712,7 +779,7 @@ export function Onboarding() {
           Back
         </Button>
         
-        <Button onClick={handleNext}>
+        <Button onClick={activeStep === steps.length - 1 ? handleComplete : handleNext}>
           {activeStep === steps.length - 1 ? (
             <>
               Get Started
