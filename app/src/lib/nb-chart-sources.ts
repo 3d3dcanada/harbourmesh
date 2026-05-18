@@ -90,7 +90,8 @@ export function isWithinNBPilotBounds(position: MapPosition | null | undefined):
 }
 
 export function getNBPilotMapCenter(position: MapPosition | null | undefined): MapPosition {
-  return isWithinNBPilotBounds(position) ? position : NB_PILOT_CENTER;
+  if (!position) return NB_PILOT_CENTER;
+  return position;
 }
 
 export function getShareableLayerCount(): number {

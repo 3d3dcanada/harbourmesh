@@ -157,8 +157,16 @@ function App() {
     const isFakeMode = boatNode.telemetryMode === 'replay' || boatNode.telemetryMode === 'simulated';
     if (isFakeMode && !demoModeEnabled && 'geolocation' in navigator) {
       updateBoatNodeSettings({ telemetryMode: 'phone' });
+      return;
     }
-  }, [boatNode.telemetryMode, demoModeEnabled, updateBoatNodeSettings]);
+    if (boatNode.telemetryMode === 'signalk') {
+      const defaultUrl = 'http://192.168.1.100:3000';
+      const hasCustomSignalK = boatNode.signalKBaseUrl && boatNode.signalKBaseUrl !== defaultUrl;
+      if (!hasCustomSignalK) {
+        updateBoatNodeSettings({ telemetryMode: 'phone' });
+      }
+    }
+  }, [boatNode.telemetryMode, boatNode.signalKBaseUrl, demoModeEnabled, updateBoatNodeSettings]);
 
   return (
     <AuthGate>

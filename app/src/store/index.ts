@@ -734,7 +734,7 @@ export interface BoatNodeSettings {
 export const DEFAULT_BOAT_NODE_SETTINGS: BoatNodeSettings = {
   deviceId: 'boat-node-001',
   deviceName: 'NB Pilot Boat Node',
-  telemetryMode: 'replay',
+  telemetryMode: 'phone',
   signalKBaseUrl: 'http://192.168.1.100:3000',
   signalKSubscribe: 'self',
   connectionTimeoutSeconds: 10,

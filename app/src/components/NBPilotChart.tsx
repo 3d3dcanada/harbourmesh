@@ -217,13 +217,66 @@ export function NBPilotChart({
         minZoom={6}
         maxZoom={18}
         scrollWheelZoom
-        maxBounds={NB_MAX_BOUNDS}
         className="h-full w-full"
       >
         <RecenterOnPosition center={mapCenter} />
-        <TileLayer attribution={MAP_ATTRIBUTION} url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
         <LayersControl position="topright">
+          {/* Base Layers */}
+          <LayersControl.BaseLayer checked name="Street Map">
+            <TileLayer
+              attribution={MAP_ATTRIBUTION}
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              maxZoom={19}
+            />
+          </LayersControl.BaseLayer>
+
+          <LayersControl.BaseLayer name="Esri Ocean Bathymetry">
+            <TileLayer
+              url="https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}"
+              attribution="Esri, GEBCO, NOAA"
+              maxZoom={13}
+            />
+          </LayersControl.BaseLayer>
+
+          <LayersControl.BaseLayer name="Satellite Imagery">
+            <TileLayer
+              url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+              attribution="Esri, Maxar"
+              maxZoom={19}
+            />
+          </LayersControl.BaseLayer>
+
+          {/* Overlays */}
+          <LayersControl.Overlay checked name="OpenSeaMap Seamarks">
+            <TileLayer
+              url="https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png"
+              attribution="&copy; OpenSeaMap"
+              maxZoom={18}
+              opacity={0.85}
+            />
+          </LayersControl.Overlay>
+
+          <LayersControl.Overlay name="CHS Canadian ENC">
+            <WMSTileLayer
+              url="https://egisp.dfo-mpo.gc.ca/arcgis/rest/services/chs/ENC_MaritimeChartService/MapServer/exts/MaritimeChartService/WMSServer"
+              layers="10,6,8,2,0,9,1,12,3,7,11,5,4"
+              format="image/png"
+              transparent
+              opacity={0.7}
+              attribution="CHS / DFO"
+            />
+          </LayersControl.Overlay>
+
+          <LayersControl.Overlay name="NOAA Nautical Charts">
+            <TileLayer
+              url="https://tileservice.charts.noaa.gov/tiles/50000_1/{z}/{x}/{y}.png"
+              attribution="NOAA"
+              maxZoom={16}
+              opacity={0.7}
+            />
+          </LayersControl.Overlay>
+
           {GEONB_WMS_LAYERS.map((layer) => (
             <LayersControl.Overlay key={layer.id} checked={layer.checked} name={layer.label}>
               <WMSTileLayer
@@ -238,46 +291,6 @@ export function NBPilotChart({
               />
             </LayersControl.Overlay>
           ))}
-
-          {/* OpenSeaMap seamark overlay */}
-          <LayersControl.Overlay checked name="OpenSeaMap Seamarks">
-            <TileLayer
-              url="https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png"
-              attribution="&copy; OpenSeaMap"
-              maxZoom={18}
-              opacity={0.85}
-            />
-          </LayersControl.Overlay>
-
-          {/* CHS Canadian ENC overlay */}
-          <LayersControl.Overlay name="CHS Canadian ENC">
-            <WMSTileLayer
-              url="https://egisp.dfo-mpo.gc.ca/arcgis/rest/services/chs/ENC_MaritimeChartService/MapServer/exts/MaritimeChartService/WMSServer"
-              layers="10,6,8,2,0,9,1,12,3,7,11,5,4"
-              format="image/png"
-              transparent
-              opacity={0.7}
-              attribution="CHS / DFO"
-            />
-          </LayersControl.Overlay>
-
-          {/* Esri Ocean Basemap */}
-          <LayersControl.BaseLayer name="Esri Ocean Bathymetry">
-            <TileLayer
-              url="https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}"
-              attribution="Esri, GEBCO, NOAA"
-              maxZoom={13}
-            />
-          </LayersControl.BaseLayer>
-
-          {/* Esri Satellite */}
-          <LayersControl.BaseLayer name="Satellite Imagery">
-            <TileLayer
-              url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-              attribution="Esri, Maxar"
-              maxZoom={19}
-            />
-          </LayersControl.BaseLayer>
 
           {/* Maritime Ports */}
           <LayersControl.Overlay checked name="Maritime Ports">
