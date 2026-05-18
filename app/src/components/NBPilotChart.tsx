@@ -1,7 +1,7 @@
 import L, { type LatLngExpression } from 'leaflet';
-import { CircleMarker, LayerGroup, LayersControl, MapContainer, Pane, Polygon, Popup, Polyline, TileLayer, WMSTileLayer, useMap } from 'react-leaflet';
+import { Circle, CircleMarker, LayerGroup, LayersControl, MapContainer, Pane, Polygon, Popup, Polyline, TileLayer, WMSTileLayer, useMap } from 'react-leaflet';
 import { useEffect, useMemo } from 'react';
-import { AlertTriangle, Database, Droplets, FileLock2, Ship } from 'lucide-react';
+import { AlertTriangle, Anchor, Database, Droplets, FileLock2, Ship } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn, formatCoordinate, formatHeading } from '@/lib/utils';
 import type { CommunityAggregateFeature, CommunityOverlayFeature } from '@/lib/community-overlay';
@@ -14,8 +14,26 @@ import {
   isWithinNBPilotBounds,
   type MapPosition,
 } from '@/lib/nb-chart-sources';
+import chartSourcesData from '@/data/chart-sources.json';
 
 import type { MeshVessel } from '@/store/meshStore';
+import { WeatherMapLayer } from './WeatherOverlay';
+
+const maritimePorts = chartSourcesData.maritimePorts;
+
+const FACILITY_LABELS: Record<string, string> = {
+  fuel: 'Fuel',
+  pumpout: 'Pumpout',
+  repair: 'Repair',
+  customs: 'Customs',
+  'haul-out': 'Haul-out',
+};
+
+const PROVINCE_COLORS: Record<string, string> = {
+  NB: '#0369a1',
+  NS: '#7c3aed',
+  PEI: '#b45309',
+};
 
 type AisTarget = {
   mmsi: string;
@@ -34,6 +52,14 @@ type NBPilotChartProps = {
   activeRouteId?: string | null;
   communityFeatures?: CommunityOverlayFeature[];
   communityAggregateFeatures?: CommunityAggregateFeature[];
+  anchorWatch?: {
+    position: { latitude: number; longitude: number };
+    maxRadius: number;
+    currentRadius: number | null;
+    track: Array<{ latitude: number; longitude: number }>;
+  } | null;
+  weatherData?: import('@/lib/weather-service').MarineWeatherData | null;
+  weatherLayers?: { wind?: boolean; waves?: boolean; pressure?: boolean };
   className?: string;
 };
 
@@ -154,6 +180,9 @@ export function NBPilotChart({
   activeRouteId = null,
   communityFeatures = [],
   communityAggregateFeatures = [],
+  anchorWatch = null,
+  weatherData = null,
+  weatherLayers,
   className,
 }: NBPilotChartProps) {
   const usablePosition = isWithinNBPilotBounds(position) ? position : null;
@@ -209,6 +238,88 @@ export function NBPilotChart({
               />
             </LayersControl.Overlay>
           ))}
+
+          {/* OpenSeaMap seamark overlay */}
+          <LayersControl.Overlay checked name="OpenSeaMap Seamarks">
+            <TileLayer
+              url="https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png"
+              attribution="&copy; OpenSeaMap"
+              maxZoom={18}
+              opacity={0.85}
+            />
+          </LayersControl.Overlay>
+
+          {/* CHS Canadian ENC overlay */}
+          <LayersControl.Overlay name="CHS Canadian ENC">
+            <WMSTileLayer
+              url="https://egisp.dfo-mpo.gc.ca/arcgis/rest/services/chs/ENC_MaritimeChartService/MapServer/exts/MaritimeChartService/WMSServer"
+              layers="10,6,8,2,0,9,1,12,3,7,11,5,4"
+              format="image/png"
+              transparent
+              opacity={0.7}
+              attribution="CHS / DFO"
+            />
+          </LayersControl.Overlay>
+
+          {/* Esri Ocean Basemap */}
+          <LayersControl.BaseLayer name="Esri Ocean Bathymetry">
+            <TileLayer
+              url="https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}"
+              attribution="Esri, GEBCO, NOAA"
+              maxZoom={13}
+            />
+          </LayersControl.BaseLayer>
+
+          {/* Esri Satellite */}
+          <LayersControl.BaseLayer name="Satellite Imagery">
+            <TileLayer
+              url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+              attribution="Esri, Maxar"
+              maxZoom={19}
+            />
+          </LayersControl.BaseLayer>
+
+          {/* Maritime Ports */}
+          <LayersControl.Overlay checked name="Maritime Ports">
+            <LayerGroup>
+              {maritimePorts.map((port) => (
+                <CircleMarker
+                  key={port.name}
+                  center={[port.lat, port.lon]}
+                  radius={7}
+                  pathOptions={{
+                    color: PROVINCE_COLORS[port.province] ?? '#475569',
+                    fillColor: PROVINCE_COLORS[port.province] ?? '#475569',
+                    fillOpacity: 0.85,
+                    weight: 2,
+                  }}
+                >
+                  <Popup>
+                    <div className="space-y-1.5 text-sm min-w-[160px]">
+                      <strong className="flex items-center gap-1.5">
+                        <Anchor className="h-3.5 w-3.5" />
+                        {port.name}
+                      </strong>
+                      <div className="text-muted-foreground">{port.province} &middot; VHF Ch {port.vhfChannel}</div>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {port.facilities.map((f) => (
+                          <span key={f} className="inline-block rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-medium text-blue-800 dark:bg-blue-900/40 dark:text-blue-200">
+                            {FACILITY_LABELS[f] ?? f}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </Popup>
+                </CircleMarker>
+              ))}
+            </LayerGroup>
+          </LayersControl.Overlay>
+
+          <LayersControl.Overlay name="Wind &amp; Waves">
+            <LayerGroup>
+              <WeatherMapLayer weatherData={weatherData} showWind={weatherLayers?.wind ?? true} showWaves={weatherLayers?.waves ?? true} showPressure={weatherLayers?.pressure ?? false} />
+            </LayerGroup>
+          </LayersControl.Overlay>
         </LayersControl>
 
         <Pane name="harbourmesh-routes" style={{ zIndex: 620 }}>
@@ -262,6 +373,29 @@ export function NBPilotChart({
             );
           })}
         </Pane>
+
+        {anchorWatch && (
+          <Pane name="harbourmesh-anchor-watch" style={{ zIndex: 625 }}>
+            <Circle
+              center={[anchorWatch.position.latitude, anchorWatch.position.longitude]}
+              radius={anchorWatch.maxRadius}
+              pathOptions={{ color: '#10b981', weight: 2, dashArray: '8 4', fillColor: '#10b981', fillOpacity: 0.05 }}
+            />
+            <CircleMarker
+              center={[anchorWatch.position.latitude, anchorWatch.position.longitude]}
+              radius={6}
+              pathOptions={{ color: '#dc2626', fillColor: '#ef4444', fillOpacity: 1, weight: 2 }}
+            >
+              <Popup><strong>Anchor Position</strong><br />Radius: {anchorWatch.maxRadius.toFixed(0)}m</Popup>
+            </CircleMarker>
+            {anchorWatch.track.length > 1 && (
+              <Polyline
+                positions={anchorWatch.track.map((p) => [p.latitude, p.longitude] as LatLngExpression)}
+                pathOptions={{ color: '#6366f1', weight: 1.5, opacity: 0.6 }}
+              />
+            )}
+          </Pane>
+        )}
 
         <Pane name="harbourmesh-community-overlay" style={{ zIndex: 635 }}>
           {visibleAggregateFeatures.map((feature) => {

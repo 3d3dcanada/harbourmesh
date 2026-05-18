@@ -17,6 +17,7 @@ import {
   type ConsentSettings,
   type AIProviderConfig,
   type TelemetryMessage,
+  type MotionPayload,
   type LogEntry,
   type Task,
   type Document,
@@ -420,7 +421,16 @@ export const useLogTaskStore = create<LogTaskStore>()(
 interface TelemetryStore {
   messages: TelemetryMessage[];
   latestPosition: GeoPosition | null;
-  latestMotion: { roll: number; pitch: number; yaw: number } | null;
+  latestMotion: {
+    roll: number;
+    pitch: number;
+    yaw: number;
+    heave?: number;
+    surge?: number;
+    sway?: number;
+    linearAcceleration?: { x: number; y: number; z: number };
+    angularVelocity?: { x: number; y: number; z: number };
+  } | null;
   latestEnvironment: {
     depth?: number;
     waterTemp?: number;
@@ -476,8 +486,17 @@ export const useTelemetryStore = create<TelemetryStore>()((set, get) => ({
           break;
         }
         case 'motion': {
-          const motion = message.payload as { roll: number; pitch: number; yaw: number };
-          newState.latestMotion = motion;
+          const motion = message.payload as MotionPayload;
+          newState.latestMotion = {
+            roll: motion.roll,
+            pitch: motion.pitch,
+            yaw: motion.yaw,
+            heave: motion.heave,
+            surge: motion.surge,
+            sway: motion.sway,
+            linearAcceleration: motion.linearAcceleration,
+            angularVelocity: motion.angularVelocity,
+          };
           break;
         }
         case 'environment': {
@@ -686,7 +705,7 @@ export const useAIStore = create<AIStore>()(
 // SETTINGS STORE
 // ============================================================================
 
-export type TelemetryMode = 'replay' | 'signalk' | 'simulated';
+export type TelemetryMode = 'replay' | 'signalk' | 'simulated' | 'phone';
 
 export interface BoatNodeSettings {
   deviceId: string;
@@ -746,6 +765,11 @@ interface SettingsStore {
     dateFormat: string;
     timeFormat: '12h' | '24h';
   };
+  voiceAutoSend: boolean;
+  voiceLanguage: string;
+  weatherLayers: { wind: boolean; waves: boolean; pressure: boolean };
+  weatherRefreshInterval: number;
+  dashboardLayout: Record<string, unknown> | null;
   boatNode: BoatNodeSettings;
 
   // Actions
@@ -754,6 +778,11 @@ interface SettingsStore {
   setDemoModeEnabled: (enabled: boolean) => void;
   setUserPreferences: (preferences: SettingsStore['userPreferences']) => void;
   updateUserPreferences: (updates: Partial<SettingsStore['userPreferences']>) => void;
+  setVoiceAutoSend: (enabled: boolean) => void;
+  setVoiceLanguage: (language: string) => void;
+  setWeatherLayers: (layers: Partial<SettingsStore['weatherLayers']>) => void;
+  setWeatherRefreshInterval: (interval: number) => void;
+  setDashboardLayout: (layout: Record<string, unknown> | null) => void;
   updateBoatNodeSettings: (updates: Partial<BoatNodeSettings>) => void;
 }
 
@@ -770,6 +799,11 @@ export const useSettingsStore = create<SettingsStore>()(
 	        dateFormat: 'YYYY-MM-DD',
 	        timeFormat: '24h' as const,
 	      },
+      voiceAutoSend: true,
+      voiceLanguage: 'en-US',
+      weatherLayers: { wind: true, waves: true, pressure: false },
+      weatherRefreshInterval: 30,
+      dashboardLayout: null,
 	      boatNode: DEFAULT_BOAT_NODE_SETTINGS,
 
       setConsent: (consent) => set({ consent }),
@@ -783,6 +817,14 @@ export const useSettingsStore = create<SettingsStore>()(
 	        set((state) => ({
 	          userPreferences: { ...state.userPreferences, ...updates },
 	        })),
+      setVoiceAutoSend: (enabled) => set({ voiceAutoSend: enabled }),
+      setVoiceLanguage: (language) => set({ voiceLanguage: language }),
+      setWeatherLayers: (layers) =>
+        set((state) => ({
+          weatherLayers: { ...state.weatherLayers, ...layers },
+        })),
+      setWeatherRefreshInterval: (interval) => set({ weatherRefreshInterval: interval }),
+      setDashboardLayout: (layout) => set({ dashboardLayout: layout }),
 	      updateBoatNodeSettings: (updates) =>
 	        set((state) => ({
 	          boatNode: { ...state.boatNode, ...updates },
@@ -1376,4 +1418,86 @@ export const useOnboardingStore = create<OnboardingStore>()((set) => ({
       ),
     })),
 }));
+// ============================================================================
+// FLEET STORE (Manifests & Procedures)
+// ============================================================================
+
+export interface FleetManifest {
+  id: string;
+  vesselId: string;
+  vesselName: string;
+  departure: string;
+  return: string;
+  status: 'planned' | 'underway' | 'completed' | 'cancelled';
+  crew: Array<{ name: string; role: string; checkedIn: boolean }>;
+  passengers: Array<{ name: string; checkedIn: boolean }>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FleetProcedure {
+  id: string;
+  name: string;
+  category: string;
+  assignedTo: string;
+  frequency: string;
+  lastCompleted: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface FleetStore {
+  manifests: FleetManifest[];
+  procedures: FleetProcedure[];
+
+  addManifest: (manifest: FleetManifest) => void;
+  updateManifest: (id: string, updates: Partial<FleetManifest>) => void;
+  deleteManifest: (id: string) => void;
+
+  addProcedure: (procedure: FleetProcedure) => void;
+  updateProcedure: (id: string, updates: Partial<FleetProcedure>) => void;
+  deleteProcedure: (id: string) => void;
+}
+
+export const useFleetStore = create<FleetStore>()(
+  persist(
+    (set) => ({
+      manifests: [],
+      procedures: [],
+
+      addManifest: (manifest) =>
+        set((state) => ({ manifests: [manifest, ...state.manifests] })),
+      updateManifest: (id, updates) =>
+        set((state) => ({
+          manifests: state.manifests.map((m) =>
+            m.id === id ? { ...m, ...updates, updatedAt: new Date().toISOString() } : m,
+          ),
+        })),
+      deleteManifest: (id) =>
+        set((state) => ({ manifests: state.manifests.filter((m) => m.id !== id) })),
+
+      addProcedure: (procedure) =>
+        set((state) => ({ procedures: [procedure, ...state.procedures] })),
+      updateProcedure: (id, updates) =>
+        set((state) => ({
+          procedures: state.procedures.map((p) =>
+            p.id === id ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p,
+          ),
+        })),
+      deleteProcedure: (id) =>
+        set((state) => ({ procedures: state.procedures.filter((p) => p.id !== id) })),
+    }),
+    {
+      name: 'harbormesh-fleet',
+      partialize: (state) => ({
+        manifests: state.manifests,
+        procedures: state.procedures,
+      }),
+    },
+  ),
+);
+
 export * from './meshStore';
+export * from './subscriptionStore';
+export * from './anchorWatchStore';
+export * from './socialStore';

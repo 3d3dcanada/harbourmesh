@@ -30,6 +30,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DataSourceNotice } from '@/components/DataSourceNotice';
 import { cn, formatDate, formatFileSize } from '@/lib/utils';
+import { storeFile, retrieveFile, deleteFile as deleteStoredFile } from '@/lib/document-storage';
 import { useAppStore, useDocumentStore, useSettingsStore, useVesselStore } from '@/store';
 import { DocumentType, UserRole, type Document } from '@/types';
 
@@ -245,34 +246,50 @@ export function Documents() {
   const [showUpload, setShowUpload] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState('all');
-  const [uploadDraft, setUploadDraft] = useState({
+  const [vesselFilter, setVesselFilter] = useState<'all' | 'current'>('all');
+  const [uploadDraft, setUploadDraft] = useState<{
+    type: DocumentType;
+    title: string;
+    sensitivity: Document['sensitivity']['level'];
+    neverForTraining: boolean;
+    file: File | null;
+  }>({
     type: DocumentType.MANUAL,
     title: '',
-    sensitivity: 'internal' as Document['sensitivity']['level'],
+    sensitivity: 'internal',
     neverForTraining: true,
+    file: null,
   });
   
   const usingDemoDocuments = documents.length === 0 && demoModeEnabled;
   const currentDocuments = usingDemoDocuments ? demoDocuments : documents;
 
-  const handleSaveDocument = () => {
+  const handleSaveDocument = async () => {
     if (!currentVessel) return;
 
     const now = new Date().toISOString();
     const documentId = crypto.randomUUID();
     const title = uploadDraft.title.trim() || 'Untitled Document';
-    const fileName = `${title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'document'}.metadata.json`;
+    const file = uploadDraft.file;
+    const fileName = file?.name ?? `${title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'document'}.metadata.json`;
+    const fileSize = file?.size ?? 0;
+    const mimeType = file?.type || 'application/json';
+
+    if (file) {
+      await storeFile(documentId, file);
+    }
+
     const document: Document = {
       id: documentId,
       vesselId: currentVessel.id,
       type: uploadDraft.type,
       title,
-      description: 'Metadata record only; file bytes are not stored in this local beta vault.',
-      storagePath: `local-metadata://${documentId}`,
+      description: file ? `Stored locally (${formatFileSize(fileSize)})` : 'Metadata record only',
+      storagePath: file ? `idb://${documentId}` : `local-metadata://${documentId}`,
       fileName,
-      fileSize: 0,
-      mimeType: 'application/json',
-      hash: `metadata-only:${documentId}`,
+      fileSize,
+      mimeType,
+      hash: `local:${documentId}`,
       metadata: {},
       sensitivity: {
         level: uploadDraft.sensitivity,
@@ -291,7 +308,23 @@ export function Documents() {
       title: '',
       sensitivity: 'internal',
       neverForTraining: true,
+      file: null,
     });
+  };
+
+  const handleDownloadDocument = async (doc: Document) => {
+    if (!doc.storagePath.startsWith('idb://')) return;
+    const stored = await retrieveFile(doc.id);
+    if (!stored) return;
+    const url = URL.createObjectURL(stored.blob);
+    const a = Object.assign(document.createElement('a'), { href: url, download: stored.name });
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDeleteDocument = async (docId: string) => {
+    await deleteStoredFile(docId);
+    deleteDocument(docId);
   };
   
   // Filter documents
@@ -300,20 +333,22 @@ export function Documents() {
                          doc.description?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesType = filterType === 'all' || doc.type === filterType;
     const matchesSensitivity = filterSensitivity === 'all' || doc.sensitivity.level === filterSensitivity;
-    
+    const matchesVessel = vesselFilter === 'all' || (currentVessel && doc.vesselId === currentVessel.id);
+
     // Tab filtering
     const matchesTab = activeTab === 'all' ||
                       (activeTab === 'vessel' && !doc.subjectId) ||
                       (activeTab === 'personal' && doc.subjectId) ||
-                      (activeTab === 'expiring' && doc.metadata.expiryDate && 
+                      (activeTab === 'expiring' && doc.metadata.expiryDate &&
                        new Date(doc.metadata.expiryDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
-    
-    return matchesSearch && matchesType && matchesSensitivity && matchesTab;
+
+    return matchesSearch && matchesType && matchesSensitivity && matchesTab && matchesVessel;
   });
   
   // Get expiring documents
   const expiringDocs = currentDocuments.filter((doc) => {
     if (!doc.metadata.expiryDate) return false;
+    if (vesselFilter === 'current' && currentVessel && doc.vesselId !== currentVessel.id) return false;
     const daysUntilExpiry = Math.ceil((new Date(doc.metadata.expiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
     return daysUntilExpiry <= 30 && daysUntilExpiry > 0;
   });
@@ -341,7 +376,7 @@ export function Documents() {
   };
   
   return (
-    <div className="flex h-[calc(100vh-4.5rem)] flex-col gap-2">
+    <div className="flex h-[calc(100dvh-3.5rem-4rem)] lg:h-[calc(100dvh-3.5rem)] flex-col gap-2">
       {/* Compact toolbar */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
@@ -464,10 +499,12 @@ export function Documents() {
                         <Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="h-3.5 w-3.5" /></Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem><Eye className="h-4 w-4 mr-2" />View</DropdownMenuItem>
-                        <DropdownMenuItem><Download className="h-4 w-4 mr-2" />Download</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDownloadDocument(doc)}><Eye className="h-4 w-4 mr-2" />View</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDownloadDocument(doc)} disabled={!doc.storagePath.startsWith('idb://')}>
+                          <Download className="h-4 w-4 mr-2" />Download
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-500" disabled={usingDemoDocuments} onClick={() => deleteDocument(doc.id)}>
+                        <DropdownMenuItem className="text-red-500" disabled={usingDemoDocuments} onClick={() => handleDeleteDocument(doc.id)}>
                           <Trash2 className="h-4 w-4 mr-2" />Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -503,7 +540,7 @@ export function Documents() {
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) {
-                    setUploadDraft((draft) => ({ ...draft, title: draft.title || file.name, fileName: file.name, fileSizeBytes: file.size }));
+                    setUploadDraft((draft) => ({ ...draft, title: draft.title || file.name, file }));
                   }
                 }}
               />
@@ -579,7 +616,9 @@ export function Documents() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowUpload(false)}>Cancel</Button>
-            <Button onClick={handleSaveDocument} disabled={!currentVessel}>Save Metadata</Button>
+            <Button onClick={handleSaveDocument} disabled={!currentVessel}>
+              {uploadDraft.file ? 'Upload & Save' : 'Save Metadata'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

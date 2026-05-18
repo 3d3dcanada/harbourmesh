@@ -7,6 +7,7 @@ export const PORTABLE_STORE_KEYS = [
   'harbormesh-local-chart-library',
   'harbormesh-settings',
   'harbormesh-community-data',
+  'harbormesh-fleet',
 ] as const;
 
 export const EXCLUDED_STORE_KEYS = [

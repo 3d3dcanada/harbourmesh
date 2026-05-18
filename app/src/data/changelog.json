@@ -1,0 +1,59 @@
+[
+  {
+    "version": "3.0.0",
+    "date": "2026-05-17",
+    "title": "Real Billing, Legal, and Product Polish",
+    "entries": [
+      "Ko-fi payment integration for Pro and Fleet tiers",
+      "Server-side subscription validation and tier enforcement",
+      "Terms of Service, Privacy Policy, and Data Rights pages",
+      "Changelog and version display in sidebar",
+      "Onboarding wizard now persists vessel data correctly",
+      "PWA install prompt for offline use",
+      "Empty states across all sections",
+      "Bitcoin and e-transfer payment options"
+    ]
+  },
+  {
+    "version": "2.1.0",
+    "date": "2026-05-10",
+    "title": "Community Data and Mesh Networking",
+    "entries": [
+      "Community depth sounding uploads",
+      "Hazard reporting with P2P mesh sync",
+      "Observation sharing with quality filters",
+      "GunDB-based mesh networking between vessels",
+      "NB Pilot reference route with waypoints"
+    ]
+  },
+  {
+    "version": "2.0.0",
+    "date": "2026-04-28",
+    "title": "Navigation HUD and Fleet Console",
+    "entries": [
+      "Full navigation HUD with real-time telemetry",
+      "Phone sensor integration for motion and position",
+      "Signal K device support",
+      "Fleet management console with manifests",
+      "3D vessel model viewer",
+      "Anchor watch alarm system",
+      "Weather overlay on charts",
+      "Departure planner"
+    ]
+  },
+  {
+    "version": "1.0.0",
+    "date": "2026-03-15",
+    "title": "Initial Release",
+    "entries": [
+      "Vessel profile and digital twin",
+      "Boat map with space management",
+      "Inventory tracking with categories",
+      "Document storage and management",
+      "Log book and task management",
+      "Basic chart navigation with GPS",
+      "AI companion integration",
+      "Dark and light theme support"
+    ]
+  }
+]

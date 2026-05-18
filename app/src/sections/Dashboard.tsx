@@ -3,7 +3,8 @@
  * Main overview screen showing vessel status, alerts, and quick actions
  */
 
-import React from 'react';
+import React, { useState } from 'react';
+import { useMemo } from 'react';
 import {
   MapPin,
   Wind,
@@ -20,14 +21,19 @@ import {
   Anchor,
   Compass,
   Gauge,
+  Waves,
   Zap,
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { AIAssistButton } from '@/components/AIAssistButton';
 import { cn, formatCoordinate, formatHeading, formatRelativeTime } from '@/lib/utils';
+import { LayoutGrid } from 'lucide-react';
+import { resolveHeading } from '@/lib/heading';
 import { useTelemetry } from '@/hooks/useTelemetry';
 import { useLogTaskStore, useDocumentStore, useSettingsStore, useVesselStore, useAppStore } from '@/store';
+import { getNearestTideInfo, type NearestTideInfo } from '@/lib/tide-service';
 import type { LogEntry, Task } from '@/types';
 
 // Quick stat card component
@@ -51,10 +57,15 @@ function StatCard({ title, value, unit, icon: Icon, trend, trendValue, status = 
   };
   
   return (
-    <div 
+    <div
       className={cn(
-        'flex flex-col justify-center px-3 py-2 border rounded-md bg-card shadow-sm min-w-0',
-        onClick && 'cursor-pointer hover:bg-muted/50 transition-colors'
+        'flex flex-col justify-center px-3 py-2.5 border rounded-xl bg-card shadow-xs min-w-0',
+        'border-l-[3px]',
+        status === 'good' ? 'border-l-emerald-500' :
+        status === 'warning' ? 'border-l-amber-500' :
+        status === 'critical' ? 'border-l-red-500' :
+        'border-l-primary/30',
+        onClick && 'cursor-pointer hover:bg-surface-2 hover:shadow-sm transition-all'
       )}
       onClick={onClick}
     >
@@ -66,7 +77,7 @@ function StatCard({ title, value, unit, icon: Icon, trend, trendValue, status = 
         {trend && (
           <div className={cn(
             'flex items-center text-[10px] font-medium ml-2 shrink-0',
-            trend === 'up' ? 'text-emerald-500' : 
+            trend === 'up' ? 'text-emerald-500' :
             trend === 'down' ? 'text-red-500' : 'text-slate-500'
           )}>
             <TrendingUp className={cn('h-3 w-3 mr-0.5', trend === 'down' && 'rotate-180')} />
@@ -75,7 +86,7 @@ function StatCard({ title, value, unit, icon: Icon, trend, trendValue, status = 
         )}
       </div>
       <div className="flex items-baseline gap-1">
-        <span className="text-lg font-bold tracking-tight truncate">{value}</span>
+        <span className="text-lg font-black tracking-tight truncate">{value}</span>
         {unit && <span className="text-xs text-muted-foreground shrink-0">{unit}</span>}
       </div>
     </div>
@@ -205,12 +216,14 @@ function TaskItem({ task }: { task: Task }) {
 }
 
 export function Dashboard() {
+  const [editMode, setEditMode] = useState(false);
   const { logs, tasks } = useLogTaskStore();
   const { documents } = useDocumentStore();
   const { currentVessel, items } = useVesselStore();
   const demoModeEnabled = useSettingsStore((state) => state.demoModeEnabled);
   const telemetryEnabled = Boolean(currentVessel) || demoModeEnabled;
   const { latestPosition, latestMotion, latestEnvironment, latestEngine } = useTelemetry({ autoConnect: telemetryEnabled });
+  const resolvedHead = resolveHeading(latestMotion?.yaw, latestPosition?.cog, latestPosition?.sog);
   const { setActiveView } = useAppStore();
   
   // Get recent items
@@ -228,21 +241,34 @@ export function Dashboard() {
   const engineHours = firstEngine ? firstEngine[1].hours : undefined;
   const lowStockItems = items.filter((item) => item.reorderThreshold !== undefined && item.quantity <= item.reorderThreshold);
   const categoryCount = new Set(items.map((item) => item.category)).size;
-  
+
+  const tideInfo = useMemo<NearestTideInfo | null>(() => {
+    if (!latestPosition) return null;
+    return getNearestTideInfo(latestPosition.latitude, latestPosition.longitude);
+  }, [latestPosition?.latitude, latestPosition?.longitude]);
+
+  const nextTideLabel = tideInfo?.nextHigh
+    ? `H ${tideInfo.nextHigh.height.toFixed(1)}m`
+    : tideInfo?.nextLow
+      ? `L ${tideInfo.nextLow.height.toFixed(1)}m`
+      : '--';
+
+  const nextTideTime = tideInfo?.nextHigh?.time ?? tideInfo?.nextLow?.time;
+
   return (
-    <div className="flex h-[calc(100vh-4.5rem)] flex-col gap-2">
+    <div className="flex h-[calc(100dvh-3.5rem-4rem)] lg:h-[calc(100dvh-3.5rem)] flex-col gap-3">
       {/* Dense Header & Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-card border rounded-md p-2 shadow-sm shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-card border rounded-xl p-3 shadow-xs shrink-0">
         <div className="flex items-center gap-3 px-1">
-          <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary/10 text-primary">
-            <Anchor className="h-4 w-4" />
+          <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-cyan-600 shadow-sm shadow-primary/20">
+            <Anchor className="h-4 w-4 text-white" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-sm font-bold tracking-tight truncate leading-none">
+            <h1 className="text-sm font-black tracking-tight truncate leading-none">
               {currentVessel ? currentVessel.name : 'Welcome to HarborMesh'}
             </h1>
             <p className="text-[11px] text-muted-foreground mt-0.5 truncate leading-none">
-              {currentVessel 
+              {currentVessel
                 ? `${currentVessel.type.replace(/_/g, ' ')} • Active`
                 : 'Setup required'
               }
@@ -262,68 +288,103 @@ export function Dashboard() {
             <Compass className="h-3.5 w-3.5 mr-1.5" />
             Navigate
           </Button>
+          <Button
+            variant={editMode ? 'default' : 'outline'}
+            size="sm"
+            className="h-8 text-xs hidden md:flex"
+            onClick={() => setEditMode(!editMode)}
+          >
+            <LayoutGrid className="h-3.5 w-3.5 mr-1.5" />
+            {editMode ? 'Done' : 'Customize'}
+          </Button>
+          <AIAssistButton prompt="Give me a full status report on my vessel" label="Ask AI" />
         </div>
       </div>
       
       {/* Dense Stats Strip */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 shrink-0">
-        <StatCard
-          title="Position"
-          value={telemetryEnabled && latestPosition 
-            ? `${formatCoordinate(latestPosition.latitude, 'lat').split(' ')[0]} ${formatCoordinate(latestPosition.longitude, 'lon').split(' ')[0]}`
-            : '--'
-          }
-          icon={MapPin}
-          status="good"
-          onClick={() => setActiveView('navigation')}
-        />
-        <StatCard
-          title="Speed"
-          value={telemetryEnabled ? latestPosition?.sog?.toFixed(1) || '--' : '--'}
-          unit="kn"
-          icon={Navigation}
-          status={latestPosition && latestPosition.sog && latestPosition.sog > 0 ? 'good' : 'neutral'}
-        />
-        <StatCard
-          title="Heading"
-          value={telemetryEnabled && latestMotion ? formatHeading(latestMotion.yaw).split(' ')[0] : '--'}
-          icon={Compass}
-          status="good"
-        />
-        <StatCard
-          title="Depth"
-          value={telemetryEnabled ? latestEnvironment?.depth?.toFixed(1) || '--' : '--'}
-          unit="m"
-          icon={Droplets}
-          status={latestEnvironment?.depth && latestEnvironment.depth < 5 ? 'warning' : 'good'}
-        />
-        <StatCard
-          title="Wind"
-          value={telemetryEnabled ? latestEnvironment?.windSpeed?.toFixed(0) || '--' : '--'}
-          unit="kn"
-          icon={Wind}
-          status="good"
-        />
-        <StatCard
-          title="Engine"
-          value={telemetryEnabled && engineHours !== undefined ? engineHours.toFixed(1) : '--'}
-          unit="hrs"
-          icon={Gauge}
-          status="good"
-        />
+      <div className="flex overflow-x-auto gap-3 snap-x snap-mandatory md:grid md:grid-cols-4 md:overflow-visible lg:grid-cols-7 shrink-0 -mx-2 px-2 md:mx-0 md:px-0">
+        <div className="card-stagger min-w-[140px] snap-center flex-shrink-0 md:min-w-0 md:flex-shrink" style={{ animationDelay: '0ms' }}>
+          <StatCard
+            title="Position"
+            value={telemetryEnabled && latestPosition
+              ? `${latestPosition.latitude.toFixed(4)}° ${latestPosition.longitude.toFixed(4)}°`
+              : '--'
+            }
+            icon={MapPin}
+            status="good"
+            onClick={() => setActiveView('navigation')}
+          />
+        </div>
+        <div className="card-stagger min-w-[140px] snap-center flex-shrink-0 md:min-w-0 md:flex-shrink" style={{ animationDelay: '50ms' }}>
+          <StatCard
+            title="Speed"
+            value={telemetryEnabled && latestPosition?.sog ? latestPosition.sog.toFixed(1) : '--'}
+            unit="kn"
+            icon={Navigation}
+            status={latestPosition?.sog && latestPosition.sog > 0 ? 'good' : 'neutral'}
+          />
+        </div>
+        <div className="card-stagger min-w-[140px] snap-center flex-shrink-0 md:min-w-0 md:flex-shrink" style={{ animationDelay: '100ms' }}>
+          <StatCard
+            title="Heading"
+            value={telemetryEnabled && resolvedHead.source !== 'none' ? formatHeading(resolvedHead.heading).split(' ')[0] : '--'}
+            icon={Compass}
+            status="good"
+          />
+        </div>
+        <div className="card-stagger min-w-[140px] snap-center flex-shrink-0 md:min-w-0 md:flex-shrink" style={{ animationDelay: '150ms' }}>
+          <StatCard
+            title="Depth"
+            value={telemetryEnabled ? latestEnvironment?.depth?.toFixed(1) || '--' : '--'}
+            unit="m"
+            icon={Droplets}
+            status={latestEnvironment?.depth && latestEnvironment.depth < 5 ? 'warning' : 'good'}
+          />
+        </div>
+        <div className="card-stagger min-w-[140px] snap-center flex-shrink-0 md:min-w-0 md:flex-shrink" style={{ animationDelay: '200ms' }}>
+          <StatCard
+            title="Wind"
+            value={telemetryEnabled ? latestEnvironment?.windSpeed?.toFixed(0) || '--' : '--'}
+            unit="kn"
+            icon={Wind}
+            status="good"
+          />
+        </div>
+        <div className="card-stagger min-w-[140px] snap-center flex-shrink-0 md:min-w-0 md:flex-shrink" style={{ animationDelay: '250ms' }}>
+          <StatCard
+            title="Tides"
+            value={nextTideLabel}
+            unit={nextTideTime ? new Date(nextTideTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+            icon={Waves}
+            status={tideInfo ? 'good' : 'neutral'}
+            onClick={() => setActiveView('navigation')}
+          />
+        </div>
+        <div className="card-stagger min-w-[140px] snap-center flex-shrink-0 md:min-w-0 md:flex-shrink" style={{ animationDelay: '300ms' }}>
+          <StatCard
+            title="Engine"
+            value={telemetryEnabled && engineHours !== undefined ? engineHours.toFixed(1) : '--'}
+            unit="hrs"
+            icon={Gauge}
+            status="good"
+          />
+        </div>
       </div>
       
       {/* Main Content Workspace Grid */}
-      <div className="flex flex-1 flex-col lg:flex-row gap-2 min-h-0">
+      <div className={cn(
+        "flex flex-1 flex-col lg:flex-row gap-3 min-h-0",
+        editMode && "[&>div>div]:border-dashed [&>div>div]:border-blue-400/50"
+      )}>
         
         {/* Left Column - System & Activity */}
-        <div className="flex-1 flex flex-col gap-2 min-h-0 lg:w-2/3">
+        <div className="flex-1 flex flex-col gap-3 min-h-0 lg:w-2/3">
           {/* Alerts / System Status */}
-          <Card className="flex flex-col border-muted/50 shadow-sm shrink-0">
-            <CardHeader className="p-2.5 border-b bg-muted/20">
+          <Card className="flex flex-col border rounded-xl shadow-xs shrink-0">
+            <CardHeader className="p-2.5 border-b bg-surface-2">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-xs font-semibold flex items-center gap-1.5">
-                  <Activity className="h-3.5 w-3.5" />
+                <CardTitle className="text-xs font-bold flex items-center gap-1.5">
+                  <Activity className="h-3.5 w-3.5 text-cyan-500" />
                   System Status
                 </CardTitle>
                 <Badge variant="outline" className={cn("text-[10px] font-medium h-5 px-1.5", currentVessel ? 'text-emerald-500 border-emerald-200' : 'text-amber-500 border-amber-200')}>
@@ -377,11 +438,11 @@ export function Dashboard() {
           </Card>
           
           {/* Recent Activity */}
-          <Card className="flex-1 flex flex-col border-muted/50 shadow-sm min-h-0">
-            <CardHeader className="p-2.5 border-b bg-muted/20">
+          <Card className="flex-1 flex flex-col border rounded-xl shadow-xs min-h-0">
+            <CardHeader className="p-2.5 border-b bg-surface-2">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-xs font-semibold flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5" />
+                <CardTitle className="text-xs font-bold flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5 text-amber-500" />
                   Recent Activity
                 </CardTitle>
                 <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2" onClick={() => setActiveView('logs')}>
@@ -398,9 +459,13 @@ export function Dashboard() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-6 text-muted-foreground">
-                    <Activity className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                    <p className="text-xs">No recent activity</p>
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Anchor className="h-10 w-10 mx-auto mb-3 opacity-20" />
+                    <p className="text-sm font-medium">All quiet on the water</p>
+                    <p className="text-xs mt-1">Your voyage logs and events will appear here.</p>
+                    <Button variant="outline" size="sm" className="mt-3 text-xs" onClick={() => setActiveView('logs')}>
+                      Start Logging
+                    </Button>
                   </div>
                 )}
               </div>
@@ -409,14 +474,14 @@ export function Dashboard() {
         </div>
         
         {/* Right Column - Tasks & Inventory */}
-        <div className="flex flex-col gap-2 min-h-0 lg:w-1/3 shrink-0">
+        <div className="flex flex-col gap-3 min-h-0 lg:w-1/3 shrink-0">
           
           {/* Pending Tasks */}
-          <Card className="flex-1 flex flex-col border-muted/50 shadow-sm min-h-0">
-            <CardHeader className="p-2.5 border-b bg-muted/20">
+          <Card className="flex-1 flex flex-col border rounded-xl shadow-xs min-h-0">
+            <CardHeader className="p-2.5 border-b bg-surface-2">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-xs font-semibold flex items-center gap-1.5">
-                  <CheckCircle2 className="h-3.5 w-3.5" />
+                <CardTitle className="text-xs font-bold flex items-center gap-1.5">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
                   Pending Tasks
                 </CardTitle>
                 <Badge variant="secondary" className="text-[10px] h-5 px-1.5">{openTasks.length}</Badge>
@@ -431,9 +496,10 @@ export function Dashboard() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-6 text-muted-foreground">
-                    <CheckCircle2 className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                    <p className="text-xs">All tasks completed!</p>
+                  <div className="text-center py-8 text-muted-foreground">
+                    <CheckCircle2 className="h-10 w-10 mx-auto mb-3 opacity-20 text-emerald-400" />
+                    <p className="text-sm font-medium">Ship-shape and Bristol fashion</p>
+                    <p className="text-xs mt-1">No pending tasks. Well done, Captain.</p>
                   </div>
                 )}
               </div>
@@ -441,10 +507,10 @@ export function Dashboard() {
           </Card>
           
           {/* Inventory Overview */}
-          <Card className="shrink-0 flex flex-col border-muted/50 shadow-sm">
-            <CardHeader className="p-2.5 border-b bg-muted/20">
-              <CardTitle className="text-xs font-semibold flex items-center gap-1.5">
-                <Package className="h-3.5 w-3.5" />
+          <Card className="shrink-0 flex flex-col border rounded-xl shadow-xs">
+            <CardHeader className="p-2.5 border-b bg-surface-2">
+              <CardTitle className="text-xs font-bold flex items-center gap-1.5">
+                <Package className="h-3.5 w-3.5 text-amber-500" />
                 Inventory Overview
               </CardTitle>
             </CardHeader>

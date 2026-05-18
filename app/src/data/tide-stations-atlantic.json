@@ -1,0 +1,6492 @@
+[
+  {
+    "id": "5cebf1df3d0f4a073c4bbc97",
+    "name": "Abbotts Harbour",
+    "code": "00382",
+    "latitude": 43.663818,
+    "longitude": -65.824022,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ee0fdc4b9b4be67d6",
+    "name": "Abegweit Passage",
+    "code": "01795",
+    "latitude": 46.166667,
+    "longitude": -63.733333,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc95",
+    "name": "Abrams River",
+    "code": "00380",
+    "latitude": 43.824506,
+    "longitude": -65.935217,
+    "timeZone": "",
+    "type": "TEMPORARY",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be65f9",
+    "name": "Abrams Village",
+    "code": "01838",
+    "latitude": 46.433333,
+    "longitude": -64.116667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66c3",
+    "name": "Adlavik Harbour",
+    "code": "01388",
+    "latitude": 55.033333,
+    "longitude": -58.866667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6696",
+    "name": "Admirals Beach",
+    "code": "00858",
+    "latitude": 47.016667,
+    "longitude": -53.65,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc4a",
+    "name": "Advocate",
+    "code": "00236",
+    "latitude": 45.331982,
+    "longitude": -64.775448,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be65ef",
+    "name": "Aggermore Point",
+    "code": "01778",
+    "latitude": 45.966667,
+    "longitude": -63.883333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc256",
+    "name": "Alberton",
+    "code": "01885",
+    "latitude": 46.7951034,
+    "longitude": -64.0582548,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6681",
+    "name": "Alder Point",
+    "code": "00614",
+    "latitude": 46.3,
+    "longitude": -60.283333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6660",
+    "name": "Alma",
+    "code": "00145",
+    "latitude": 45.583333,
+    "longitude": -64.966667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6665",
+    "name": "Amherst Basin",
+    "code": "00206",
+    "latitude": 45.833333,
+    "longitude": -64.283333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbf31",
+    "name": "Anchor Point",
+    "code": "02637",
+    "latitude": 51.233626,
+    "longitude": -56.797733,
+    "timeZone": "",
+    "type": "TEMPORARY",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6bf7",
+    "name": "Annandale",
+    "code": "01654",
+    "latitude": 46.266667,
+    "longitude": -62.433333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6928",
+    "name": "Annapolis Royal",
+    "code": "00327",
+    "latitude": 44.75,
+    "longitude": -65.516667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be6613",
+    "name": "Anse Bleu",
+    "code": "02114",
+    "latitude": 47.833333,
+    "longitude": -65.083333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc201",
+    "name": "Antigonish Harbour",
+    "code": "01590",
+    "latitude": 45.672456,
+    "longitude": -61.907064,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6666",
+    "name": "Apple River",
+    "code": "00226",
+    "latitude": 45.466667,
+    "longitude": -64.783333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc165",
+    "name": "Argentia",
+    "code": "00835",
+    "latitude": 47.289998,
+    "longitude": -53.991899,
+    "timeZone": "",
+    "type": "PERMANENT",
+    "operating": true
+  },
+  {
+    "id": "5cebf1e23d0f4a073c4bc110",
+    "name": "Arichat",
+    "code": "00580",
+    "latitude": 45.5104757,
+    "longitude": -61.01769383,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc205",
+    "name": "Arisaig",
+    "code": "01610",
+    "latitude": 45.7619714,
+    "longitude": -62.1716137,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc15c",
+    "name": "Arnolds Cove",
+    "code": "00818",
+    "latitude": 47.7579625,
+    "longitude": -53.990144,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1fd",
+    "name": "Aulds Cove",
+    "code": "01570",
+    "latitude": 45.648343,
+    "longitude": -61.435526,
+    "timeZone": "",
+    "type": "TEMPORARY",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6683",
+    "name": "Baddeck",
+    "code": "00640",
+    "latitude": 46.100254,
+    "longitude": -60.747687,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be6604",
+    "name": "Baie Ste Anne",
+    "code": "02002",
+    "latitude": 47.05,
+    "longitude": -64.95,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1ab",
+    "name": "Baie Verte",
+    "code": "01110",
+    "latitude": 49.937268,
+    "longitude": -56.191381,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbf1a",
+    "name": "Baie du Vin Island",
+    "code": "02028",
+    "latitude": 47.039056,
+    "longitude": -65.146615,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6693",
+    "name": "Baine Harbour",
+    "code": "00770",
+    "latitude": 47.366667,
+    "longitude": -54.9,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc203",
+    "name": "Ballantynes Cove",
+    "code": "01600",
+    "latitude": 45.858721,
+    "longitude": -61.918052,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbca5",
+    "name": "Barrington Passage",
+    "code": "00415",
+    "latitude": 43.525632,
+    "longitude": -65.607207,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6b8f",
+    "name": "Barrios Beach",
+    "code": "01583",
+    "latitude": 45.640973,
+    "longitude": -61.627575,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc293",
+    "name": "Bas Neguac",
+    "code": "02020",
+    "latitude": 47.256519,
+    "longitude": -65.053075,
+    "timeZone": "",
+    "type": "TEMPORARY",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc2b1",
+    "name": "Bathurst Harbour",
+    "code": "02130",
+    "latitude": 47.614601,
+    "longitude": -65.639602,
+    "timeZone": "",
+    "type": "TEMPORARY",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1bf",
+    "name": "Battle Harbour",
+    "code": "01190",
+    "latitude": 52.2736235,
+    "longitude": -55.58394272,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6bb9",
+    "name": "Bauline",
+    "code": "00911",
+    "latitude": 47.716667,
+    "longitude": -52.833333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc64",
+    "name": "Baxters Harbour",
+    "code": "00305",
+    "latitude": 45.230788,
+    "longitude": -64.514883,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6bb8",
+    "name": "Bay Bulls",
+    "code": "00900",
+    "latitude": 47.313812,
+    "longitude": -52.806124,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6690",
+    "name": "Bay L'Argent",
+    "code": "00733",
+    "latitude": 47.55,
+    "longitude": -54.883333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be69d4",
+    "name": "Bay Roberts",
+    "code": "00932",
+    "latitude": 47.588812,
+    "longitude": -53.263168,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1ed",
+    "name": "Bay St. Lawrence",
+    "code": "01520",
+    "latitude": 47.002654,
+    "longitude": -60.467522,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be65ec",
+    "name": "Beach Point",
+    "code": "01675",
+    "latitude": 46.016667,
+    "longitude": -62.483333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6c6e",
+    "name": "Beach Point",
+    "code": "02702",
+    "latitude": 48.766667,
+    "longitude": -58.8,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e23d0f4a073c4bbfae",
+    "name": "Beachside",
+    "code": "01097",
+    "latitude": 49.643134,
+    "longitude": -55.89575,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe6b",
+    "name": "Beaver Harbour",
+    "code": "00044",
+    "latitude": 45.06835,
+    "longitude": -66.739534,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e23d0f4a073c4bbfac",
+    "name": "Bedford Institute",
+    "code": "00491",
+    "latitude": 44.682262,
+    "longitude": -63.613239,
+    "timeZone": "",
+    "type": "PERMANENT",
+    "operating": true
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6b05",
+    "name": "Beldings Cove",
+    "code": "00050",
+    "latitude": 45.116667,
+    "longitude": -66.35,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc178",
+    "name": "Bell Island",
+    "code": "00915",
+    "latitude": 47.629755,
+    "longitude": -52.923473,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66b5",
+    "name": "Belle Isle",
+    "code": "01183",
+    "latitude": 51.883333,
+    "longitude": -55.383333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc2b8",
+    "name": "Belledune",
+    "code": "02145",
+    "latitude": 47.908954,
+    "longitude": -65.845892,
+    "timeZone": "",
+    "type": "PERMANENT",
+    "operating": true
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbeb2",
+    "name": "Belleoram",
+    "code": "00724",
+    "latitude": 47.526829,
+    "longitude": -55.409341,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc38",
+    "name": "Belliveau Village",
+    "code": "00172",
+    "latitude": 45.937102,
+    "longitude": -64.619739,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbeaa",
+    "name": "Big Bras D'Or",
+    "code": "00620",
+    "latitude": 46.281566,
+    "longitude": -60.424734,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6a15",
+    "name": "Big Brook",
+    "code": "02618",
+    "latitude": 51.516667,
+    "longitude": -56.15,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6675",
+    "name": "Big Tancook Island",
+    "code": "00470",
+    "latitude": 44.45,
+    "longitude": -64.166667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbee1",
+    "name": "Black Joke Cove",
+    "code": "01182",
+    "latitude": 51.999257,
+    "longitude": -55.279315,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc129",
+    "name": "Black Rock Point",
+    "code": "00623",
+    "latitude": 46.305169,
+    "longitude": -60.392998,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66ba",
+    "name": "Black Tickle",
+    "code": "01220",
+    "latitude": 53.466667,
+    "longitude": -55.783333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe69",
+    "name": "Blacks Harbour",
+    "code": "00042",
+    "latitude": 45.047841,
+    "longitude": -66.807898,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe91",
+    "name": "Blandford",
+    "code": "00479",
+    "latitude": 44.494691,
+    "longitude": -64.11229,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ee0fdc4b9b4be672a",
+    "name": "Blomidon",
+    "code": "00289",
+    "latitude": 45.266667,
+    "longitude": -64.35,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ee0fdc4b9b4be6849",
+    "name": "Blue Cove",
+    "code": "02640",
+    "latitude": 51.083333,
+    "longitude": -56.866667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ee0fdc4b9b4be6847",
+    "name": "Boat Harbour",
+    "code": "02614",
+    "latitude": 51.6,
+    "longitude": -55.983333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc189",
+    "name": "Bonavista",
+    "code": "00990",
+    "latitude": 48.650605,
+    "longitude": -53.115757,
+    "timeZone": "",
+    "type": "PERMANENT",
+    "operating": true
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1a1",
+    "name": "Botwood",
+    "code": "01080",
+    "latitude": 49.146832,
+    "longitude": -55.337226,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6b1e",
+    "name": "Boundary Creek",
+    "code": "00180",
+    "latitude": 46.05,
+    "longitude": -65.0,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbcb5",
+    "name": "Boutiliers Point",
+    "code": "00482",
+    "latitude": 44.656852,
+    "longitude": -63.94656,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6655",
+    "name": "Boyles Cove",
+    "code": "00047",
+    "latitude": 45.133333,
+    "longitude": -66.5,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be65fa",
+    "name": "Brae Harbour",
+    "code": "01842",
+    "latitude": 46.616667,
+    "longitude": -64.2,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc169",
+    "name": "Branch",
+    "code": "00855",
+    "latitude": 46.878812,
+    "longitude": -53.949748,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbedd",
+    "name": "Bridgeport",
+    "code": "01065",
+    "latitude": 49.549643,
+    "longitude": -54.873393,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe8b",
+    "name": "Bridgewater",
+    "code": "00450",
+    "latitude": 44.371741,
+    "longitude": -64.505517,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1f9",
+    "name": "Broad Cove Marsh",
+    "code": "01550",
+    "latitude": 46.300635,
+    "longitude": -61.257343,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1d9",
+    "name": "Broomfield",
+    "code": "01365",
+    "latitude": 54.47233,
+    "longitude": -57.182573,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbef7",
+    "name": "Brownell Point",
+    "code": "01485",
+    "latitude": 59.392177,
+    "longitude": -63.877661,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be665b",
+    "name": "Browns Flats",
+    "code": "00095",
+    "latitude": 45.466667,
+    "longitude": -66.133333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be65f4",
+    "name": "Buctouche",
+    "code": "01817",
+    "latitude": 46.483333,
+    "longitude": -64.733333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be669e",
+    "name": "Bull Arm",
+    "code": "00966",
+    "latitude": 47.85,
+    "longitude": -53.95,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe7f",
+    "name": "Bunker Island Light",
+    "code": "00367",
+    "latitude": 43.812291,
+    "longitude": -66.143235,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe7d",
+    "name": "Bunker Island Wharf",
+    "code": "00366",
+    "latitude": 43.818936,
+    "longitude": -66.136363,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be692f",
+    "name": "Bunyans Cove",
+    "code": "01007",
+    "latitude": 48.4,
+    "longitude": -54.016667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc150",
+    "name": "Burin",
+    "code": "00760",
+    "latitude": 47.03573,
+    "longitude": -55.164358,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc297",
+    "name": "Burnt Church",
+    "code": "02025",
+    "latitude": 47.190671,
+    "longitude": -65.134805,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be668b",
+    "name": "Burnt Islands",
+    "code": "00669",
+    "latitude": 47.583333,
+    "longitude": -58.883333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc58",
+    "name": "Burntcoat Head",
+    "code": "00270",
+    "latitude": 45.311475,
+    "longitude": -63.805688,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6b45",
+    "name": "Butler Point",
+    "code": "00027",
+    "latitude": 45.016667,
+    "longitude": -66.933333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6c67",
+    "name": "Byron Bay (Copper Island)",
+    "code": "01374",
+    "latitude": 54.728082,
+    "longitude": -57.688218,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1d3",
+    "name": "Cabot Point",
+    "code": "01320",
+    "latitude": 53.719117,
+    "longitude": -59.0644,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6939",
+    "name": "Cahoon Wharf",
+    "code": "01667",
+    "latitude": 46.05,
+    "longitude": -62.55,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe75",
+    "name": "Cambridge Narrows",
+    "code": "00103",
+    "latitude": 45.829482,
+    "longitude": -65.95297,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc2bc",
+    "name": "Campbellton",
+    "code": "02175",
+    "latitude": 48.0115566,
+    "longitude": -66.6693986,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e23d0f4a073c4bc114",
+    "name": "Cannes",
+    "code": "00585",
+    "latitude": 45.636331,
+    "longitude": -60.959515,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc221",
+    "name": "Canoe Cove",
+    "code": "01710",
+    "latitude": 46.149224,
+    "longitude": -63.303736,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbcdb",
+    "name": "Canso Harbour",
+    "code": "00555",
+    "latitude": 45.338236,
+    "longitude": -60.995406,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6c4d",
+    "name": "Canso Lock (Atlantic side)",
+    "code": "00567",
+    "latitude": 45.647755,
+    "longitude": -61.413172,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be65e3",
+    "name": "Canso Lock (Gulf side)",
+    "code": "01569",
+    "latitude": 45.64966,
+    "longitude": -61.416138,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc237",
+    "name": "Cap Pel\u00e9",
+    "code": "01800",
+    "latitude": 46.235841,
+    "longitude": -64.26127,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc240",
+    "name": "Cap de Caissie",
+    "code": "01810",
+    "latitude": 46.312812,
+    "longitude": -64.509737,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc60",
+    "name": "Cape Blomidon",
+    "code": "00290",
+    "latitude": 45.30484,
+    "longitude": -64.349067,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc46",
+    "name": "Cape Capstan",
+    "code": "00225",
+    "latitude": 45.474004,
+    "longitude": -64.853811,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6c4f",
+    "name": "Cape Chidley",
+    "code": "01495",
+    "latitude": 60.33468,
+    "longitude": -64.451803,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc22d",
+    "name": "Cape Cliff",
+    "code": "01770",
+    "latitude": 45.876731,
+    "longitude": -63.480512,
+    "timeZone": "",
+    "type": "TEMPORARY",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc24c",
+    "name": "Cape Egmont",
+    "code": "01835",
+    "latitude": 46.408225,
+    "longitude": -64.133638,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc32",
+    "name": "Cape Enrage",
+    "code": "00150",
+    "latitude": 45.593584,
+    "longitude": -64.780225,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1ff",
+    "name": "Cape Jack",
+    "code": "01580",
+    "latitude": 45.683753,
+    "longitude": -61.574802,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc52",
+    "name": "Cape Sharp",
+    "code": "00250",
+    "latitude": 45.364449,
+    "longitude": -64.391893,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be666d",
+    "name": "Cape St. Marys",
+    "code": "00357",
+    "latitude": 44.083333,
+    "longitude": -66.2,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc235",
+    "name": "Cape Tormentine",
+    "code": "01790",
+    "latitude": 46.134676,
+    "longitude": -63.776757,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc4c",
+    "name": "Cape d'Or",
+    "code": "00240",
+    "latitude": 45.290438,
+    "longitude": -64.774936,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc2ad",
+    "name": "Caraquet",
+    "code": "02110",
+    "latitude": 47.79601475,
+    "longitude": -64.927602,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1d1",
+    "name": "Caravalla Cove",
+    "code": "01285",
+    "latitude": 54.054143,
+    "longitude": -58.593691,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be65e9",
+    "name": "Cardigan",
+    "code": "01658",
+    "latitude": 46.233333,
+    "longitude": -62.616667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc20d",
+    "name": "Caribou",
+    "code": "01640",
+    "latitude": 45.73928,
+    "longitude": -62.688116,
+    "timeZone": "",
+    "type": "PERMANENT",
+    "operating": true
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc193",
+    "name": "Carmanville",
+    "code": "01040",
+    "latitude": 49.403201,
+    "longitude": -54.281334,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1cb",
+    "name": "Cartwright",
+    "code": "01245",
+    "latitude": 53.70421458,
+    "longitude": -57.020407,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66a0",
+    "name": "Champneys West",
+    "code": "00982",
+    "latitude": 48.383333,
+    "longitude": -53.3,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6931",
+    "name": "Change Island Ferry Terminal",
+    "code": "01044",
+    "latitude": 49.566667,
+    "longitude": -54.4,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc199",
+    "name": "Change Islands",
+    "code": "01052",
+    "latitude": 49.67474,
+    "longitude": -54.400271,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc21f",
+    "name": "Charlottetown",
+    "code": "01700",
+    "latitude": 46.23012108,
+    "longitude": -63.1221766,
+    "timeZone": "",
+    "type": "PERMANENT",
+    "operating": true
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66b8",
+    "name": "Charlottetown, Labrador",
+    "code": "01212",
+    "latitude": 52.7734621,
+    "longitude": -56.1169256,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc18b",
+    "name": "Charlottetown, NL",
+    "code": "01008",
+    "latitude": 48.434052,
+    "longitude": -54.004372,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbee3",
+    "name": "Chateau Bay",
+    "code": "01185",
+    "latitude": 51.975223,
+    "longitude": -55.855186,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc29d",
+    "name": "Chatham",
+    "code": "02035",
+    "latitude": 47.029867,
+    "longitude": -65.47223,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6b85",
+    "name": "Chebogue",
+    "code": "00369",
+    "latitude": 43.806553,
+    "longitude": -66.080596,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be666f",
+    "name": "Chegoggin Point",
+    "code": "00364",
+    "latitude": 43.85,
+    "longitude": -66.166667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6d40",
+    "name": "Chester",
+    "code": "00465",
+    "latitude": 44.536383,
+    "longitude": -64.242787,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbef9",
+    "name": "Cheticamp",
+    "code": "01539",
+    "latitude": 46.625175,
+    "longitude": -61.016557,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbcbd",
+    "name": "Chezzetcook Inlet",
+    "code": "00493",
+    "latitude": 44.71092,
+    "longitude": -63.236669,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc82",
+    "name": "Church Point",
+    "code": "00353",
+    "latitude": 44.345634,
+    "longitude": -66.118497,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc180",
+    "name": "Clarenville",
+    "code": "00975",
+    "latitude": 48.169807,
+    "longitude": -53.960495,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbca1",
+    "name": "Clarks Harbour",
+    "code": "00405",
+    "latitude": 43.444829,
+    "longitude": -65.634434,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbcb7",
+    "name": "Cliff Cove",
+    "code": "00485",
+    "latitude": 44.511767,
+    "longitude": -63.937469,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbec9",
+    "name": "Clifton",
+    "code": "00977",
+    "latitude": 48.175581,
+    "longitude": -53.724624,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc242",
+    "name": "Cocagne",
+    "code": "01812",
+    "latitude": 46.3380696,
+    "longitude": -64.61814202,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be65f3",
+    "name": "Cocagne Bar",
+    "code": "01814",
+    "latitude": 46.4,
+    "longitude": -64.616667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6687",
+    "name": "Codroy",
+    "code": "00660",
+    "latitude": 47.866667,
+    "longitude": -59.4,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc15a",
+    "name": "Come By Chance",
+    "code": "00815",
+    "latitude": 47.81042,
+    "longitude": -54.007651,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6932",
+    "name": "Comfort Cove",
+    "code": "01068",
+    "latitude": 49.4,
+    "longitude": -54.85,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc13c",
+    "name": "Connoire Bay",
+    "code": "00675",
+    "latitude": 47.666667,
+    "longitude": -57.9,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbedf",
+    "name": "Cooks Harbour",
+    "code": "01181",
+    "latitude": 51.607009,
+    "longitude": -55.862446,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbf18",
+    "name": "Cormorant (underwater)",
+    "code": "02014",
+    "latitude": 47.124708,
+    "longitude": -65.148642,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e43d0f4a073c4bc325",
+    "name": "Corner Brook",
+    "code": "02680",
+    "latitude": 48.95829816,
+    "longitude": -57.9431008,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6bba",
+    "name": "Cote Ste Anne",
+    "code": "01819",
+    "latitude": 46.583333,
+    "longitude": -64.716667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66ab",
+    "name": "Cottlesville",
+    "code": "01066",
+    "latitude": 49.516667,
+    "longitude": -54.866667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbeb0",
+    "name": "Couteau Bay",
+    "code": "00672",
+    "latitude": 47.712801,
+    "longitude": -58.049808,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be6602",
+    "name": "Covehead",
+    "code": "01918",
+    "latitude": 46.429035,
+    "longitude": -63.146052,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e43d0f4a073c4bc321",
+    "name": "Cow Head",
+    "code": "02660",
+    "latitude": 49.9221072,
+    "longitude": -57.8039272,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ee0fdc4b9b4be6854",
+    "name": "Crabbes River",
+    "code": "02725",
+    "latitude": 48.2184586,
+    "longitude": -58.8634113,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e23d0f4a073c4bbfb2",
+    "name": "Cribbeans Point",
+    "code": "01597",
+    "latitude": 45.755204,
+    "longitude": -61.896344,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc25e",
+    "name": "Crowbush Cove",
+    "code": "01925",
+    "latitude": 46.4269503,
+    "longitude": -62.8399476,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc6e",
+    "name": "Culloden",
+    "code": "00330",
+    "latitude": 44.665805,
+    "longitude": -65.831633,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc2ba",
+    "name": "Dalhousie",
+    "code": "02165",
+    "latitude": 48.0720178,
+    "longitude": -66.3776873,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ee0fdc4b9b4be684c",
+    "name": "Daniels Harbour",
+    "code": "02657",
+    "latitude": 50.233333,
+    "longitude": -57.583333,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbedb",
+    "name": "Dark Cove",
+    "code": "01054",
+    "latitude": 49.52496,
+    "longitude": -54.755303,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be65ff",
+    "name": "Darnley Bridge",
+    "code": "01907",
+    "latitude": 46.533333,
+    "longitude": -63.666667,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6bde",
+    "name": "Davis Cove",
+    "code": "00796",
+    "latitude": 47.636177,
+    "longitude": -54.3406365,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1e1",
+    "name": "Davis Inlet",
+    "code": "01416",
+    "latitude": 55.892393,
+    "longitude": -60.901578,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1c3",
+    "name": "Denbigh Island, Labrador",
+    "code": "01200",
+    "latitude": 52.531128,
+    "longitude": -55.82491,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6663",
+    "name": "Dieppe (Irving Wharf)",
+    "code": "00174",
+    "latitude": 46.1,
+    "longitude": -64.766667,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc6c",
+    "name": "Digby",
+    "code": "00325",
+    "latitude": 44.626561,
+    "longitude": -65.753687,
+    "timeZone": "",
+    "type": "TEMPORARY",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6c46",
+    "name": "Digby Ferry Wharf",
+    "code": "00324",
+    "latitude": 44.65984,
+    "longitude": -65.75677,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc19b",
+    "name": "Dildo Run (Causeway)",
+    "code": "01056",
+    "latitude": 49.4811,
+    "longitude": -54.734404,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc50",
+    "name": "Diligent River",
+    "code": "00247",
+    "latitude": 45.390396,
+    "longitude": -64.454776,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc12f",
+    "name": "Dingwall",
+    "code": "00638",
+    "latitude": 46.902499,
+    "longitude": -60.457949,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6673",
+    "name": "Donalds Head",
+    "code": "00412",
+    "latitude": 43.45,
+    "longitude": -65.583333,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc3a",
+    "name": "Dover",
+    "code": "00173",
+    "latitude": 45.992446,
+    "longitude": -64.686416,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbed3",
+    "name": "Dover - Wellington",
+    "code": "01025",
+    "latitude": 48.8642416,
+    "longitude": -53.9721258,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc127",
+    "name": "Duffus Point",
+    "code": "00622",
+    "latitude": 46.281566,
+    "longitude": -60.424734,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6bcd",
+    "name": "Dundee",
+    "code": "00656",
+    "latitude": 45.699744,
+    "longitude": -61.090416,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66aa",
+    "name": "Durrell",
+    "code": "01061",
+    "latitude": 49.666667,
+    "longitude": -54.733333,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1f7",
+    "name": "East Margaree Bridge",
+    "code": "01548",
+    "latitude": 46.39729,
+    "longitude": -61.078761,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbefb",
+    "name": "East Margaree River",
+    "code": "01547",
+    "latitude": 46.42772,
+    "longitude": -61.088565,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be666b",
+    "name": "East Narrows",
+    "code": "00341",
+    "latitude": 44.4,
+    "longitude": -66.183333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6b86",
+    "name": "East Petpeswick",
+    "code": "00496",
+    "latitude": 44.716667,
+    "longitude": -63.166667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe5d",
+    "name": "East Quoddy Head",
+    "code": "00021",
+    "latitude": 44.958056,
+    "longitude": -66.900556,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc76",
+    "name": "East Sandy Cove",
+    "code": "00336",
+    "latitude": 44.487013,
+    "longitude": -66.084873,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6679",
+    "name": "Eastern Passage",
+    "code": "00489",
+    "latitude": 44.616667,
+    "longitude": -63.483333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6c4c",
+    "name": "Eclipse Channel",
+    "code": "01487",
+    "latitude": 59.694339,
+    "longitude": -64.132595,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbcc9",
+    "name": "Ecum Secum",
+    "code": "00514",
+    "latitude": 44.966012,
+    "longitude": -62.137565,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ee0fdc4b9b4be684a",
+    "name": "Eddies Cove West",
+    "code": "02647",
+    "latitude": 50.75,
+    "longitude": -57.166667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6bb5",
+    "name": "Edwards Island",
+    "code": "01423",
+    "latitude": 56.437,
+    "longitude": -62.075,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1db",
+    "name": "Emily Harbour",
+    "code": "01370",
+    "latitude": 54.541068,
+    "longitude": -57.191598,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6bb4",
+    "name": "Englee",
+    "code": "01150",
+    "latitude": 50.732249638,
+    "longitude": -56.10674919,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66bf",
+    "name": "Epinette Point",
+    "code": "01340",
+    "latitude": 53.533333,
+    "longitude": -59.916667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc28f",
+    "name": "Escuminac",
+    "code": "02000",
+    "latitude": 47.082241,
+    "longitude": -64.885565,
+    "timeZone": "",
+    "type": "PERMANENT",
+    "operating": true
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6b08",
+    "name": "Eskasoni",
+    "code": "00654",
+    "latitude": 45.955825,
+    "longitude": -60.586051,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc28",
+    "name": "Evandale",
+    "code": "00098",
+    "latitude": 45.591594,
+    "longitude": -66.028695,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66c7",
+    "name": "Evans Bight",
+    "code": "01472",
+    "latitude": 59.283333,
+    "longitude": -63.516667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1a3",
+    "name": "Exploits Island",
+    "code": "01085",
+    "latitude": 49.517688,
+    "longitude": -55.063684,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc13",
+    "name": "Fairhaven",
+    "code": "00025",
+    "latitude": 44.964381,
+    "longitude": -67.007419,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbed9",
+    "name": "Farewell",
+    "code": "01053",
+    "latitude": 49.555593,
+    "longitude": -54.477702,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc16d",
+    "name": "Fermeuse",
+    "code": "00890",
+    "latitude": 46.964724,
+    "longitude": -52.938131,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be667c",
+    "name": "Fishermans Harbour",
+    "code": "00532",
+    "latitude": 45.116667,
+    "longitude": -61.7,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6922",
+    "name": "Five Fathom Hole",
+    "code": "00052",
+    "latitude": 45.186598,
+    "longitude": -66.257278,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc56",
+    "name": "Five Islands",
+    "code": "00260",
+    "latitude": 45.379434,
+    "longitude": -64.12989,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc9d",
+    "name": "Flat Island",
+    "code": "00395",
+    "latitude": 43.509749,
+    "longitude": -66.002756,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6698",
+    "name": "Flatrock",
+    "code": "00909",
+    "latitude": 47.7,
+    "longitude": -52.7,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e43d0f4a073c4bc31d",
+    "name": "Flowers Cove",
+    "code": "02635",
+    "latitude": 51.29992,
+    "longitude": -56.735151,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc197",
+    "name": "Fogo",
+    "code": "01050",
+    "latitude": 49.7136486,
+    "longitude": -54.2884966,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbef5",
+    "name": "Ford Harbour",
+    "code": "01425",
+    "latitude": 56.4663686,
+    "longitude": -61.19228058,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6911",
+    "name": "Fort Lawrence",
+    "code": "00203",
+    "latitude": 45.8,
+    "longitude": -64.383333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e43d0f4a073c4bc315",
+    "name": "Forteau Bay",
+    "code": "02590",
+    "latitude": 51.46944,
+    "longitude": -56.953481,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6692",
+    "name": "Fortune",
+    "code": "00741",
+    "latitude": 47.066667,
+    "longitude": -55.833333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be65e7",
+    "name": "Fortune Bay",
+    "code": "01652",
+    "latitude": 46.333333,
+    "longitude": -62.35,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66ad",
+    "name": "Fortune Harbour",
+    "code": "01086",
+    "latitude": 49.533333,
+    "longitude": -55.233333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbea8",
+    "name": "Fourchu",
+    "code": "00595",
+    "latitude": 45.71712,
+    "longitude": -60.245189,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e43d0f4a073c4bc329",
+    "name": "Fox Island",
+    "code": "02695",
+    "latitude": 48.695636,
+    "longitude": -58.683013,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbf16",
+    "name": "Fox Island Range Light",
+    "code": "02012",
+    "latitude": 47.11348,
+    "longitude": -65.043085,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6c47",
+    "name": "Foxtrap",
+    "code": "00921",
+    "latitude": 47.516667,
+    "longitude": -53.0,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be668e",
+    "name": "Francois",
+    "code": "00683",
+    "latitude": 47.577351,
+    "longitude": -56.743771,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be692b",
+    "name": "Frasers Cove",
+    "code": "00649",
+    "latitude": 45.9,
+    "longitude": -61.033333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc2c",
+    "name": "Fredericton",
+    "code": "00120",
+    "latitude": 45.966423,
+    "longitude": -66.65197,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be6600",
+    "name": "French River North",
+    "code": "01909",
+    "latitude": 46.516667,
+    "longitude": -63.5,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6691",
+    "name": "Frenchman's Cove",
+    "code": "00738",
+    "latitude": 47.216667,
+    "longitude": -55.4,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6924",
+    "name": "Gagetown",
+    "code": "00105",
+    "latitude": 45.783911,
+    "longitude": -66.142873,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe51",
+    "name": "Gannet Rock",
+    "code": "00007",
+    "latitude": 44.510712,
+    "longitude": -66.781717,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6b89",
+    "name": "Gaultois",
+    "code": "00708",
+    "latitude": 47.608433,
+    "longitude": -55.904371,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc211",
+    "name": "Georgetown",
+    "code": "01660",
+    "latitude": 46.17951,
+    "longitude": -62.531618,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e23d0f4a073c4bc11a",
+    "name": "Glace Bay",
+    "code": "00605",
+    "latitude": 46.197506,
+    "longitude": -59.948036,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc18f",
+    "name": "Glovertown South",
+    "code": "01018",
+    "latitude": 48.682227,
+    "longitude": -53.993161,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be667d",
+    "name": "Goldboro",
+    "code": "00536",
+    "latitude": 45.180778,
+    "longitude": -61.652261,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc258",
+    "name": "Goodwood River",
+    "code": "01896",
+    "latitude": 46.616799,
+    "longitude": -63.916607,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbf1e",
+    "name": "Gordon Point",
+    "code": "02034",
+    "latitude": 47.079161,
+    "longitude": -65.393159,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc213",
+    "name": "Graham Pond",
+    "code": "01665",
+    "latitude": 46.095961,
+    "longitude": -62.453698,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc14c",
+    "name": "Grand Bank",
+    "code": "00740",
+    "latitude": 47.10185,
+    "longitude": -55.750569,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc131",
+    "name": "Grand Bay",
+    "code": "00663",
+    "latitude": 47.59022,
+    "longitude": -59.181979,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6b88",
+    "name": "Grand Bruit",
+    "code": "00671",
+    "latitude": 47.671685,
+    "longitude": -58.224724,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc70",
+    "name": "Grand Eddy",
+    "code": "00333",
+    "latitude": 44.39592,
+    "longitude": -66.204866,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be665d",
+    "name": "Grand Lake",
+    "code": "00110",
+    "latitude": 46.033333,
+    "longitude": -66.05,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6b3f",
+    "name": "Grand Manan Channel",
+    "code": "00013",
+    "latitude": 44.75,
+    "longitude": -66.933333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be6614",
+    "name": "Grande Anse",
+    "code": "02116",
+    "latitude": 47.816667,
+    "longitude": -65.183333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1b3",
+    "name": "Great Harbour Deep",
+    "code": "01145",
+    "latitude": 50.433333,
+    "longitude": -56.5,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be693d",
+    "name": "Green Island Brook",
+    "code": "02625",
+    "latitude": 51.4,
+    "longitude": -56.516667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be669c",
+    "name": "Greens Harbour",
+    "code": "00960",
+    "latitude": 47.65,
+    "longitude": -53.5,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6bf6",
+    "name": "Grey River",
+    "code": "00681",
+    "latitude": 47.888,
+    "longitude": -57.101,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc34",
+    "name": "Grindstone Island",
+    "code": "00160",
+    "latitude": 45.72187,
+    "longitude": -64.621207,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc16f",
+    "name": "Gull Island",
+    "code": "00898",
+    "latitude": 47.262122,
+    "longitude": -52.777936,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1de3d0f4a073c4bb90f",
+    "name": "Guysborough",
+    "code": "00560",
+    "latitude": 45.383333,
+    "longitude": -61.5,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6677",
+    "name": "Hackets Cove",
+    "code": "00483",
+    "latitude": 44.566667,
+    "longitude": -63.933333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66be",
+    "name": "Haines Island",
+    "code": "01296",
+    "latitude": 53.916667,
+    "longitude": -58.933333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbcbb",
+    "name": "Halifax",
+    "code": "00490",
+    "latitude": 44.65914,
+    "longitude": -63.583386,
+    "timeZone": "",
+    "type": "TEMPORARY",
+    "operating": true
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1af",
+    "name": "Hampden",
+    "code": "01125",
+    "latitude": 49.5452688,
+    "longitude": -56.85334086,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6bb7",
+    "name": "Hampstead",
+    "code": "00100",
+    "latitude": 45.625282,
+    "longitude": -66.083807,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be669b",
+    "name": "Hants Harbour",
+    "code": "00952",
+    "latitude": 48.016667,
+    "longitude": -53.266667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc5e",
+    "name": "Hantsport",
+    "code": "00282",
+    "latitude": 45.066886,
+    "longitude": -64.170122,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc148",
+    "name": "Harbour Breton",
+    "code": "00720",
+    "latitude": 47.477957,
+    "longitude": -55.81267,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc17c",
+    "name": "Harbour Grace",
+    "code": "00935",
+    "latitude": 47.691119,
+    "longitude": -53.2168035,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be65f1",
+    "name": "Harshmans Brook",
+    "code": "01801",
+    "latitude": 46.233333,
+    "longitude": -64.3,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6925",
+    "name": "Harvey Bank",
+    "code": "00155",
+    "latitude": 45.733333,
+    "longitude": -64.7,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e23d0f4a073c4bc0dc",
+    "name": "Hatfield Point",
+    "code": "00097",
+    "latitude": 45.613801,
+    "longitude": -65.912438,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be65e4",
+    "name": "Havre Boucher",
+    "code": "01576",
+    "latitude": 45.68962,
+    "longitude": -61.527238,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be693e",
+    "name": "Hawkes Bay",
+    "code": "02652",
+    "latitude": 50.6,
+    "longitude": -57.166667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc17e",
+    "name": "Hearts Content",
+    "code": "00955",
+    "latitude": 47.8708505,
+    "longitude": -53.367706,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1e9",
+    "name": "Hebron",
+    "code": "01465",
+    "latitude": 58.199632,
+    "longitude": -62.624991,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbee5",
+    "name": "Henley Harbour",
+    "code": "01186",
+    "latitude": 51.9925867,
+    "longitude": -55.8553451,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc146",
+    "name": "Hermitage",
+    "code": "00710",
+    "latitude": 47.556463,
+    "longitude": -55.925395,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc30",
+    "name": "Herring Cove",
+    "code": "00140",
+    "latitude": 45.574668,
+    "longitude": -64.965629,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbec7",
+    "name": "Hickmans Harbour",
+    "code": "00973",
+    "latitude": 48.103238,
+    "longitude": -53.743636,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc17a",
+    "name": "Holyrood Bay",
+    "code": "00925",
+    "latitude": 47.389127,
+    "longitude": -53.135356,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1df",
+    "name": "Hopedale",
+    "code": "01405",
+    "latitude": 55.4541256,
+    "longitude": -60.2228018,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc36",
+    "name": "Hopewell Cape",
+    "code": "00170",
+    "latitude": 45.860104,
+    "longitude": -64.57907,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6adf",
+    "name": "Horton Bluff",
+    "code": "00285",
+    "latitude": 45.111176690961344,
+    "longitude": -64.24198058218819,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6937",
+    "name": "House Harbour",
+    "code": "01420",
+    "latitude": 56.235527,
+    "longitude": -61.049647,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be65fb",
+    "name": "Howards Cove",
+    "code": "01850",
+    "latitude": 46.733333,
+    "longitude": -64.383333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe93",
+    "name": "Hubbards",
+    "code": "00480",
+    "latitude": 44.637327,
+    "longitude": -64.059586,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6c4b",
+    "name": "Igloksoatalik Island",
+    "code": "01458",
+    "latitude": 57.67846,
+    "longitude": -61.816734,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc66",
+    "name": "Ile Haute",
+    "code": "00312",
+    "latitude": 45.253894,
+    "longitude": -64.990928,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe95",
+    "name": "Indian Harbour",
+    "code": "00484",
+    "latitude": 44.514837,
+    "longitude": -63.937238,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66c1",
+    "name": "Indian Harbour",
+    "code": "01368",
+    "latitude": 54.45,
+    "longitude": -57.2,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66bb",
+    "name": "Indian Tickle",
+    "code": "01225",
+    "latitude": 53.566667,
+    "longitude": -56.0,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6657",
+    "name": "Indiantown",
+    "code": "00075",
+    "latitude": 45.266667,
+    "longitude": -66.083333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe87",
+    "name": "Ingomar",
+    "code": "00423",
+    "latitude": 43.563155,
+    "longitude": -65.363373,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc12d",
+    "name": "Ingonish Beach",
+    "code": "00630",
+    "latitude": 46.629842,
+    "longitude": -60.389685,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6b71",
+    "name": "Iona",
+    "code": "00655",
+    "latitude": 45.956781,
+    "longitude": -60.793964,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbcd3",
+    "name": "Isaacs Harbour",
+    "code": "00535",
+    "latitude": 45.179911,
+    "longitude": -61.659633,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66a6",
+    "name": "Island Harbour",
+    "code": "01046",
+    "latitude": 49.616667,
+    "longitude": -54.316667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc13a",
+    "name": "Isle Aux Morts",
+    "code": "00666",
+    "latitude": 47.582132,
+    "longitude": -58.979109,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbef1",
+    "name": "Jackos Point",
+    "code": "01398",
+    "latitude": 55.121487,
+    "longitude": -59.443562,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbecd",
+    "name": "Jamestown",
+    "code": "01003",
+    "latitude": 48.444292,
+    "longitude": -53.799962,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6c68",
+    "name": "Jeanette Bay, Lab",
+    "code": "01376",
+    "latitude": 54.749478,
+    "longitude": -57.891383,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be665f",
+    "name": "Jemseg",
+    "code": "00124",
+    "latitude": 45.833333,
+    "longitude": -66.116667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66a7",
+    "name": "Joe Batts Arm",
+    "code": "01047",
+    "latitude": 49.730817,
+    "longitude": -54.157698,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc44",
+    "name": "Joggins",
+    "code": "00215",
+    "latitude": 45.660547,
+    "longitude": -64.488192,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6c6a",
+    "name": "John Hayes Harbour",
+    "code": "01422",
+    "latitude": 56.399527,
+    "longitude": -61.614195,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbeae",
+    "name": "Johnstown",
+    "code": "00653",
+    "latitude": 45.79297,
+    "longitude": -60.739103,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1cd",
+    "name": "Jordans Point",
+    "code": "01267",
+    "latitude": 54.218294,
+    "longitude": -58.241539,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6d42",
+    "name": "Judes Point",
+    "code": "01876",
+    "latitude": 46.95,
+    "longitude": -64.033333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be65f8",
+    "name": "Kellys Beach",
+    "code": "01829",
+    "latitude": 46.833333,
+    "longitude": -64.916667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe81",
+    "name": "Kellys Cove",
+    "code": "00368",
+    "latitude": 43.783271,
+    "longitude": -66.131679,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc26",
+    "name": "Kennebecasis Bay",
+    "code": "00085",
+    "latitude": 45.393261,
+    "longitude": -66.000923,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6659",
+    "name": "Ketepec",
+    "code": "00087",
+    "latitude": 45.283333,
+    "longitude": -66.166667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6d41",
+    "name": "Kiglapait Harbour",
+    "code": "01452",
+    "latitude": 57.158904,
+    "longitude": -61.56302,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be692e",
+    "name": "Kings Cove",
+    "code": "00995",
+    "latitude": 48.566667,
+    "longitude": -53.333333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be692c",
+    "name": "La Poile (Little Bay)",
+    "code": "00670",
+    "latitude": 47.684234,
+    "longitude": -58.39571,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1f1",
+    "name": "La Pointe",
+    "code": "01540",
+    "latitude": 46.603101,
+    "longitude": -61.0526,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1a9",
+    "name": "La Scie",
+    "code": "01105",
+    "latitude": 49.9631805,
+    "longitude": -55.6029476,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be6611",
+    "name": "Lameque",
+    "code": "02095",
+    "latitude": 47.783333,
+    "longitude": -64.65,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be692d",
+    "name": "Lamline Bay",
+    "code": "00750",
+    "latitude": 46.85,
+    "longitude": -55.816667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbebd",
+    "name": "Lance Cove",
+    "code": "00893",
+    "latitude": 46.80064,
+    "longitude": -54.097654,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e43d0f4a073c4bc327",
+    "name": "Lark Harbour",
+    "code": "02685",
+    "latitude": 49.0959298,
+    "longitude": -58.37913541,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbcd5",
+    "name": "Larrys River",
+    "code": "00540",
+    "latitude": 45.217684,
+    "longitude": -61.373621,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be65e8",
+    "name": "Launching Pond",
+    "code": "01656",
+    "latitude": 46.216667,
+    "longitude": -62.416667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6b8c",
+    "name": "Leading Tickle",
+    "code": "01087",
+    "latitude": 49.5020504,
+    "longitude": -55.4470603,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66bc",
+    "name": "Lester Point",
+    "code": "01270",
+    "latitude": 54.183333,
+    "longitude": -58.366667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe65",
+    "name": "Letang Harbour",
+    "code": "00033",
+    "latitude": 45.084553,
+    "longitude": -66.783714,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc15",
+    "name": "Letite Harbour",
+    "code": "00030",
+    "latitude": 45.055804,
+    "longitude": -66.864833,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc19f",
+    "name": "Lewisporte",
+    "code": "01070",
+    "latitude": 49.246536,
+    "longitude": -55.052948,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc7e",
+    "name": "Lighthouse Cove",
+    "code": "00345",
+    "latitude": 44.24963,
+    "longitude": -66.392209,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbccb",
+    "name": "Liscomb Harbour",
+    "code": "00515",
+    "latitude": 45.023824,
+    "longitude": -61.996742,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1a5",
+    "name": "Little Bay Arm",
+    "code": "01095",
+    "latitude": 49.600766,
+    "longitude": -55.923296,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66b0",
+    "name": "Little Bay Island",
+    "code": "01093",
+    "latitude": 49.65,
+    "longitude": -55.8,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6682",
+    "name": "Little Bras D'Or Entrance",
+    "code": "00615",
+    "latitude": 46.233333,
+    "longitude": -60.283333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6c35",
+    "name": "Little Catalina",
+    "code": "00987",
+    "latitude": 48.55,
+    "longitude": -53.05,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe99",
+    "name": "Little Harbour",
+    "code": "00497",
+    "latitude": 44.708858,
+    "longitude": -62.841551,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6684",
+    "name": "Little Narrows",
+    "code": "00645",
+    "latitude": 45.966667,
+    "longitude": -60.983333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6694",
+    "name": "Little Paradise",
+    "code": "00785",
+    "latitude": 47.366667,
+    "longitude": -54.583333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6695",
+    "name": "Little Southern Harbour",
+    "code": "00820",
+    "latitude": 47.716667,
+    "longitude": -53.95,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ee0fdc4b9b4be6718",
+    "name": "Little Wood Island",
+    "code": "00002",
+    "latitude": 44.6,
+    "longitude": -66.8,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbcaf",
+    "name": "Liverpool",
+    "code": "00440",
+    "latitude": 44.048996,
+    "longitude": -64.69442,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbcab",
+    "name": "Lockeport",
+    "code": "00430",
+    "latitude": 43.701539,
+    "longitude": -65.107167,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1b7",
+    "name": "Locks Cove",
+    "code": "01165",
+    "latitude": 51.337356,
+    "longitude": -55.954712,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be65f7",
+    "name": "Loggiecroft Wharf",
+    "code": "01828",
+    "latitude": 46.833333,
+    "longitude": -64.933333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc29b",
+    "name": "Loggieville",
+    "code": "02033",
+    "latitude": 47.074387,
+    "longitude": -65.384277,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbec5",
+    "name": "Long Beach",
+    "code": "00970",
+    "latitude": 47.996447,
+    "longitude": -53.810697,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be669d",
+    "name": "Long Cove",
+    "code": "00962",
+    "latitude": 47.566755,
+    "longitude": -53.6675267,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc15e",
+    "name": "Long Harbour",
+    "code": "00830",
+    "latitude": 47.428591,
+    "longitude": -53.822808,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe67",
+    "name": "Long Island",
+    "code": "00041",
+    "latitude": 45.149561,
+    "longitude": -66.961084,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ee0fdc4b9b4be6851",
+    "name": "Long Point",
+    "code": "02703",
+    "latitude": 48.75,
+    "longitude": -58.783333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6e1c",
+    "name": "Long Point Island",
+    "code": "01287",
+    "latitude": 54.015302,
+    "longitude": -58.566696,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbec3",
+    "name": "Long Pond",
+    "code": "00920",
+    "latitude": 47.517431,
+    "longitude": -52.978591,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe6f",
+    "name": "Lorneville",
+    "code": "00055",
+    "latitude": 45.192742,
+    "longitude": -66.14824,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e23d0f4a073c4bc118",
+    "name": "Louisbourg",
+    "code": "00600",
+    "latitude": 45.916903,
+    "longitude": -59.971018,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ee0fdc4b9b4be6852",
+    "name": "Lourdes",
+    "code": "02704",
+    "latitude": 48.633333,
+    "longitude": -58.966667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ee0fdc4b9b4be6853",
+    "name": "Lower Cove",
+    "code": "02707",
+    "latitude": 48.516667,
+    "longitude": -59.016667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc99",
+    "name": "Lower East Pubnico",
+    "code": "00385",
+    "latitude": 43.630445,
+    "longitude": -65.771242,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be665e",
+    "name": "Lower St. Marys",
+    "code": "00118",
+    "latitude": 45.916667,
+    "longitude": -66.583333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6671",
+    "name": "Lower Surettes Island",
+    "code": "00381",
+    "latitude": 43.716667,
+    "longitude": -65.9,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc91",
+    "name": "Lower Wedgeport",
+    "code": "00375",
+    "latitude": 43.712299,
+    "longitude": -65.984139,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66a5",
+    "name": "Lumsden",
+    "code": "01033",
+    "latitude": 49.3,
+    "longitude": -53.583333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbcb1",
+    "name": "Lunenburg",
+    "code": "00455",
+    "latitude": 44.375468,
+    "longitude": -64.307098,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd5a57fff231600015c1993",
+    "name": "Maccan",
+    "code": "00210",
+    "latitude": 45.724667,
+    "longitude": -64.259833,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe73",
+    "name": "Macdonald Point",
+    "code": "00102",
+    "latitude": 45.71881,
+    "longitude": -66.04758,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be65eb",
+    "name": "Machons Point",
+    "code": "01669",
+    "latitude": 46.016667,
+    "longitude": -62.516667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6674",
+    "name": "Mahone Harbour",
+    "code": "00460",
+    "latitude": 44.447429,
+    "longitude": -64.373975,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd5aa6aff231600015c1a03",
+    "name": "Maitland",
+    "code": "00267",
+    "latitude": 45.251167,
+    "longitude": -63.456,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1dd",
+    "name": "Makkovik",
+    "code": "01390",
+    "latitude": 55.082942,
+    "longitude": -59.1701008,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc22b",
+    "name": "Malagash",
+    "code": "01760",
+    "latitude": 45.77520205,
+    "longitude": -63.2961563,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc25a",
+    "name": "Malpeque",
+    "code": "01905",
+    "latitude": 46.523993,
+    "longitude": -63.696637,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6689",
+    "name": "Margaree",
+    "code": "00667",
+    "latitude": 47.566667,
+    "longitude": -59.066667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1f5",
+    "name": "Margaree Harbour",
+    "code": "01546",
+    "latitude": 46.4424,
+    "longitude": -61.112103,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1f3",
+    "name": "Margaree Trailer",
+    "code": "01545",
+    "latitude": 46.440193,
+    "longitude": -61.11288,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc68",
+    "name": "Margaretsville",
+    "code": "00315",
+    "latitude": 45.048773,
+    "longitude": -65.062969,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe9f",
+    "name": "Marie Joseph",
+    "code": "00516",
+    "latitude": 44.965562,
+    "longitude": -62.079311,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6921",
+    "name": "Mark Point",
+    "code": "00036",
+    "latitude": 45.166667,
+    "longitude": -67.2,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6c65",
+    "name": "Mary's Harbour",
+    "code": "01193",
+    "latitude": 52.30809,
+    "longitude": -55.833768,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6b8a",
+    "name": "Marystown",
+    "code": "00765",
+    "latitude": 47.165605,
+    "longitude": -55.148173,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe63",
+    "name": "Matthews Cove",
+    "code": "00029",
+    "latitude": 45.052007,
+    "longitude": -66.894529,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6b16",
+    "name": "Maugerville",
+    "code": "00114",
+    "latitude": 45.866667,
+    "longitude": -66.466667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe61",
+    "name": "McMaster Island",
+    "code": "00028",
+    "latitude": 45.054307,
+    "longitude": -66.930853,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be668f",
+    "name": "Mccallum",
+    "code": "00688",
+    "latitude": 47.631183,
+    "longitude": -56.22705,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be660b",
+    "name": "Mceacherns Point Gully",
+    "code": "02056",
+    "latitude": 47.3,
+    "longitude": -64.933333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc3e",
+    "name": "Memramcook",
+    "code": "00185",
+    "latitude": 45.978865,
+    "longitude": -64.55205,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc207",
+    "name": "Merigomish",
+    "code": "01620",
+    "latitude": 45.648764,
+    "longitude": -62.448885,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc84",
+    "name": "Meteghan",
+    "code": "00355",
+    "latitude": 44.193113,
+    "longitude": -66.166268,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ee0fdc4b9b4be6850",
+    "name": "Middle Arm",
+    "code": "02676",
+    "latitude": 49.116667,
+    "longitude": -58.066667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be6612",
+    "name": "Middle Caraquet",
+    "code": "02107",
+    "latitude": 47.803,
+    "longitude": -64.873,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbebf",
+    "name": "Middle Cove",
+    "code": "00907",
+    "latitude": 47.650895,
+    "longitude": -52.695878,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66af",
+    "name": "Miles Cove",
+    "code": "01092",
+    "latitude": 49.533333,
+    "longitude": -55.783333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbcb3",
+    "name": "Mill Cove",
+    "code": "00475",
+    "latitude": 44.580148,
+    "longitude": -64.052082,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be6615",
+    "name": "Miller Brook Wharf",
+    "code": "02121",
+    "latitude": 47.666667,
+    "longitude": -65.55,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc2a1",
+    "name": "Millerton",
+    "code": "02045",
+    "latitude": 46.9,
+    "longitude": -65.633333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be65fe",
+    "name": "Milligan's Wharf",
+    "code": "01893",
+    "latitude": 46.65,
+    "longitude": -63.916667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc250",
+    "name": "Miminegash",
+    "code": "01855",
+    "latitude": 46.88011,
+    "longitude": -64.234435,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66b3",
+    "name": "Mings Bight",
+    "code": "01108",
+    "latitude": 49.983333,
+    "longitude": -56.016667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc2a3",
+    "name": "Miramichi River",
+    "code": "02050",
+    "latitude": 46.95,
+    "longitude": -65.766667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc2ab",
+    "name": "Miscou",
+    "code": "02090",
+    "latitude": 47.896209,
+    "longitude": -64.578601,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc3c",
+    "name": "Moncton",
+    "code": "00175",
+    "latitude": 46.087883,
+    "longitude": -64.771888,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6ae4",
+    "name": "Moncton (Causeway)",
+    "code": "00176",
+    "latitude": 46.066667,
+    "longitude": -64.816667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbefd",
+    "name": "Montague",
+    "code": "01662",
+    "latitude": 46.164725,
+    "longitude": -62.646332,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbeed",
+    "name": "Mostyn Cove",
+    "code": "01377",
+    "latitude": 54.7401315,
+    "longitude": -57.982024,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be667e",
+    "name": "Mulgrave",
+    "code": "00565",
+    "latitude": 45.6,
+    "longitude": -61.383333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6e36",
+    "name": "Mulligan Bay",
+    "code": "01331",
+    "latitude": 53.8356,
+    "longitude": -59.871383,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbcc1",
+    "name": "Murphys Cove",
+    "code": "00500",
+    "latitude": 44.785651,
+    "longitude": -62.761954,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be65f0",
+    "name": "Murray Corner",
+    "code": "01797",
+    "latitude": 46.166667,
+    "longitude": -63.933333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc215",
+    "name": "Murray Harbour",
+    "code": "01670",
+    "latitude": 46.005478,
+    "longitude": -62.523515,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be65ea",
+    "name": "Murray River",
+    "code": "01668",
+    "latitude": 46.016667,
+    "longitude": -62.616667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbed5",
+    "name": "Musgrave Harbour",
+    "code": "01035",
+    "latitude": 49.453792,
+    "longitude": -53.958367,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66a4",
+    "name": "Musgravetown",
+    "code": "01005",
+    "latitude": 48.416667,
+    "longitude": -53.883333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe6d",
+    "name": "Musquash Harbour",
+    "code": "00053",
+    "latitude": 45.148535,
+    "longitude": -66.257932,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1e7",
+    "name": "Nain",
+    "code": "01430",
+    "latitude": 56.543452,
+    "longitude": -61.686473,
+    "timeZone": "",
+    "type": "PERMANENT",
+    "operating": true
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc262",
+    "name": "Naufrage",
+    "code": "01945",
+    "latitude": 46.468428,
+    "longitude": -62.417173,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc295",
+    "name": "Neguac",
+    "code": "02022",
+    "latitude": 47.240992,
+    "longitude": -65.072306,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbeac",
+    "name": "Neils Harbour",
+    "code": "00635",
+    "latitude": 46.806867,
+    "longitude": -60.320471,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1c7",
+    "name": "Nevile Island",
+    "code": "01205",
+    "latitude": 52.55116,
+    "longitude": -56.111893,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6bf9",
+    "name": "New Waterford",
+    "code": "00608",
+    "latitude": 46.25,
+    "longitude": -60.083333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66a8",
+    "name": "New World Island",
+    "code": "01055",
+    "latitude": 49.583333,
+    "longitude": -54.666667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc29f",
+    "name": "Newcastle",
+    "code": "02040",
+    "latitude": 46.998039,
+    "longitude": -65.561618,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe77",
+    "name": "Newcastle Creek",
+    "code": "00122",
+    "latitude": 46.056492,
+    "longitude": -66.002698,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbed1",
+    "name": "Newman Sound",
+    "code": "01010",
+    "latitude": 48.561952,
+    "longitude": -53.962352,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66a1",
+    "name": "Newmans Cove",
+    "code": "00992",
+    "latitude": 48.583333,
+    "longitude": -53.183333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6b8b",
+    "name": "Newtown",
+    "code": "01032",
+    "latitude": 49.2,
+    "longitude": -53.516667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6a14",
+    "name": "Nine Mile Creek",
+    "code": "01706",
+    "latitude": 46.15,
+    "longitude": -63.216667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6c64",
+    "name": "Nippers Harbour",
+    "code": "01101",
+    "latitude": 49.793454,
+    "longitude": -55.8598663,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66b9",
+    "name": "Norman Bay",
+    "code": "01214",
+    "latitude": 52.93597986,
+    "longitude": -55.90235541,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e43d0f4a073c4bc323",
+    "name": "Norris Cove",
+    "code": "02670",
+    "latitude": 49.5173444,
+    "longitude": -57.87582752,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ee0fdc4b9b4be684f",
+    "name": "North Arm Harbour Cove",
+    "code": "02674",
+    "latitude": 49.2,
+    "longitude": -57.983333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc158",
+    "name": "North Harbour",
+    "code": "00810",
+    "latitude": 47.846313,
+    "longitude": -54.096719,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc0d",
+    "name": "North Head",
+    "code": "00010",
+    "latitude": 44.763118,
+    "longitude": -66.749,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc264",
+    "name": "North Lake Harbour",
+    "code": "01955",
+    "latitude": 46.4669804,
+    "longitude": -62.06881902,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc252",
+    "name": "North Point",
+    "code": "01865",
+    "latitude": 47.0581997,
+    "longitude": -63.9960403,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e23d0f4a073c4bc123",
+    "name": "North Sydney",
+    "code": "00612",
+    "latitude": 46.20897,
+    "longitude": -60.245314,
+    "timeZone": "",
+    "type": "PERMANENT",
+    "operating": true
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1d5",
+    "name": "North West River",
+    "code": "01335",
+    "latitude": 53.523929,
+    "longitude": -60.1457805,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6c69",
+    "name": "Nukasusutok Island",
+    "code": "01421",
+    "latitude": 56.370108,
+    "longitude": -61.241776,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc299",
+    "name": "Oak Point",
+    "code": "02030",
+    "latitude": 47.116441,
+    "longitude": -65.267016,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be665c",
+    "name": "Oak Point",
+    "code": "00096",
+    "latitude": 45.516667,
+    "longitude": -66.083333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be669a",
+    "name": "Ochre Pit Cove",
+    "code": "00940",
+    "latitude": 47.916667,
+    "longitude": -53.066667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be6618",
+    "name": "Old Mission Point",
+    "code": "02176",
+    "latitude": 48.016667,
+    "longitude": -66.683333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc5a",
+    "name": "Outer Wood Island",
+    "code": "00001",
+    "latitude": 44.606836,
+    "longitude": -66.818208,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe8f",
+    "name": "Owls Head",
+    "code": "00473",
+    "latitude": 44.521816,
+    "longitude": -64.00538,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbeeb",
+    "name": "Paradise River",
+    "code": "01248",
+    "latitude": 53.440361,
+    "longitude": -57.285765,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc6a",
+    "name": "Parkers Cove",
+    "code": "00320",
+    "latitude": 44.813683,
+    "longitude": -65.538394,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc54",
+    "name": "Parrsboro",
+    "code": "00255",
+    "latitude": 45.3899678,
+    "longitude": -64.3186504,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6a16",
+    "name": "Parsons Pond",
+    "code": "02659",
+    "latitude": 50.033333,
+    "longitude": -57.7,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc1d",
+    "name": "Partridge Island",
+    "code": "00060",
+    "latitude": 45.241166,
+    "longitude": -66.052274,
+    "timeZone": "",
+    "type": "TEMPORARY",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc40",
+    "name": "Pecks Point",
+    "code": "00190",
+    "latitude": 45.741838,
+    "longitude": -64.479898,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6d8f",
+    "name": "Penny Lane",
+    "code": "00624",
+    "latitude": 46.29864,
+    "longitude": -60.399749,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6927",
+    "name": "Pereau",
+    "code": "00288",
+    "latitude": 45.2,
+    "longitude": -64.383333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e23d0f4a073c4bc112",
+    "name": "Petit De Grat",
+    "code": "00582",
+    "latitude": 45.506907,
+    "longitude": -60.961596,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6bdf",
+    "name": "Petite Forte",
+    "code": "00776",
+    "latitude": 47.396298,
+    "longitude": -54.667979,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6697",
+    "name": "Petty Harbour",
+    "code": "00903",
+    "latitude": 47.466667,
+    "longitude": -52.7,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6941",
+    "name": "Piccadilly Point",
+    "code": "02700",
+    "latitude": 48.566667,
+    "longitude": -58.9,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc209",
+    "name": "Pictou",
+    "code": "01630",
+    "latitude": 45.6740806,
+    "longitude": -62.7033375,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc20b",
+    "name": "Pictou Island",
+    "code": "01635",
+    "latitude": 45.802557,
+    "longitude": -62.585592,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be660f",
+    "name": "Pigeon Hill (Inner)",
+    "code": "02075",
+    "latitude": 47.883333,
+    "longitude": -64.5,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be6610",
+    "name": "Pigeon Hill (Outer)",
+    "code": "02076",
+    "latitude": 47.877915,
+    "longitude": -64.503722,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be65ed",
+    "name": "Pinette",
+    "code": "01686",
+    "latitude": 46.05,
+    "longitude": -62.916667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc8f",
+    "name": "Pinkney Point",
+    "code": "00370",
+    "latitude": 43.704021,
+    "longitude": -66.055683,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6c66",
+    "name": "Pinsent Arm",
+    "code": "01211",
+    "latitude": 52.683333,
+    "longitude": -55.883333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66a2",
+    "name": "Plate Cove West",
+    "code": "00997",
+    "latitude": 48.516667,
+    "longitude": -53.483333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66c8",
+    "name": "Pleasant Bay",
+    "code": "01535",
+    "latitude": 46.816667,
+    "longitude": -60.8,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc219",
+    "name": "Point Prim",
+    "code": "01690",
+    "latitude": 46.056251,
+    "longitude": -63.030217,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e23d0f4a073c4bc10e",
+    "name": "Point Tupper",
+    "code": "00576",
+    "latitude": 45.595606,
+    "longitude": -61.363328,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc24a",
+    "name": "Pointe Sapin",
+    "code": "01830",
+    "latitude": 46.9628154,
+    "longitude": -64.8300883,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be6617",
+    "name": "Pointe Verte",
+    "code": "02143",
+    "latitude": 47.866667,
+    "longitude": -65.766667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "64b6e5ec8027cb190816a0c0",
+    "name": "Pointe-du-Ch\u00eane",
+    "code": "01804",
+    "latitude": 46.24061389,
+    "longitude": -64.53000556,
+    "timeZone": "",
+    "type": "PERMANENT",
+    "operating": true
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6b87",
+    "name": "Poirierville",
+    "code": "00584",
+    "latitude": 45.583333,
+    "longitude": -60.933333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ee0fdc4b9b4be684b",
+    "name": "Port Aux Choix",
+    "code": "02655",
+    "latitude": 50.70732869,
+    "longitude": -57.35684758,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbcd1",
+    "name": "Port Bickerton",
+    "code": "00530",
+    "latitude": 45.105369,
+    "longitude": -61.723156,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc225",
+    "name": "Port Borden",
+    "code": "01725",
+    "latitude": 46.246127,
+    "longitude": -63.700721,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6699",
+    "name": "Port De Grave",
+    "code": "00931",
+    "latitude": 47.583333,
+    "longitude": -53.216667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe9d",
+    "name": "Port Dufferin",
+    "code": "00511",
+    "latitude": 44.89582,
+    "longitude": -62.375197,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc233",
+    "name": "Port Elgin",
+    "code": "01785",
+    "latitude": 46.051875,
+    "longitude": -64.082768,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc4e",
+    "name": "Port Greville",
+    "code": "00245",
+    "latitude": 45.404321,
+    "longitude": -64.541522,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e43d0f4a073c4bc32b",
+    "name": "Port Harmon",
+    "code": "02710",
+    "latitude": 48.53051075,
+    "longitude": -58.52627363,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e23d0f4a073c4bc10c",
+    "name": "Port Hastings",
+    "code": "00570",
+    "latitude": 45.64615,
+    "longitude": -61.405665,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbea6",
+    "name": "Port Hawkesbury",
+    "code": "00575",
+    "latitude": 45.614417,
+    "longitude": -61.365637,
+    "timeZone": "",
+    "type": "PERMANENT",
+    "operating": true
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1fb",
+    "name": "Port Hood",
+    "code": "01560",
+    "latitude": 46.027909,
+    "longitude": -61.545014,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1c9",
+    "name": "Port Hope Simpson",
+    "code": "01210",
+    "latitude": 52.54908,
+    "longitude": -56.296152,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc86",
+    "name": "Port Maitland",
+    "code": "00360",
+    "latitude": 43.985999,
+    "longitude": -66.159098,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ee0fdc4b9b4be67cf",
+    "name": "Port Manvers",
+    "code": "01450",
+    "latitude": 56.954676,
+    "longitude": -61.506858,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1c1",
+    "name": "Port Marnham",
+    "code": "01195",
+    "latitude": 52.383568,
+    "longitude": -55.733203,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbcad",
+    "name": "Port Mouton",
+    "code": "00435",
+    "latitude": 43.921621,
+    "longitude": -64.841138,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e43d0f4a073c4bc31f",
+    "name": "Port Saunders",
+    "code": "02650",
+    "latitude": 50.644007,
+    "longitude": -57.296997,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc182",
+    "name": "Port Union",
+    "code": "00985",
+    "latitude": 48.498876,
+    "longitude": -53.0811086,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6669",
+    "name": "Port Williams",
+    "code": "00287",
+    "latitude": 45.094653,
+    "longitude": -64.406617,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc138",
+    "name": "Port aux Basques",
+    "code": "00665",
+    "latitude": 47.580155,
+    "longitude": -59.139055,
+    "timeZone": "",
+    "type": "PERMANENT",
+    "operating": true
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc291",
+    "name": "Portage Island",
+    "code": "02010",
+    "latitude": 47.177032,
+    "longitude": -65.037294,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbec1",
+    "name": "Portugal Cove",
+    "code": "00912",
+    "latitude": 47.625667,
+    "longitude": -52.856716,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbeef",
+    "name": "Postville",
+    "code": "01397",
+    "latitude": 54.907125,
+    "longitude": -59.766688,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6b46",
+    "name": "Princeton",
+    "code": "00999",
+    "latitude": 48.416667,
+    "longitude": -53.6,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6686",
+    "name": "Pringle Harbour",
+    "code": "00652",
+    "latitude": 45.75,
+    "longitude": -60.983333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe97",
+    "name": "Prospect",
+    "code": "00486",
+    "latitude": 44.468951,
+    "longitude": -63.783677,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ee0fdc4b9b4be671a",
+    "name": "Public Landing",
+    "code": "00093",
+    "latitude": 45.405682,
+    "longitude": -66.195982,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc22f",
+    "name": "Pugwash",
+    "code": "01775",
+    "latitude": 45.8483972,
+    "longitude": -63.663297,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbee7",
+    "name": "Punchbowl",
+    "code": "01217",
+    "latitude": 53.250676,
+    "longitude": -55.751618,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc140",
+    "name": "Pushthrough",
+    "code": "00690",
+    "latitude": 47.635589,
+    "longitude": -56.16505,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1bb",
+    "name": "Quirpon Harbour",
+    "code": "01175",
+    "latitude": 51.583333,
+    "longitude": -55.466667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e23d0f4a073c4bc027",
+    "name": "Rabbit Island",
+    "code": "01345",
+    "latitude": 53.401117,
+    "longitude": -60.137636,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be668d",
+    "name": "Ramea Island",
+    "code": "00679",
+    "latitude": 47.521818,
+    "longitude": -57.38464,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66b1",
+    "name": "Rattling Brook",
+    "code": "01099",
+    "latitude": 49.633333,
+    "longitude": -56.183333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc142",
+    "name": "Raymond Point",
+    "code": "00700",
+    "latitude": 47.7,
+    "longitude": -55.95,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e43d0f4a073c4bc319",
+    "name": "Red Bay",
+    "code": "02600",
+    "latitude": 51.732061,
+    "longitude": -56.43062,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be6603",
+    "name": "Red Head Harbour",
+    "code": "01930",
+    "latitude": 46.433333,
+    "longitude": -62.716667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc13e",
+    "name": "Rencontre West",
+    "code": "00685",
+    "latitude": 47.615249,
+    "longitude": -56.70837,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1de3d0f4a073c4bb9f1",
+    "name": "Reversing Falls",
+    "code": "00066",
+    "latitude": 45.259,
+    "longitude": -66.087,
+    "timeZone": "",
+    "type": "VIRTUAL",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbeff",
+    "name": "Richibucto",
+    "code": "01827",
+    "latitude": 46.68032,
+    "longitude": -64.86042,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc248",
+    "name": "Richibucto Bar",
+    "code": "01825",
+    "latitude": 46.710852,
+    "longitude": -64.791113,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc246",
+    "name": "Richibucto Cape",
+    "code": "01820",
+    "latitude": 46.67454025,
+    "longitude": -64.7125534,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1cf",
+    "name": "Rigolet",
+    "code": "01280",
+    "latitude": 54.180469,
+    "longitude": -58.427962,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd5a784ff231600015c199e",
+    "name": "River Hebert",
+    "code": "00211",
+    "latitude": 45.690167,
+    "longitude": -64.373833,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe8d",
+    "name": "Riverport",
+    "code": "00452",
+    "latitude": 44.289312,
+    "longitude": -64.345007,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6933",
+    "name": "Roberts Arm",
+    "code": "01091",
+    "latitude": 49.5,
+    "longitude": -55.8,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbf1c",
+    "name": "Robichaud Spit",
+    "code": "02029",
+    "latitude": 47.129705,
+    "longitude": -65.251003,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be65f2",
+    "name": "Robichaud Wharf",
+    "code": "01802",
+    "latitude": 46.223,
+    "longitude": -64.383333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be693f",
+    "name": "Rocky Harbour",
+    "code": "02667",
+    "latitude": 49.583333,
+    "longitude": -57.916667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66b4",
+    "name": "Roddickton",
+    "code": "01151",
+    "latitude": 50.866667,
+    "longitude": -56.133333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be668a",
+    "name": "Rose Blanche",
+    "code": "00668",
+    "latitude": 47.615609,
+    "longitude": -58.700195,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc25c",
+    "name": "Rustico",
+    "code": "01915",
+    "latitude": 46.4560018,
+    "longitude": -63.2940585,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbcd9",
+    "name": "Sable Island/Sable, \u00c3\u017dle de",
+    "code": "00550",
+    "latitude": 43.959157,
+    "longitude": -59.794781,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc42",
+    "name": "Sackville",
+    "code": "00200",
+    "latitude": 45.882118,
+    "longitude": -64.340647,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ee0fdc4b9b4be67d0",
+    "name": "Saglek Bay",
+    "code": "01470",
+    "latitude": 58.486817,
+    "longitude": -62.668467,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be65f5",
+    "name": "Saint Edouard De Kent",
+    "code": "01818",
+    "latitude": 46.542,
+    "longitude": -64.7,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc24",
+    "name": "Saint John",
+    "code": "00065",
+    "latitude": 45.254596,
+    "longitude": -66.06004,
+    "timeZone": "",
+    "type": "PERMANENT",
+    "operating": true
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6bf8",
+    "name": "Saint Louis Wharf",
+    "code": "01824",
+    "latitude": 46.766667,
+    "longitude": -64.916667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc244",
+    "name": "Saint Thomas De Kent",
+    "code": "01815",
+    "latitude": 46.447615,
+    "longitude": -64.636837,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc14e",
+    "name": "Saint-Pierre Et Miquelon",
+    "code": "00745",
+    "latitude": 46.777365,
+    "longitude": -56.169216,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be660e",
+    "name": "Sainte Marie Sur Mer",
+    "code": "02073",
+    "latitude": 47.783333,
+    "longitude": -64.566667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbcbf",
+    "name": "Salmon River Bridge",
+    "code": "00495",
+    "latitude": 44.778633,
+    "longitude": -63.042147,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbecf",
+    "name": "Saltons Brook",
+    "code": "01009",
+    "latitude": 48.57899,
+    "longitude": -53.946939,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc18d",
+    "name": "Salvage",
+    "code": "01015",
+    "latitude": 48.686698,
+    "longitude": -53.642866,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbcb9",
+    "name": "Sambro Harbour",
+    "code": "00488",
+    "latitude": 44.478153,
+    "longitude": -63.599156,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e23d0f4a073c4bc10a",
+    "name": "Sand Point",
+    "code": "00563",
+    "latitude": 45.521378,
+    "longitude": -61.263584,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6653",
+    "name": "Sand Point",
+    "code": "00038",
+    "latitude": 45.159342,
+    "longitude": -67.141058,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbee9",
+    "name": "Sandwich Bay (East Arm)",
+    "code": "01247",
+    "latitude": 53.566561,
+    "longitude": -57.161563,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc74",
+    "name": "Sandy Cove",
+    "code": "00335",
+    "latitude": 44.498851,
+    "longitude": -66.098584,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ee0fdc4b9b4be6848",
+    "name": "Sandy Cove",
+    "code": "02631",
+    "latitude": 51.35,
+    "longitude": -56.666667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe89",
+    "name": "Sandy Point",
+    "code": "00426",
+    "latitude": 43.695318,
+    "longitude": -65.324184,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be666e",
+    "name": "Sanford",
+    "code": "00362",
+    "latitude": 43.916667,
+    "longitude": -66.15,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6936",
+    "name": "Sango Bay",
+    "code": "01417",
+    "latitude": 55.933333,
+    "longitude": -61.083333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6929",
+    "name": "Saulnierville",
+    "code": "00354",
+    "latitude": 44.266667,
+    "longitude": -66.133333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e43d0f4a073c4bc31b",
+    "name": "Savage Cove",
+    "code": "02633",
+    "latitude": 51.3327256,
+    "longitude": -56.70043202,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6938",
+    "name": "Schooner Cove",
+    "code": "01478",
+    "latitude": 59.0966,
+    "longitude": -63.5187,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc62",
+    "name": "Scots Bay",
+    "code": "00300",
+    "latitude": 45.315444,
+    "longitude": -64.440747,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be65fc",
+    "name": "Seacow Pond",
+    "code": "01868",
+    "latitude": 47.0300766,
+    "longitude": -63.9910272,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe4d",
+    "name": "Seal Cove",
+    "code": "00005",
+    "latitude": 44.648709,
+    "longitude": -66.839677,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1ad",
+    "name": "Seal Cove",
+    "code": "01115",
+    "latitude": 49.936176,
+    "longitude": -56.38880325,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc9f",
+    "name": "Seal Island",
+    "code": "00400",
+    "latitude": 43.409734,
+    "longitude": -66.020097,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "664e56e70d43e44e47427864",
+    "name": "Seal Islands Bridge",
+    "code": "00626",
+    "latitude": 46.2366,
+    "longitude": -60.5002,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbed7",
+    "name": "Seldom",
+    "code": "01048",
+    "latitude": 49.609583,
+    "longitude": -54.182199,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6672",
+    "name": "Shag Harbour",
+    "code": "00396",
+    "latitude": 43.5,
+    "longitude": -65.7,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc23e",
+    "name": "Shediac Bay",
+    "code": "01805",
+    "latitude": 46.22689722,
+    "longitude": -64.54510278,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbcc5",
+    "name": "Sheet Harbour",
+    "code": "00510",
+    "latitude": 44.903,
+    "longitude": -62.5036,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbca9",
+    "name": "Shelburne",
+    "code": "00425",
+    "latitude": 43.753636,
+    "longitude": -65.320292,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbccf",
+    "name": "Sherbrooke",
+    "code": "00525",
+    "latitude": 45.133931,
+    "longitude": -61.983345,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1bd",
+    "name": "Ship Cove",
+    "code": "01180",
+    "latitude": 51.6027255,
+    "longitude": -55.62597008,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc2a9",
+    "name": "Shippagan",
+    "code": "02071",
+    "latitude": 47.747852,
+    "longitude": -64.702431,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc2a7",
+    "name": "Shippagan Gully",
+    "code": "02070",
+    "latitude": 47.7187001,
+    "longitude": -64.669771,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbf36",
+    "name": "Shoal Cove West",
+    "code": "02642",
+    "latitude": 51.024546,
+    "longitude": -57.022789,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbef3",
+    "name": "Shoal Tickle",
+    "code": "01410",
+    "latitude": 55.771765,
+    "longitude": -60.352145,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6b8d",
+    "name": "Shoe Cove",
+    "code": "01103",
+    "latitude": 49.916667,
+    "longitude": -55.55,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be668c",
+    "name": "Short Reach",
+    "code": "00677",
+    "latitude": 47.616818,
+    "longitude": -57.620916,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc229",
+    "name": "Skinners Cove",
+    "code": "01745",
+    "latitude": 45.79447,
+    "longitude": -63.04467,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbf01",
+    "name": "Skinners Pond",
+    "code": "01860",
+    "latitude": 46.964224,
+    "longitude": -64.122878,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6670",
+    "name": "Sluice Point",
+    "code": "00379",
+    "latitude": 43.783333,
+    "longitude": -65.966667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66b2",
+    "name": "Smiths Harbour",
+    "code": "01100",
+    "latitude": 49.733333,
+    "longitude": -55.966667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6e25",
+    "name": "Snooks Rocks",
+    "code": "01263",
+    "latitude": 54.2627,
+    "longitude": -58.1955,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbccd",
+    "name": "Sonora",
+    "code": "00520",
+    "latitude": 45.057346,
+    "longitude": -61.904549,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1b1",
+    "name": "Sops Island",
+    "code": "01135",
+    "latitude": 49.797178,
+    "longitude": -56.794615,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc20f",
+    "name": "Souris",
+    "code": "01650",
+    "latitude": 46.349625,
+    "longitude": -62.251762,
+    "timeZone": "",
+    "type": "PERMANENT",
+    "operating": true
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc152",
+    "name": "South East Bight",
+    "code": "00780",
+    "latitude": 47.4,
+    "longitude": -54.583333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe79",
+    "name": "Spencers Island",
+    "code": "00242",
+    "latitude": 45.35476,
+    "longitude": -64.710035,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbfa3",
+    "name": "Springdale",
+    "code": "01098",
+    "latitude": 49.5000599,
+    "longitude": -56.064947,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe9b",
+    "name": "Spry Harbour",
+    "code": "00509",
+    "latitude": 44.837741,
+    "longitude": -62.614059,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc144",
+    "name": "St Albans",
+    "code": "00705",
+    "latitude": 47.863101,
+    "longitude": -55.835199,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc12b",
+    "name": "St Anns Harbour",
+    "code": "00625",
+    "latitude": 46.266667,
+    "longitude": -60.6,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1b9",
+    "name": "St Anthony",
+    "code": "01170",
+    "latitude": 51.3639566,
+    "longitude": -55.58490847,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6b6c",
+    "name": "St Brendans",
+    "code": "01020",
+    "latitude": 48.8741,
+    "longitude": -53.6674,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc167",
+    "name": "St Brides",
+    "code": "00845",
+    "latitude": 46.9175758,
+    "longitude": -54.177762,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e43d0f4a073c4bc32d",
+    "name": "St Georges",
+    "code": "02720",
+    "latitude": 48.430237,
+    "longitude": -58.484809,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be669f",
+    "name": "St Jones Within",
+    "code": "00972",
+    "latitude": 48.05,
+    "longitude": -53.75,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66b6",
+    "name": "St Lewis",
+    "code": "01197",
+    "latitude": 52.366667,
+    "longitude": -55.683333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be65f6",
+    "name": "St Louis Gully",
+    "code": "01826",
+    "latitude": 46.783333,
+    "longitude": -64.883333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc2e",
+    "name": "St Martins",
+    "code": "00129",
+    "latitude": 45.35517,
+    "longitude": -65.531886,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbebb",
+    "name": "St Marys",
+    "code": "00860",
+    "latitude": 46.9194628,
+    "longitude": -53.580154,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1ef",
+    "name": "St Paul Island",
+    "code": "01530",
+    "latitude": 47.199,
+    "longitude": -60.146544,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ee0fdc4b9b4be684d",
+    "name": "St Pauls",
+    "code": "02661",
+    "latitude": 49.85,
+    "longitude": -57.783333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e23d0f4a073c4bc116",
+    "name": "St Peters Bay",
+    "code": "00587",
+    "latitude": 45.652431,
+    "longitude": -60.869506,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc260",
+    "name": "St Peters Bay",
+    "code": "01935",
+    "latitude": 46.43862,
+    "longitude": -62.73313,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be667f",
+    "name": "St Peters Inlet",
+    "code": "00588",
+    "latitude": 45.661123,
+    "longitude": -60.874447,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc19",
+    "name": "St. Andrews",
+    "code": "00040",
+    "latitude": 45.0822524,
+    "longitude": -67.0845247,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbf34",
+    "name": "St. Barbe",
+    "code": "02638",
+    "latitude": 51.204308,
+    "longitude": -56.77283,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc176",
+    "name": "St. Johns",
+    "code": "00905",
+    "latitude": 47.567045,
+    "longitude": -52.702311,
+    "timeZone": "",
+    "type": "PERMANENT",
+    "operating": true
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbeb9",
+    "name": "St. Lawrence",
+    "code": "00755",
+    "latitude": 46.916789,
+    "longitude": -55.39005,
+    "timeZone": "",
+    "type": "PERMANENT",
+    "operating": true
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc17",
+    "name": "St. Stephen",
+    "code": "00035",
+    "latitude": 45.191916,
+    "longitude": -67.276017,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be6601",
+    "name": "Stanley Bridge",
+    "code": "01912",
+    "latitude": 46.466667,
+    "longitude": -63.466667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc2af",
+    "name": "Stonehaven",
+    "code": "02120",
+    "latitude": 47.7542608,
+    "longitude": -65.3618448,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66a9",
+    "name": "Summerford",
+    "code": "01058",
+    "latitude": 49.4896307,
+    "longitude": -54.796798,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc227",
+    "name": "Summerside",
+    "code": "01735",
+    "latitude": 46.386486,
+    "longitude": -63.789649,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66a3",
+    "name": "Sweet Bay",
+    "code": "01002",
+    "latitude": 48.433333,
+    "longitude": -53.666667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbca3",
+    "name": "Swims Point",
+    "code": "00410",
+    "latitude": 43.433419,
+    "longitude": -65.631869,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e23d0f4a073c4bc11c",
+    "name": "Sydney",
+    "code": "00610",
+    "latitude": 46.141358,
+    "longitude": -60.199803,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e23d0f4a073c4bc125",
+    "name": "Table Head",
+    "code": "00621",
+    "latitude": 46.323534,
+    "longitude": -60.360073,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc154",
+    "name": "Tacks Beach",
+    "code": "00795",
+    "latitude": 47.581357,
+    "longitude": -54.212081,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc14a",
+    "name": "Terrenceville",
+    "code": "00730",
+    "latitude": 47.666667,
+    "longitude": -54.716667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1d7",
+    "name": "Terrington Basin",
+    "code": "01350",
+    "latitude": 53.344237,
+    "longitude": -60.401007,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66bd",
+    "name": "The Backway",
+    "code": "01290",
+    "latitude": 54.083333,
+    "longitude": -58.266667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be667a",
+    "name": "Three Fathom Harbour",
+    "code": "00498",
+    "latitude": 44.633333,
+    "longitude": -63.266667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6935",
+    "name": "Ticoralak Island",
+    "code": "01265",
+    "latitude": 54.266667,
+    "longitude": -58.2,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd5abf2ff231600015c1a10",
+    "name": "Tidal View Farm",
+    "code": "00281",
+    "latitude": 45.01,
+    "longitude": -64.073,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc231",
+    "name": "Tidnish",
+    "code": "01780",
+    "latitude": 45.997582,
+    "longitude": -64.007441,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc254",
+    "name": "Tignish",
+    "code": "01875",
+    "latitude": 46.950947,
+    "longitude": -63.9938431,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1a7",
+    "name": "Tilt Cove",
+    "code": "01102",
+    "latitude": 49.880514,
+    "longitude": -55.623771,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc195",
+    "name": "Tilting Harbour",
+    "code": "01049",
+    "latitude": 49.705267,
+    "longitude": -54.061983,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc78",
+    "name": "Tiverton",
+    "code": "00337",
+    "latitude": 44.380189,
+    "longitude": -66.213845,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc7a",
+    "name": "Tiverton (Boars Head)",
+    "code": "00338",
+    "latitude": 44.404224,
+    "longitude": -66.214794,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbcc3",
+    "name": "Tomlee Bay",
+    "code": "00505",
+    "latitude": 44.836431,
+    "longitude": -62.587022,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be65e6",
+    "name": "Toney River",
+    "code": "01645",
+    "latitude": 45.7692439,
+    "longitude": -62.8902308,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc2a5",
+    "name": "Tracadie",
+    "code": "02060",
+    "latitude": 47.52295,
+    "longitude": -64.90893,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be693a",
+    "name": "Tracadie",
+    "code": "01922",
+    "latitude": 46.35,
+    "longitude": -62.966667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc16b",
+    "name": "Trepassey",
+    "code": "00880",
+    "latitude": 46.735517,
+    "longitude": -53.371543,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e13d0f4a073c4bbecb",
+    "name": "Trinity",
+    "code": "00981",
+    "latitude": 48.372154,
+    "longitude": -53.357848,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66ae",
+    "name": "Triton",
+    "code": "01088",
+    "latitude": 49.533333,
+    "longitude": -55.617,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc72",
+    "name": "Trout Cove",
+    "code": "00334",
+    "latitude": 44.551317,
+    "longitude": -66.032085,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6940",
+    "name": "Trout River",
+    "code": "02672",
+    "latitude": 49.466667,
+    "longitude": -58.116667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e23d0f4a073c4bbfb4",
+    "name": "Truro",
+    "code": "00265",
+    "latitude": 45.366667,
+    "longitude": -63.316667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66c2",
+    "name": "Tuchialic Bay",
+    "code": "01384",
+    "latitude": 54.75,
+    "longitude": -58.416667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66c4",
+    "name": "Turnavik Island",
+    "code": "01400",
+    "latitude": 55.285606,
+    "longitude": -59.34282,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc93",
+    "name": "Tusket",
+    "code": "00378",
+    "latitude": 43.852062,
+    "longitude": -65.975042,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc19d",
+    "name": "Twillingate",
+    "code": "01060",
+    "latitude": 49.6597532,
+    "longitude": -54.77322577,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc2a",
+    "name": "Upper Gagetown",
+    "code": "00108",
+    "latitude": 45.847241,
+    "longitude": -66.234799,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ee0fdc4b9b4be671e",
+    "name": "Upper Maugerville",
+    "code": "00117",
+    "latitude": 45.883333,
+    "longitude": -66.05,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbca7",
+    "name": "Upper Port la Tour",
+    "code": "00420",
+    "latitude": 43.505894,
+    "longitude": -65.469347,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be660d",
+    "name": "Val Comeau",
+    "code": "02058",
+    "latitude": 47.465095,
+    "longitude": -64.8827213,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc191",
+    "name": "Valleyfield",
+    "code": "01030",
+    "latitude": 49.122244,
+    "longitude": -53.607874,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc223",
+    "name": "Victoria, PEI",
+    "code": "01715",
+    "latitude": 46.212623,
+    "longitude": -63.489466,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be65ee",
+    "name": "Wallace",
+    "code": "01766",
+    "latitude": 45.816667,
+    "longitude": -63.466667,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6667",
+    "name": "Walton",
+    "code": "00275",
+    "latitude": 45.216667,
+    "longitude": -64.0,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66c6",
+    "name": "Webb Bay",
+    "code": "01445",
+    "latitude": 56.8,
+    "longitude": -61.716667,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe83",
+    "name": "Wedgeport",
+    "code": "00374",
+    "latitude": 43.71704,
+    "longitude": -65.983089,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc0f",
+    "name": "Welshpool",
+    "code": "00015",
+    "latitude": 44.888903,
+    "longitude": -66.957557,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6930",
+    "name": "Wesleyville",
+    "code": "01031",
+    "latitude": 49.15,
+    "longitude": -53.566667,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc48",
+    "name": "West Advocate",
+    "code": "00235",
+    "latitude": 45.345678,
+    "longitude": -64.816617,
+    "timeZone": "",
+    "type": "TEMPORARY",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc1b",
+    "name": "West Dipper Harbour",
+    "code": "00046",
+    "latitude": 45.09284,
+    "longitude": -66.418731,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e03d0f4a073c4bbe85",
+    "name": "West Head",
+    "code": "00408",
+    "latitude": 43.459567,
+    "longitude": -65.653437,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbcc7",
+    "name": "West Newdy Quoddy",
+    "code": "00512",
+    "latitude": 44.904092,
+    "longitude": -62.349648,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc24e",
+    "name": "West Point",
+    "code": "01845",
+    "latitude": 46.620079,
+    "longitude": -64.371788,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e43d0f4a073c4bc317",
+    "name": "West St. Modeste",
+    "code": "02595",
+    "latitude": 51.594882,
+    "longitude": -56.704036,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be6af1",
+    "name": "Westfield",
+    "code": "00090",
+    "latitude": 45.35,
+    "longitude": -66.216667,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be665a",
+    "name": "Westfield Beach",
+    "code": "00089",
+    "latitude": 45.348372,
+    "longitude": -66.223552,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc7c",
+    "name": "Westport",
+    "code": "00340",
+    "latitude": 44.263641,
+    "longitude": -66.350064,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc80",
+    "name": "Weymouth",
+    "code": "00350",
+    "latitude": 44.383333,
+    "longitude": -66.0,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be666c",
+    "name": "Weymouth North",
+    "code": "00349",
+    "latitude": 44.433333,
+    "longitude": -66.0,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1c5",
+    "name": "White Bear Arm",
+    "code": "01202",
+    "latitude": 52.734901,
+    "longitude": -55.829688,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbcd7",
+    "name": "Whitehead",
+    "code": "00545",
+    "latitude": 45.240412,
+    "longitude": -61.188736,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be6685",
+    "name": "Whycocomagh",
+    "code": "00650",
+    "latitude": 45.966667,
+    "longitude": -61.116667,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1b5",
+    "name": "Wild Cove",
+    "code": "01155",
+    "latitude": 50.866667,
+    "longitude": -55.95,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc1eb",
+    "name": "Williams Harbour, North Labrador",
+    "code": "01490",
+    "latitude": 60.009951,
+    "longitude": -64.316726,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66b7",
+    "name": "Williams Harbour, South Labrador",
+    "code": "01199",
+    "latitude": 52.5596724,
+    "longitude": -55.7698364,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc11",
+    "name": "Wilsons Beach",
+    "code": "00020",
+    "latitude": 44.93183,
+    "longitude": -66.940664,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc5c",
+    "name": "Windsor",
+    "code": "00280",
+    "latitude": 44.983333,
+    "longitude": -64.15,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66c5",
+    "name": "Winsor Harbour Island",
+    "code": "01402",
+    "latitude": 55.333333,
+    "longitude": -59.733333,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5dd3064de0fdc4b9b4be66ac",
+    "name": "Wiseman Head",
+    "code": "01075",
+    "latitude": 49.233333,
+    "longitude": -55.216667,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5dd3064fe0fdc4b9b4be693b",
+    "name": "Wishart Point",
+    "code": "02055",
+    "latitude": 47.339657,
+    "longitude": -64.96788,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc217",
+    "name": "Wood Islands",
+    "code": "01680",
+    "latitude": 45.952878,
+    "longitude": -62.749395,
+    "timeZone": "",
+    "type": "PERMANENT",
+    "operating": true
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc9b",
+    "name": "Woods Harbour",
+    "code": "00390",
+    "latitude": 43.529406,
+    "longitude": -65.739946,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5cebf1e33d0f4a073c4bc156",
+    "name": "Woody Island",
+    "code": "00805",
+    "latitude": 47.783668,
+    "longitude": -54.178688,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5dd3064ee0fdc4b9b4be684e",
+    "name": "Woody Point",
+    "code": "02671",
+    "latitude": 49.5,
+    "longitude": -57.916667,
+    "timeZone": "",
+    "type": "UNKNOWN",
+    "operating": false
+  },
+  {
+    "id": "5cebf1df3d0f4a073c4bbc8d",
+    "name": "Yarmouth",
+    "code": "00365",
+    "latitude": 43.832311,
+    "longitude": -66.124968,
+    "timeZone": "",
+    "type": "PERMANENT",
+    "operating": true
+  },
+  {
+    "id": "5dd3064ce0fdc4b9b4be6616",
+    "name": "Youghall Beach #1",
+    "code": "02132",
+    "latitude": 47.65,
+    "longitude": -65.633333,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  },
+  {
+    "id": "5dd30650e0fdc4b9b4be6c6b",
+    "name": "Young's Harbour",
+    "code": "01435",
+    "latitude": 56.633,
+    "longitude": -61.061,
+    "timeZone": "",
+    "type": "DISCONTINUED",
+    "operating": false
+  }
+]

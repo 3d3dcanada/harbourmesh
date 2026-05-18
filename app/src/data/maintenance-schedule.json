@@ -1,0 +1,119 @@
+{
+  "schemaVersion": "harbourmesh.maintenance-schedule.v1",
+  "categories": [
+    {
+      "id": "engine",
+      "name": "Engine & Propulsion",
+      "tasks": [
+        {"id": "eng-oil-change", "name": "Engine Oil & Filter Change", "intervalHours": 100, "intervalMonths": 12, "priority": "critical", "description": "Replace engine oil and oil filter. Check for metal particles in old oil.", "parts": ["engine oil", "oil filter", "drain washer"]},
+        {"id": "eng-fuel-filter", "name": "Primary Fuel Filter/Water Separator", "intervalHours": 200, "intervalMonths": 12, "priority": "critical", "description": "Replace primary fuel filter element. Drain water from separator bowl.", "parts": ["fuel filter element", "O-ring"]},
+        {"id": "eng-secondary-fuel", "name": "Secondary Fuel Filter", "intervalHours": 400, "intervalMonths": 24, "priority": "high", "description": "Replace engine-mounted secondary fuel filter.", "parts": ["secondary fuel filter"]},
+        {"id": "eng-impeller", "name": "Raw Water Impeller", "intervalHours": 500, "intervalMonths": 24, "priority": "critical", "description": "Replace raw water pump impeller. Inspect pump housing for scoring. Carry spare onboard.", "parts": ["impeller", "impeller gasket", "cover O-ring"]},
+        {"id": "eng-coolant", "name": "Coolant Flush & Replace", "intervalHours": 1000, "intervalMonths": 24, "priority": "high", "description": "Drain and flush cooling system. Refill with manufacturer-specified coolant mix.", "parts": ["coolant", "thermostat gasket"]},
+        {"id": "eng-thermostat", "name": "Thermostat Replacement", "intervalHours": 2000, "intervalMonths": 48, "priority": "medium", "description": "Replace thermostat and gasket. Test opening temperature.", "parts": ["thermostat", "gasket"]},
+        {"id": "eng-belt", "name": "Drive Belt Inspection", "intervalHours": 200, "intervalMonths": 6, "priority": "high", "description": "Check belt tension and condition. Look for cracks, glazing, fraying. Replace if worn.", "parts": ["drive belt"]},
+        {"id": "eng-valve-clearance", "name": "Valve Clearance Adjustment", "intervalHours": 500, "intervalMonths": 24, "priority": "medium", "description": "Check and adjust valve clearances per manufacturer specs.", "parts": []},
+        {"id": "eng-zincs", "name": "Engine Zinc Anodes", "intervalHours": null, "intervalMonths": 6, "priority": "high", "description": "Inspect pencil zincs in heat exchanger and exhaust elbow. Replace at 50% erosion.", "parts": ["pencil zinc anodes"]},
+        {"id": "eng-exhaust-elbow", "name": "Exhaust Elbow Inspection", "intervalHours": 1000, "intervalMonths": 24, "priority": "high", "description": "Remove and inspect exhaust elbow for carbon buildup and corrosion. Critical failure point.", "parts": ["exhaust elbow gasket"]},
+        {"id": "eng-hoses", "name": "Cooling Hose Inspection", "intervalHours": 500, "intervalMonths": 12, "priority": "high", "description": "Squeeze all cooling hoses. Replace any that feel soft, spongy, or show surface cracking.", "parts": ["hose clamps"]},
+        {"id": "eng-transmission-fluid", "name": "Transmission Fluid Check", "intervalHours": 250, "intervalMonths": 12, "priority": "high", "description": "Check transmission fluid level and condition. Top up or replace as needed.", "parts": ["transmission fluid"]},
+        {"id": "eng-alignment", "name": "Engine Alignment Check", "intervalHours": 500, "intervalMonths": 12, "priority": "medium", "description": "Check engine-to-shaft alignment with feeler gauges. Misalignment causes vibration and bearing wear."},
+        {"id": "eng-prop-inspect", "name": "Propeller Inspection", "intervalHours": null, "intervalMonths": 6, "priority": "high", "description": "Remove propeller, inspect blades for dings/bends, check shaft for fishing line damage, re-grease."},
+        {"id": "eng-prop-zinc", "name": "Propeller Shaft Zinc", "intervalHours": null, "intervalMonths": 6, "priority": "high", "description": "Inspect and replace shaft zinc anode at 50% erosion.", "parts": ["shaft zinc anode"]},
+        {"id": "eng-stuffing-box", "name": "Stuffing Box / Shaft Seal", "intervalHours": null, "intervalMonths": 6, "priority": "critical", "description": "Check shaft seal drip rate (1-2 drops/min under power for traditional). Adjust packing if needed.", "parts": ["packing material"]}
+      ]
+    },
+    {
+      "id": "hull",
+      "name": "Hull & Structure",
+      "tasks": [
+        {"id": "hull-bottom-clean", "name": "Bottom Cleaning", "intervalHours": null, "intervalMonths": 3, "priority": "medium", "description": "Scrub bottom paint to remove marine growth. Tropical waters: monthly."},
+        {"id": "hull-bottom-paint", "name": "Bottom Paint Application", "intervalHours": null, "intervalMonths": 18, "priority": "medium", "description": "Haul out, pressure wash, sand, and apply 2 coats antifouling paint.", "parts": ["antifouling paint", "roller covers", "solvent"]},
+        {"id": "hull-zincs", "name": "Hull Zinc Anodes", "intervalHours": null, "intervalMonths": 12, "priority": "high", "description": "Inspect and replace hull zincs at haul-out. Match anode metal to water type (zinc for salt, magnesium for fresh).", "parts": ["hull zinc anodes"]},
+        {"id": "hull-through-hull", "name": "Through-Hull & Seacock Inspection", "intervalHours": null, "intervalMonths": 6, "priority": "critical", "description": "Exercise all seacocks. Check for dezincification (pink/reddish bronze). Inspect hose connections and double clamps below waterline."},
+        {"id": "hull-keel-bolts", "name": "Keel Bolt Inspection", "intervalHours": null, "intervalMonths": 24, "priority": "critical", "description": "Inspect keel bolt condition at haul-out. Check for weeping, rust stains, or movement."},
+        {"id": "hull-rudder", "name": "Rudder Bearing & Stock", "intervalHours": null, "intervalMonths": 12, "priority": "high", "description": "Check rudder for play. Inspect bearing, stock, and quadrant connections."},
+        {"id": "hull-gelcoat", "name": "Gelcoat Inspection", "intervalHours": null, "intervalMonths": 12, "priority": "low", "description": "Inspect for cracks, chips, blisters. Repair stress cracks. Check for osmotic blistering below waterline."},
+        {"id": "hull-cutlass", "name": "Cutlass Bearing Check", "intervalHours": null, "intervalMonths": 12, "priority": "medium", "description": "Check shaft play in cutlass bearing. Replace if shaft can move more than 1mm."}
+      ]
+    },
+    {
+      "id": "electrical",
+      "name": "Electrical Systems",
+      "tasks": [
+        {"id": "elec-battery-test", "name": "Battery Load Test", "intervalHours": null, "intervalMonths": 6, "priority": "high", "description": "Load test all batteries. Check specific gravity (flooded) or voltage (AGM/LiFePO4). Clean terminals."},
+        {"id": "elec-battery-water", "name": "Battery Water Level (Flooded)", "intervalHours": null, "intervalMonths": 1, "priority": "high", "description": "Check and top up electrolyte with distilled water. Only for flooded lead-acid batteries."},
+        {"id": "elec-connections", "name": "Electrical Connection Audit", "intervalHours": null, "intervalMonths": 12, "priority": "high", "description": "Inspect all visible wiring for chafe, corrosion, heat damage. Tighten terminal connections. Apply dielectric grease."},
+        {"id": "elec-alternator", "name": "Alternator Belt & Output", "intervalHours": 200, "intervalMonths": 12, "priority": "high", "description": "Check belt tension. Verify charging output with multimeter (13.8-14.4V at battery terminals while running)."},
+        {"id": "elec-shore-power", "name": "Shore Power Cord & Inlet", "intervalHours": null, "intervalMonths": 6, "priority": "high", "description": "Inspect shore power cord for damage, burned pins, corrosion. Check inlet connection quality."},
+        {"id": "elec-nav-lights", "name": "Navigation Light Test", "intervalHours": null, "intervalMonths": 3, "priority": "critical", "description": "Test all navigation lights: port, starboard, stern, masthead, anchor, steaming. Carry spare bulbs."},
+        {"id": "elec-bonding", "name": "Bonding System Check", "intervalHours": null, "intervalMonths": 12, "priority": "medium", "description": "Test continuity of bonding system between all underwater metals. Check for stray current corrosion."}
+      ]
+    },
+    {
+      "id": "rigging",
+      "name": "Rigging & Sails",
+      "tasks": [
+        {"id": "rig-standing", "name": "Standing Rigging Inspection", "intervalHours": null, "intervalMonths": 12, "priority": "critical", "description": "Inspect all shrouds and stays for broken strands, meat hooks, corrosion. Check swage fittings and turnbuckles. Replace rigging every 10-15 years."},
+        {"id": "rig-running", "name": "Running Rigging Inspection", "intervalHours": null, "intervalMonths": 6, "priority": "high", "description": "Inspect halyards, sheets, and control lines for chafe, UV damage, stiffness. Replace as needed."},
+        {"id": "rig-chainplates", "name": "Chainplate Inspection", "intervalHours": null, "intervalMonths": 12, "priority": "critical", "description": "Check chainplates for cracks and corrosion. Inspect bedding/sealant around deck penetrations for leaks."},
+        {"id": "rig-mast-step", "name": "Mast Step & Partners", "intervalHours": null, "intervalMonths": 12, "priority": "high", "description": "Inspect mast step for corrosion and cracks. Check mast partners for compression damage."},
+        {"id": "rig-spreaders", "name": "Spreader & Fitting Check", "intervalHours": null, "intervalMonths": 12, "priority": "high", "description": "Inspect spreader tips, tangs, and attachment points. Check for cracks and proper angle."},
+        {"id": "rig-furler", "name": "Furler Service", "intervalHours": null, "intervalMonths": 12, "priority": "high", "description": "Clean and lubricate roller furling drum. Inspect UV strip on headsail. Check furling line for wear."},
+        {"id": "rig-winch", "name": "Winch Service", "intervalHours": null, "intervalMonths": 12, "priority": "medium", "description": "Strip, clean, and re-grease all winches. Inspect pawls and springs. Replace worn bearings."},
+        {"id": "rig-sail-inspect", "name": "Sail Inspection", "intervalHours": null, "intervalMonths": 12, "priority": "medium", "description": "Inspect all sails for chafe, UV damage, stitching failure. Check battens, slides, and hanks."}
+      ]
+    },
+    {
+      "id": "safety",
+      "name": "Safety Equipment",
+      "tasks": [
+        {"id": "safe-pfd", "name": "PFD/Lifejacket Inspection", "intervalHours": null, "intervalMonths": 6, "priority": "critical", "description": "Check all PFDs for rips, deteriorating straps, faded reflective tape. Test inflatable mechanisms. Check CO2 cartridge charge dates."},
+        {"id": "safe-extinguisher", "name": "Fire Extinguisher Check", "intervalHours": null, "intervalMonths": 3, "priority": "critical", "description": "Verify gauge in green zone. Check mounting bracket secure. Shake dry chemical units monthly to prevent caking. Note expiry dates."},
+        {"id": "safe-flares", "name": "Visual Distress Signals", "intervalHours": null, "intervalMonths": 12, "priority": "critical", "description": "Check expiration dates on all flares and smoke signals. Replace 30 days before expiry. Carry current set plus recently expired backup."},
+        {"id": "safe-epirb", "name": "EPIRB/PLB Test", "intervalHours": null, "intervalMonths": 1, "priority": "critical", "description": "Self-test EPIRB/PLB per manufacturer instructions. Verify registration is current. Check hydrostatic release date (if applicable)."},
+        {"id": "safe-liferaft", "name": "Liferaft Service", "intervalHours": null, "intervalMonths": 36, "priority": "critical", "description": "Professional liferaft service per manufacturer interval (typically 3 years). Check hydrostatic release and cradle mounting."},
+        {"id": "safe-horn", "name": "Sound Signal Devices", "intervalHours": null, "intervalMonths": 3, "priority": "high", "description": "Test horn, whistle, and bell. Check compressed air canisters for charge level. Carry manual backup."},
+        {"id": "safe-co-detector", "name": "CO Detector Test", "intervalHours": null, "intervalMonths": 1, "priority": "critical", "description": "Test carbon monoxide detector. Replace batteries. Check expiry date (typically 5-7 year lifespan)."},
+        {"id": "safe-bilge-pump", "name": "Bilge Pump Test", "intervalHours": null, "intervalMonths": 1, "priority": "critical", "description": "Test automatic float switch activation. Verify strong discharge stream. Test manual backup pump. Clean strainer."},
+        {"id": "safe-first-aid", "name": "First Aid Kit Audit", "intervalHours": null, "intervalMonths": 6, "priority": "high", "description": "Check all medications for expiry. Replace used items. Ensure seasickness medication current. Verify waterproof container seal."},
+        {"id": "safe-jacklines", "name": "Jacklines & Tethers", "intervalHours": null, "intervalMonths": 12, "priority": "critical", "description": "Inspect jacklines for UV damage, chafe, corrosion at attachment points. Check harness tethers and clips. Replace per manufacturer schedule."}
+      ]
+    },
+    {
+      "id": "plumbing",
+      "name": "Plumbing & Tanks",
+      "tasks": [
+        {"id": "plumb-head", "name": "Marine Head Service", "intervalHours": null, "intervalMonths": 12, "priority": "medium", "description": "Rebuild marine toilet pump with new valves and seals. Clean joker valve. Inspect discharge hose for permeation (smell test)."},
+        {"id": "plumb-holding-tank", "name": "Holding Tank Pump-Out", "intervalHours": null, "intervalMonths": 1, "priority": "high", "description": "Pump out holding tank at designated facility. Flush with fresh water. Check vent for blockage."},
+        {"id": "plumb-water-heater", "name": "Water Heater Anode", "intervalHours": null, "intervalMonths": 12, "priority": "medium", "description": "Check and replace water heater anode rod. Flush tank to remove sediment."},
+        {"id": "plumb-water-filter", "name": "Freshwater Filter", "intervalHours": null, "intervalMonths": 6, "priority": "medium", "description": "Replace freshwater filter element. Sanitize water system with dilute bleach solution at start of season."},
+        {"id": "plumb-fuel-tank", "name": "Fuel Tank Inspection", "intervalHours": null, "intervalMonths": 12, "priority": "high", "description": "Check fuel tank for water contamination (fuel paste or visual). Inspect fittings and vents. Polish fuel if stored over winter."},
+        {"id": "plumb-hose-clamps", "name": "Below-Waterline Hose Clamps", "intervalHours": null, "intervalMonths": 12, "priority": "critical", "description": "Inspect all hose clamps below waterline. Ensure double-clamped. Replace any showing rust or weakness. Use marine-grade stainless only."}
+      ]
+    },
+    {
+      "id": "electronics",
+      "name": "Electronics & Navigation",
+      "tasks": [
+        {"id": "elec-vhf-test", "name": "VHF Radio Test", "intervalHours": null, "intervalMonths": 1, "priority": "critical", "description": "Test VHF radio on working channel with nearby station. Verify DSC functionality. Check MMSI programmed correctly."},
+        {"id": "elec-gps-test", "name": "GPS/Chartplotter Check", "intervalHours": null, "intervalMonths": 3, "priority": "high", "description": "Verify GPS fix accuracy against known position. Update electronic charts to latest edition."},
+        {"id": "elec-radar", "name": "Radar Performance Check", "intervalHours": null, "intervalMonths": 6, "priority": "medium", "description": "Verify radar acquiring targets correctly. Check for interference patterns. Clean scanner unit."},
+        {"id": "elec-ais", "name": "AIS Verification", "intervalHours": null, "intervalMonths": 6, "priority": "high", "description": "Verify AIS transmitting correctly (check with nearby vessel or web tracker). Confirm MMSI and vessel data accurate."},
+        {"id": "elec-compass", "name": "Compass Deviation Check", "intervalHours": null, "intervalMonths": 12, "priority": "high", "description": "Compare magnetic compass to GPS bearing on known transit. Record deviation card. Swing compass if deviation exceeds 5°."},
+        {"id": "elec-depth", "name": "Depth Sounder Verification", "intervalHours": null, "intervalMonths": 6, "priority": "high", "description": "Compare depth reading against chart datum in known location. Clean transducer face of marine growth."},
+        {"id": "elec-instrument-cal", "name": "Instrument Calibration", "intervalHours": null, "intervalMonths": 12, "priority": "medium", "description": "Calibrate wind instruments, log/speed, and heading sensor. Cross-reference with known values."}
+      ]
+    },
+    {
+      "id": "seasonal",
+      "name": "Seasonal",
+      "tasks": [
+        {"id": "season-commission", "name": "Spring Commissioning", "intervalHours": null, "intervalMonths": 12, "priority": "critical", "description": "Complete pre-season checklist: launch, step mast, connect systems, engine start, sea trial. Typically April-May in Maritimes."},
+        {"id": "season-decommission", "name": "Fall Decommissioning", "intervalHours": null, "intervalMonths": 12, "priority": "critical", "description": "Complete winterization: haul out, engine winterize, drain water systems, remove sails, cover. Typically October-November in Maritimes."},
+        {"id": "season-insurance", "name": "Insurance & Registration Renewal", "intervalHours": null, "intervalMonths": 12, "priority": "critical", "description": "Renew vessel insurance and registration. Update surveyed value if needed. Verify coverage limits."},
+        {"id": "season-safety-audit", "name": "Transport Canada Safety Audit", "intervalHours": null, "intervalMonths": 12, "priority": "critical", "description": "Verify vessel meets Transport Canada Small Vessel Regulations: required safety equipment, capacity plate, licensing."}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,4606 @@
+{
+  "Saint John, NB": {
+    "stationId": "5cebf1df3d0f4a073c4bbc24",
+    "predictions": [
+      {
+        "eventDate": "2026-05-17T03:13:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 8.59
+      },
+      {
+        "eventDate": "2026-05-17T09:36:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 0.307
+      },
+      {
+        "eventDate": "2026-05-17T15:45:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 8.062
+      },
+      {
+        "eventDate": "2026-05-17T21:56:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 0.797
+      },
+      {
+        "eventDate": "2026-05-18T04:04:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 8.678
+      },
+      {
+        "eventDate": "2026-05-18T10:27:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 0.248
+      },
+      {
+        "eventDate": "2026-05-18T16:38:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 8.068
+      },
+      {
+        "eventDate": "2026-05-18T22:48:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 0.839
+      },
+      {
+        "eventDate": "2026-05-19T04:57:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 8.628
+      },
+      {
+        "eventDate": "2026-05-19T11:21:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 0.329
+      },
+      {
+        "eventDate": "2026-05-19T17:32:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 7.983
+      },
+      {
+        "eventDate": "2026-05-19T23:44:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 0.964
+      },
+      {
+        "eventDate": "2026-05-20T05:52:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 8.46
+      },
+      {
+        "eventDate": "2026-05-20T12:17:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 0.52
+      },
+      {
+        "eventDate": "2026-05-20T18:29:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 7.831
+      },
+      {
+        "eventDate": "2026-05-21T00:41:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 1.146
+      },
+      {
+        "eventDate": "2026-05-21T06:51:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 8.209
+      },
+      {
+        "eventDate": "2026-05-21T13:15:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 0.774
+      },
+      {
+        "eventDate": "2026-05-21T19:28:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 7.652
+      },
+      {
+        "eventDate": "2026-05-22T01:42:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 1.348
+      },
+      {
+        "eventDate": "2026-05-22T07:52:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 7.925
+      },
+      {
+        "eventDate": "2026-05-22T14:16:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 1.033
+      },
+      {
+        "eventDate": "2026-05-22T20:31:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 7.497
+      },
+      {
+        "eventDate": "2026-05-23T02:45:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 1.517
+      },
+      {
+        "eventDate": "2026-05-23T08:57:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 7.662
+      },
+      {
+        "eventDate": "2026-05-23T15:19:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 1.246
+      },
+      {
+        "eventDate": "2026-05-23T21:35:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 7.411
+      },
+      {
+        "eventDate": "2026-05-24T03:50:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 1.608
+      },
+      {
+        "eventDate": "2026-05-24T10:03:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 7.465
+      },
+      {
+        "eventDate": "2026-05-24T16:22:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 1.39
+      },
+      {
+        "eventDate": "2026-05-24T22:38:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 7.405
+      },
+      {
+        "eventDate": "2026-05-25T04:54:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 1.603
+      },
+      {
+        "eventDate": "2026-05-25T11:07:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 7.349
+      },
+      {
+        "eventDate": "2026-05-25T17:23:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 1.472
+      },
+      {
+        "eventDate": "2026-05-25T23:37:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 7.456
+      },
+      {
+        "eventDate": "2026-05-26T05:54:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 1.527
+      },
+      {
+        "eventDate": "2026-05-26T12:06:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 7.295
+      },
+      {
+        "eventDate": "2026-05-26T18:19:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 1.524
+      },
+      {
+        "eventDate": "2026-05-27T00:32:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 7.523
+      },
+      {
+        "eventDate": "2026-05-27T06:50:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 1.428
+      },
+      {
+        "eventDate": "2026-05-27T13:01:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 7.273
+      },
+      {
+        "eventDate": "2026-05-27T19:11:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 1.573
+      },
+      {
+        "eventDate": "2026-05-28T01:21:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 7.574
+      },
+      {
+        "eventDate": "2026-05-28T07:39:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 1.346
+      },
+      {
+        "eventDate": "2026-05-28T13:51:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 7.255
+      },
+      {
+        "eventDate": "2026-05-28T19:58:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 1.629
+      },
+      {
+        "eventDate": "2026-05-29T02:06:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 7.604
+      },
+      {
+        "eventDate": "2026-05-29T08:24:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 1.295
+      },
+      {
+        "eventDate": "2026-05-29T14:35:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 7.235
+      },
+      {
+        "eventDate": "2026-05-29T20:40:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 1.685
+      },
+      {
+        "eventDate": "2026-05-30T02:48:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 7.619
+      },
+      {
+        "eventDate": "2026-05-30T09:06:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 1.271
+      },
+      {
+        "eventDate": "2026-05-30T15:16:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 7.217
+      },
+      {
+        "eventDate": "2026-05-30T21:21:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f29",
+        "value": 1.731
+      }
+    ],
+    "count": 54
+  },
+  "Halifax, NS": {
+    "stationId": "5cebf1df3d0f4a073c4bbcbb",
+    "predictions": [
+      {
+        "eventDate": "2026-05-17T06:13:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": -0.039
+      },
+      {
+        "eventDate": "2026-05-17T12:05:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 1.736
+      },
+      {
+        "eventDate": "2026-05-17T18:17:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 0.294
+      },
+      {
+        "eventDate": "2026-05-18T00:11:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 2.018
+      },
+      {
+        "eventDate": "2026-05-18T07:06:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": -0.047
+      },
+      {
+        "eventDate": "2026-05-18T12:57:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 1.755
+      },
+      {
+        "eventDate": "2026-05-18T19:16:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 0.332
+      },
+      {
+        "eventDate": "2026-05-19T01:03:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 1.979
+      },
+      {
+        "eventDate": "2026-05-19T08:02:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": -0.011
+      },
+      {
+        "eventDate": "2026-05-19T13:51:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 1.753
+      },
+      {
+        "eventDate": "2026-05-19T20:21:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 0.401
+      },
+      {
+        "eventDate": "2026-05-20T01:56:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 1.911
+      },
+      {
+        "eventDate": "2026-05-20T09:01:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 0.055
+      },
+      {
+        "eventDate": "2026-05-20T14:45:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 1.729
+      },
+      {
+        "eventDate": "2026-05-20T21:29:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 0.475
+      },
+      {
+        "eventDate": "2026-05-21T02:50:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 1.821
+      },
+      {
+        "eventDate": "2026-05-21T10:01:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 0.135
+      },
+      {
+        "eventDate": "2026-05-21T15:41:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 1.691
+      },
+      {
+        "eventDate": "2026-05-21T22:37:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 0.529
+      },
+      {
+        "eventDate": "2026-05-22T03:45:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 1.717
+      },
+      {
+        "eventDate": "2026-05-22T11:01:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 0.219
+      },
+      {
+        "eventDate": "2026-05-22T16:39:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 1.652
+      },
+      {
+        "eventDate": "2026-05-22T23:42:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 0.547
+      },
+      {
+        "eventDate": "2026-05-23T04:44:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 1.612
+      },
+      {
+        "eventDate": "2026-05-23T11:59:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 0.3
+      },
+      {
+        "eventDate": "2026-05-23T17:41:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 1.628
+      },
+      {
+        "eventDate": "2026-05-24T00:43:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 0.533
+      },
+      {
+        "eventDate": "2026-05-24T05:51:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 1.526
+      },
+      {
+        "eventDate": "2026-05-24T12:55:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 0.371
+      },
+      {
+        "eventDate": "2026-05-24T18:47:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 1.63
+      },
+      {
+        "eventDate": "2026-05-25T01:42:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 0.495
+      },
+      {
+        "eventDate": "2026-05-25T07:05:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 1.481
+      },
+      {
+        "eventDate": "2026-05-25T13:50:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 0.425
+      },
+      {
+        "eventDate": "2026-05-25T19:47:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 1.654
+      },
+      {
+        "eventDate": "2026-05-26T02:36:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 0.444
+      },
+      {
+        "eventDate": "2026-05-26T08:13:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 1.482
+      },
+      {
+        "eventDate": "2026-05-26T14:44:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 0.462
+      },
+      {
+        "eventDate": "2026-05-26T20:38:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 1.68
+      },
+      {
+        "eventDate": "2026-05-27T03:27:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 0.389
+      },
+      {
+        "eventDate": "2026-05-27T09:09:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 1.511
+      },
+      {
+        "eventDate": "2026-05-27T15:36:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 0.487
+      },
+      {
+        "eventDate": "2026-05-27T21:21:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 1.696
+      },
+      {
+        "eventDate": "2026-05-28T04:14:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 0.335
+      },
+      {
+        "eventDate": "2026-05-28T09:58:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 1.551
+      },
+      {
+        "eventDate": "2026-05-28T16:25:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 0.512
+      },
+      {
+        "eventDate": "2026-05-28T22:02:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 1.701
+      },
+      {
+        "eventDate": "2026-05-29T04:55:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 0.29
+      },
+      {
+        "eventDate": "2026-05-29T10:43:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 1.589
+      },
+      {
+        "eventDate": "2026-05-29T17:09:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 0.547
+      },
+      {
+        "eventDate": "2026-05-29T22:41:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 1.699
+      },
+      {
+        "eventDate": "2026-05-30T05:33:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 0.26
+      },
+      {
+        "eventDate": "2026-05-30T11:27:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 1.616
+      },
+      {
+        "eventDate": "2026-05-30T17:48:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 0.594
+      },
+      {
+        "eventDate": "2026-05-30T23:19:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c633a9f593161c3f72",
+        "value": 1.699
+      }
+    ],
+    "count": 54
+  },
+  "Charlottetown, PEI": {
+    "stationId": "5cebf1e33d0f4a073c4bc21f",
+    "predictions": [
+      {
+        "eventDate": "2026-05-17T03:02:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 2.708
+      },
+      {
+        "eventDate": "2026-05-17T08:44:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 1.231
+      },
+      {
+        "eventDate": "2026-05-17T14:19:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 2.784
+      },
+      {
+        "eventDate": "2026-05-17T21:14:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 0.074
+      },
+      {
+        "eventDate": "2026-05-18T03:54:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 2.772
+      },
+      {
+        "eventDate": "2026-05-18T09:33:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 1.258
+      },
+      {
+        "eventDate": "2026-05-18T15:06:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 2.861
+      },
+      {
+        "eventDate": "2026-05-18T22:01:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 0.002
+      },
+      {
+        "eventDate": "2026-05-19T04:45:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 2.778
+      },
+      {
+        "eventDate": "2026-05-19T10:21:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 1.284
+      },
+      {
+        "eventDate": "2026-05-19T15:52:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 2.9
+      },
+      {
+        "eventDate": "2026-05-19T22:49:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 0.02
+      },
+      {
+        "eventDate": "2026-05-20T05:37:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 2.74
+      },
+      {
+        "eventDate": "2026-05-20T11:11:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 1.306
+      },
+      {
+        "eventDate": "2026-05-20T16:41:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 2.881
+      },
+      {
+        "eventDate": "2026-05-20T23:37:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 0.121
+      },
+      {
+        "eventDate": "2026-05-21T06:32:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 2.68
+      },
+      {
+        "eventDate": "2026-05-21T12:02:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 1.322
+      },
+      {
+        "eventDate": "2026-05-21T17:33:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 2.795
+      },
+      {
+        "eventDate": "2026-05-22T00:28:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 0.289
+      },
+      {
+        "eventDate": "2026-05-22T07:30:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 2.621
+      },
+      {
+        "eventDate": "2026-05-22T12:58:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 1.322
+      },
+      {
+        "eventDate": "2026-05-22T18:32:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 2.656
+      },
+      {
+        "eventDate": "2026-05-23T01:20:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 0.499
+      },
+      {
+        "eventDate": "2026-05-23T08:26:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 2.573
+      },
+      {
+        "eventDate": "2026-05-23T13:58:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 1.293
+      },
+      {
+        "eventDate": "2026-05-23T19:41:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 2.502
+      },
+      {
+        "eventDate": "2026-05-24T02:16:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 0.724
+      },
+      {
+        "eventDate": "2026-05-24T09:19:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 2.537
+      },
+      {
+        "eventDate": "2026-05-24T15:01:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 1.219
+      },
+      {
+        "eventDate": "2026-05-24T20:57:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 2.385
+      },
+      {
+        "eventDate": "2026-05-25T03:17:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 0.934
+      },
+      {
+        "eventDate": "2026-05-25T10:06:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 2.509
+      },
+      {
+        "eventDate": "2026-05-25T16:05:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 1.1
+      },
+      {
+        "eventDate": "2026-05-25T22:18:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 2.34
+      },
+      {
+        "eventDate": "2026-05-26T04:22:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 1.105
+      },
+      {
+        "eventDate": "2026-05-26T10:50:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 2.486
+      },
+      {
+        "eventDate": "2026-05-26T17:07:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 0.951
+      },
+      {
+        "eventDate": "2026-05-26T23:36:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 2.365
+      },
+      {
+        "eventDate": "2026-05-27T05:26:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 1.227
+      },
+      {
+        "eventDate": "2026-05-27T11:31:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 2.471
+      },
+      {
+        "eventDate": "2026-05-27T18:04:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 0.8
+      },
+      {
+        "eventDate": "2026-05-28T00:44:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 2.425
+      },
+      {
+        "eventDate": "2026-05-28T06:24:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 1.309
+      },
+      {
+        "eventDate": "2026-05-28T12:10:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 2.468
+      },
+      {
+        "eventDate": "2026-05-28T18:55:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 0.672
+      },
+      {
+        "eventDate": "2026-05-29T01:42:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 2.478
+      },
+      {
+        "eventDate": "2026-05-29T07:14:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 1.365
+      },
+      {
+        "eventDate": "2026-05-29T12:48:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 2.481
+      },
+      {
+        "eventDate": "2026-05-29T19:41:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 0.582
+      },
+      {
+        "eventDate": "2026-05-30T02:31:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 2.504
+      },
+      {
+        "eventDate": "2026-05-30T07:59:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 1.409
+      },
+      {
+        "eventDate": "2026-05-30T13:24:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 2.511
+      },
+      {
+        "eventDate": "2026-05-30T20:23:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4159",
+        "value": 0.53
+      }
+    ],
+    "count": 54
+  },
+  "Shediac Bay, NB": {
+    "stationId": "5cebf1e33d0f4a073c4bc23e",
+    "predictions": [
+      {
+        "eventDate": "2026-05-17T04:16:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.541
+      },
+      {
+        "eventDate": "2026-05-17T06:31:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.505
+      },
+      {
+        "eventDate": "2026-05-17T09:18:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.561
+      },
+      {
+        "eventDate": "2026-05-17T20:08:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 0.358
+      },
+      {
+        "eventDate": "2026-05-18T09:52:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.641
+      },
+      {
+        "eventDate": "2026-05-18T20:55:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 0.293
+      },
+      {
+        "eventDate": "2026-05-19T10:33:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.674
+      },
+      {
+        "eventDate": "2026-05-19T21:44:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 0.279
+      },
+      {
+        "eventDate": "2026-05-20T11:11:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.654
+      },
+      {
+        "eventDate": "2026-05-20T13:28:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.612
+      },
+      {
+        "eventDate": "2026-05-20T15:05:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.634
+      },
+      {
+        "eventDate": "2026-05-20T22:34:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 0.317
+      },
+      {
+        "eventDate": "2026-05-21T11:41:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.586
+      },
+      {
+        "eventDate": "2026-05-21T13:57:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.54
+      },
+      {
+        "eventDate": "2026-05-21T16:19:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.611
+      },
+      {
+        "eventDate": "2026-05-21T23:28:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 0.403
+      },
+      {
+        "eventDate": "2026-05-22T08:08:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.551
+      },
+      {
+        "eventDate": "2026-05-22T14:35:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.423
+      },
+      {
+        "eventDate": "2026-05-22T17:28:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.55
+      },
+      {
+        "eventDate": "2026-05-23T00:25:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 0.528
+      },
+      {
+        "eventDate": "2026-05-23T08:35:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.517
+      },
+      {
+        "eventDate": "2026-05-23T15:17:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.28
+      },
+      {
+        "eventDate": "2026-05-23T18:37:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.458
+      },
+      {
+        "eventDate": "2026-05-24T01:28:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 0.681
+      },
+      {
+        "eventDate": "2026-05-24T09:01:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.479
+      },
+      {
+        "eventDate": "2026-05-24T16:00:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.129
+      },
+      {
+        "eventDate": "2026-05-24T19:55:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.353
+      },
+      {
+        "eventDate": "2026-05-25T02:39:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 0.846
+      },
+      {
+        "eventDate": "2026-05-25T09:26:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.442
+      },
+      {
+        "eventDate": "2026-05-25T16:40:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 0.986
+      },
+      {
+        "eventDate": "2026-05-25T21:41:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.28
+      },
+      {
+        "eventDate": "2026-05-26T03:48:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.008
+      },
+      {
+        "eventDate": "2026-05-26T09:50:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.409
+      },
+      {
+        "eventDate": "2026-05-26T17:17:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 0.857
+      },
+      {
+        "eventDate": "2026-05-26T23:50:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.299
+      },
+      {
+        "eventDate": "2026-05-27T04:56:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.155
+      },
+      {
+        "eventDate": "2026-05-27T10:16:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.387
+      },
+      {
+        "eventDate": "2026-05-27T17:49:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 0.745
+      },
+      {
+        "eventDate": "2026-05-28T01:30:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.385
+      },
+      {
+        "eventDate": "2026-05-28T06:34:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.274
+      },
+      {
+        "eventDate": "2026-05-28T10:47:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.377
+      },
+      {
+        "eventDate": "2026-05-28T18:22:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 0.65
+      },
+      {
+        "eventDate": "2026-05-29T02:40:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.47
+      },
+      {
+        "eventDate": "2026-05-29T08:55:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.336
+      },
+      {
+        "eventDate": "2026-05-29T11:23:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.379
+      },
+      {
+        "eventDate": "2026-05-29T19:02:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 0.578
+      },
+      {
+        "eventDate": "2026-05-30T03:39:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.532
+      },
+      {
+        "eventDate": "2026-05-30T10:11:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.366
+      },
+      {
+        "eventDate": "2026-05-30T12:03:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 1.391
+      },
+      {
+        "eventDate": "2026-05-30T19:44:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7da33a9f593161c4166",
+        "value": 0.527
+      }
+    ],
+    "count": 50
+  },
+  "North Head (Grand Manan), NB": {
+    "stationId": "5cebf1df3d0f4a073c4bbc0d",
+    "predictions": [
+      {
+        "eventDate": "2026-05-17T03:05:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 7.002
+      },
+      {
+        "eventDate": "2026-05-17T09:29:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 0.11
+      },
+      {
+        "eventDate": "2026-05-17T15:36:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 6.495
+      },
+      {
+        "eventDate": "2026-05-17T21:46:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 0.596
+      },
+      {
+        "eventDate": "2026-05-18T03:53:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 7.053
+      },
+      {
+        "eventDate": "2026-05-18T10:18:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 0.083
+      },
+      {
+        "eventDate": "2026-05-18T16:26:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 6.462
+      },
+      {
+        "eventDate": "2026-05-18T22:36:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 0.65
+      },
+      {
+        "eventDate": "2026-05-19T04:43:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 7.003
+      },
+      {
+        "eventDate": "2026-05-19T11:09:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 0.149
+      },
+      {
+        "eventDate": "2026-05-19T17:17:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 6.374
+      },
+      {
+        "eventDate": "2026-05-19T23:27:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 0.75
+      },
+      {
+        "eventDate": "2026-05-20T05:34:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 6.865
+      },
+      {
+        "eventDate": "2026-05-20T12:01:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 0.288
+      },
+      {
+        "eventDate": "2026-05-20T18:10:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 6.251
+      },
+      {
+        "eventDate": "2026-05-21T00:21:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 0.881
+      },
+      {
+        "eventDate": "2026-05-21T06:28:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 6.664
+      },
+      {
+        "eventDate": "2026-05-21T12:56:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 0.47
+      },
+      {
+        "eventDate": "2026-05-21T19:06:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 6.121
+      },
+      {
+        "eventDate": "2026-05-22T01:18:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 1.017
+      },
+      {
+        "eventDate": "2026-05-22T07:26:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 6.438
+      },
+      {
+        "eventDate": "2026-05-22T13:53:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 0.657
+      },
+      {
+        "eventDate": "2026-05-22T20:05:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 6.019
+      },
+      {
+        "eventDate": "2026-05-23T02:19:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 1.124
+      },
+      {
+        "eventDate": "2026-05-23T08:28:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 6.232
+      },
+      {
+        "eventDate": "2026-05-23T14:54:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 0.812
+      },
+      {
+        "eventDate": "2026-05-23T21:07:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 5.979
+      },
+      {
+        "eventDate": "2026-05-24T03:23:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 1.165
+      },
+      {
+        "eventDate": "2026-05-24T09:32:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 6.085
+      },
+      {
+        "eventDate": "2026-05-24T15:55:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 0.913
+      },
+      {
+        "eventDate": "2026-05-24T22:10:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 6.017
+      },
+      {
+        "eventDate": "2026-05-25T04:28:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 1.122
+      },
+      {
+        "eventDate": "2026-05-25T10:37:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 6.016
+      },
+      {
+        "eventDate": "2026-05-25T16:56:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 0.956
+      },
+      {
+        "eventDate": "2026-05-25T23:10:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 6.123
+      },
+      {
+        "eventDate": "2026-05-26T05:29:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 1.007
+      },
+      {
+        "eventDate": "2026-05-26T11:38:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 6.016
+      },
+      {
+        "eventDate": "2026-05-26T17:54:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 0.959
+      },
+      {
+        "eventDate": "2026-05-27T00:06:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 6.261
+      },
+      {
+        "eventDate": "2026-05-27T06:27:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 0.857
+      },
+      {
+        "eventDate": "2026-05-27T12:35:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 6.054
+      },
+      {
+        "eventDate": "2026-05-27T18:47:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 0.95
+      },
+      {
+        "eventDate": "2026-05-28T00:57:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 6.392
+      },
+      {
+        "eventDate": "2026-05-28T07:19:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 0.716
+      },
+      {
+        "eventDate": "2026-05-28T13:28:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 6.095
+      },
+      {
+        "eventDate": "2026-05-28T19:37:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 0.95
+      },
+      {
+        "eventDate": "2026-05-29T01:45:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 6.488
+      },
+      {
+        "eventDate": "2026-05-29T08:08:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 0.618
+      },
+      {
+        "eventDate": "2026-05-29T14:16:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 6.113
+      },
+      {
+        "eventDate": "2026-05-29T20:24:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 0.973
+      },
+      {
+        "eventDate": "2026-05-30T02:30:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 6.532
+      },
+      {
+        "eventDate": "2026-05-30T08:53:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 0.578
+      },
+      {
+        "eventDate": "2026-05-30T15:01:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 6.093
+      },
+      {
+        "eventDate": "2026-05-30T21:08:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f20",
+        "value": 1.023
+      }
+    ],
+    "count": 54
+  },
+  "St. Andrews, NB": {
+    "stationId": "5cebf1df3d0f4a073c4bbc19",
+    "predictions": [
+      {
+        "eventDate": "2026-05-17T03:38:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 7.702
+      },
+      {
+        "eventDate": "2026-05-17T10:05:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": -0.072
+      },
+      {
+        "eventDate": "2026-05-17T16:08:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 7.233
+      },
+      {
+        "eventDate": "2026-05-17T22:25:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 0.45
+      },
+      {
+        "eventDate": "2026-05-18T04:27:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 7.751
+      },
+      {
+        "eventDate": "2026-05-18T10:56:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": -0.109
+      },
+      {
+        "eventDate": "2026-05-18T16:58:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 7.194
+      },
+      {
+        "eventDate": "2026-05-18T23:15:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 0.504
+      },
+      {
+        "eventDate": "2026-05-19T05:17:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 7.67
+      },
+      {
+        "eventDate": "2026-05-19T11:47:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": -0.014
+      },
+      {
+        "eventDate": "2026-05-19T17:49:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 7.07
+      },
+      {
+        "eventDate": "2026-05-20T00:07:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 0.636
+      },
+      {
+        "eventDate": "2026-05-20T06:08:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 7.477
+      },
+      {
+        "eventDate": "2026-05-20T12:38:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 0.181
+      },
+      {
+        "eventDate": "2026-05-20T18:41:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 6.892
+      },
+      {
+        "eventDate": "2026-05-21T01:00:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 0.824
+      },
+      {
+        "eventDate": "2026-05-21T07:01:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 7.209
+      },
+      {
+        "eventDate": "2026-05-21T13:32:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 0.429
+      },
+      {
+        "eventDate": "2026-05-21T19:35:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 6.701
+      },
+      {
+        "eventDate": "2026-05-22T01:56:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 1.026
+      },
+      {
+        "eventDate": "2026-05-22T07:58:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 6.919
+      },
+      {
+        "eventDate": "2026-05-22T14:28:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 0.676
+      },
+      {
+        "eventDate": "2026-05-22T20:34:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 6.543
+      },
+      {
+        "eventDate": "2026-05-23T02:55:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 1.196
+      },
+      {
+        "eventDate": "2026-05-23T08:58:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 6.665
+      },
+      {
+        "eventDate": "2026-05-23T15:28:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 0.877
+      },
+      {
+        "eventDate": "2026-05-23T21:35:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 6.46
+      },
+      {
+        "eventDate": "2026-05-24T03:57:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 1.29
+      },
+      {
+        "eventDate": "2026-05-24T10:01:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 6.485
+      },
+      {
+        "eventDate": "2026-05-24T16:28:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 1.017
+      },
+      {
+        "eventDate": "2026-05-24T22:38:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 6.467
+      },
+      {
+        "eventDate": "2026-05-25T05:00:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 1.291
+      },
+      {
+        "eventDate": "2026-05-25T11:05:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 6.389
+      },
+      {
+        "eventDate": "2026-05-25T17:27:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 1.109
+      },
+      {
+        "eventDate": "2026-05-25T23:38:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 6.538
+      },
+      {
+        "eventDate": "2026-05-26T06:00:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 1.216
+      },
+      {
+        "eventDate": "2026-05-26T12:06:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 6.357
+      },
+      {
+        "eventDate": "2026-05-26T18:24:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 1.18
+      },
+      {
+        "eventDate": "2026-05-27T00:34:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 6.626
+      },
+      {
+        "eventDate": "2026-05-27T06:57:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 1.108
+      },
+      {
+        "eventDate": "2026-05-27T13:05:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 6.358
+      },
+      {
+        "eventDate": "2026-05-27T19:18:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 1.247
+      },
+      {
+        "eventDate": "2026-05-28T01:26:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 6.692
+      },
+      {
+        "eventDate": "2026-05-28T07:50:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 1.017
+      },
+      {
+        "eventDate": "2026-05-28T13:58:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 6.358
+      },
+      {
+        "eventDate": "2026-05-28T20:09:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 1.318
+      },
+      {
+        "eventDate": "2026-05-29T02:14:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 6.714
+      },
+      {
+        "eventDate": "2026-05-29T08:39:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 0.974
+      },
+      {
+        "eventDate": "2026-05-29T14:46:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 6.332
+      },
+      {
+        "eventDate": "2026-05-29T20:56:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 1.396
+      },
+      {
+        "eventDate": "2026-05-30T02:59:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 6.692
+      },
+      {
+        "eventDate": "2026-05-30T09:23:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 0.985
+      },
+      {
+        "eventDate": "2026-05-30T15:29:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 6.274
+      },
+      {
+        "eventDate": "2026-05-30T21:39:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f26",
+        "value": 1.478
+      }
+    ],
+    "count": 54
+  },
+  "St Martins, NB": {
+    "stationId": "5cebf1df3d0f4a073c4bbc2e",
+    "predictions": [
+      {
+        "eventDate": "2026-05-17T03:33:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 10.163
+      },
+      {
+        "eventDate": "2026-05-17T09:53:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 0.277
+      },
+      {
+        "eventDate": "2026-05-17T16:03:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 9.79
+      },
+      {
+        "eventDate": "2026-05-17T22:12:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 0.658
+      },
+      {
+        "eventDate": "2026-05-18T04:22:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 10.311
+      },
+      {
+        "eventDate": "2026-05-18T10:42:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 0.145
+      },
+      {
+        "eventDate": "2026-05-18T16:53:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 9.849
+      },
+      {
+        "eventDate": "2026-05-18T23:01:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 0.641
+      },
+      {
+        "eventDate": "2026-05-19T05:12:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 10.304
+      },
+      {
+        "eventDate": "2026-05-19T11:32:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 0.163
+      },
+      {
+        "eventDate": "2026-05-19T17:44:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 9.787
+      },
+      {
+        "eventDate": "2026-05-19T23:52:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 0.745
+      },
+      {
+        "eventDate": "2026-05-20T06:03:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 10.154
+      },
+      {
+        "eventDate": "2026-05-20T12:24:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 0.316
+      },
+      {
+        "eventDate": "2026-05-20T18:37:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 9.625
+      },
+      {
+        "eventDate": "2026-05-21T00:45:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 0.944
+      },
+      {
+        "eventDate": "2026-05-21T06:57:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 9.893
+      },
+      {
+        "eventDate": "2026-05-21T13:17:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 0.568
+      },
+      {
+        "eventDate": "2026-05-21T19:32:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 9.406
+      },
+      {
+        "eventDate": "2026-05-22T01:41:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 1.192
+      },
+      {
+        "eventDate": "2026-05-22T07:54:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 9.572
+      },
+      {
+        "eventDate": "2026-05-22T14:14:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 0.869
+      },
+      {
+        "eventDate": "2026-05-22T20:31:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 9.182
+      },
+      {
+        "eventDate": "2026-05-23T02:40:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 1.435
+      },
+      {
+        "eventDate": "2026-05-23T08:54:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 9.254
+      },
+      {
+        "eventDate": "2026-05-23T15:13:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 1.163
+      },
+      {
+        "eventDate": "2026-05-23T21:31:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 9.003
+      },
+      {
+        "eventDate": "2026-05-24T03:42:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 1.616
+      },
+      {
+        "eventDate": "2026-05-24T09:57:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 8.995
+      },
+      {
+        "eventDate": "2026-05-24T16:14:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 1.403
+      },
+      {
+        "eventDate": "2026-05-24T22:33:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 8.904
+      },
+      {
+        "eventDate": "2026-05-25T04:45:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 1.7
+      },
+      {
+        "eventDate": "2026-05-25T11:00:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 8.826
+      },
+      {
+        "eventDate": "2026-05-25T17:15:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 1.569
+      },
+      {
+        "eventDate": "2026-05-25T23:33:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 8.884
+      },
+      {
+        "eventDate": "2026-05-26T05:47:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 1.692
+      },
+      {
+        "eventDate": "2026-05-26T12:02:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 8.741
+      },
+      {
+        "eventDate": "2026-05-26T18:13:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 1.671
+      },
+      {
+        "eventDate": "2026-05-27T00:31:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 8.915
+      },
+      {
+        "eventDate": "2026-05-27T06:45:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 1.627
+      },
+      {
+        "eventDate": "2026-05-27T13:00:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 8.704
+      },
+      {
+        "eventDate": "2026-05-27T19:08:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 1.744
+      },
+      {
+        "eventDate": "2026-05-28T01:24:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 8.955
+      },
+      {
+        "eventDate": "2026-05-28T07:39:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 1.554
+      },
+      {
+        "eventDate": "2026-05-28T13:53:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 8.67
+      },
+      {
+        "eventDate": "2026-05-28T19:58:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 1.819
+      },
+      {
+        "eventDate": "2026-05-29T02:12:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 8.969
+      },
+      {
+        "eventDate": "2026-05-29T08:28:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 1.515
+      },
+      {
+        "eventDate": "2026-05-29T14:42:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 8.608
+      },
+      {
+        "eventDate": "2026-05-29T20:45:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 1.919
+      },
+      {
+        "eventDate": "2026-05-30T02:57:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 8.936
+      },
+      {
+        "eventDate": "2026-05-30T09:13:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 1.528
+      },
+      {
+        "eventDate": "2026-05-30T15:26:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 8.506
+      },
+      {
+        "eventDate": "2026-05-30T21:28:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2e",
+        "value": 2.045
+      }
+    ],
+    "count": 54
+  },
+  "Herring Cove, NB": {
+    "stationId": "5cebf1df3d0f4a073c4bbc30",
+    "predictions": [
+      {
+        "eventDate": "2026-05-17T03:42:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 10.683
+      },
+      {
+        "eventDate": "2026-05-17T10:10:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 0.75
+      },
+      {
+        "eventDate": "2026-05-17T16:14:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 10.031
+      },
+      {
+        "eventDate": "2026-05-17T22:25:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 1.291
+      },
+      {
+        "eventDate": "2026-05-18T04:31:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 10.826
+      },
+      {
+        "eventDate": "2026-05-18T10:58:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 0.695
+      },
+      {
+        "eventDate": "2026-05-18T17:01:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 10.097
+      },
+      {
+        "eventDate": "2026-05-18T23:13:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 1.278
+      },
+      {
+        "eventDate": "2026-05-19T05:18:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 10.86
+      },
+      {
+        "eventDate": "2026-05-19T11:44:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 0.754
+      },
+      {
+        "eventDate": "2026-05-19T17:47:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 10.125
+      },
+      {
+        "eventDate": "2026-05-20T00:00:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 1.334
+      },
+      {
+        "eventDate": "2026-05-20T06:03:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 10.776
+      },
+      {
+        "eventDate": "2026-05-20T12:28:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 0.896
+      },
+      {
+        "eventDate": "2026-05-20T18:32:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 10.116
+      },
+      {
+        "eventDate": "2026-05-21T00:46:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 1.454
+      },
+      {
+        "eventDate": "2026-05-21T06:49:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 10.594
+      },
+      {
+        "eventDate": "2026-05-21T13:13:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 1.08
+      },
+      {
+        "eventDate": "2026-05-21T19:18:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 10.082
+      },
+      {
+        "eventDate": "2026-05-22T01:34:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 1.617
+      },
+      {
+        "eventDate": "2026-05-22T07:37:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 10.351
+      },
+      {
+        "eventDate": "2026-05-22T14:02:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 1.266
+      },
+      {
+        "eventDate": "2026-05-22T20:10:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 10.044
+      },
+      {
+        "eventDate": "2026-05-23T02:27:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 1.778
+      },
+      {
+        "eventDate": "2026-05-23T08:33:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 10.112
+      },
+      {
+        "eventDate": "2026-05-23T14:56:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 1.405
+      },
+      {
+        "eventDate": "2026-05-23T21:10:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 10.059
+      },
+      {
+        "eventDate": "2026-05-24T03:28:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 1.853
+      },
+      {
+        "eventDate": "2026-05-24T09:37:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 9.978
+      },
+      {
+        "eventDate": "2026-05-24T15:58:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 1.427
+      },
+      {
+        "eventDate": "2026-05-24T22:15:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 10.202
+      },
+      {
+        "eventDate": "2026-05-25T04:36:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 1.736
+      },
+      {
+        "eventDate": "2026-05-25T10:45:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 10.036
+      },
+      {
+        "eventDate": "2026-05-25T17:05:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 1.283
+      },
+      {
+        "eventDate": "2026-05-25T23:21:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 10.471
+      },
+      {
+        "eventDate": "2026-05-26T05:44:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 1.408
+      },
+      {
+        "eventDate": "2026-05-26T11:51:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 10.229
+      },
+      {
+        "eventDate": "2026-05-26T18:09:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 1.048
+      },
+      {
+        "eventDate": "2026-05-27T00:22:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 10.74
+      },
+      {
+        "eventDate": "2026-05-27T06:47:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 1.021
+      },
+      {
+        "eventDate": "2026-05-27T12:52:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 10.386
+      },
+      {
+        "eventDate": "2026-05-27T19:08:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 0.896
+      },
+      {
+        "eventDate": "2026-05-28T01:19:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 10.86
+      },
+      {
+        "eventDate": "2026-05-28T07:44:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 0.772
+      },
+      {
+        "eventDate": "2026-05-28T13:48:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 10.363
+      },
+      {
+        "eventDate": "2026-05-28T20:02:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 0.965
+      },
+      {
+        "eventDate": "2026-05-29T02:12:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 10.755
+      },
+      {
+        "eventDate": "2026-05-29T08:37:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 0.769
+      },
+      {
+        "eventDate": "2026-05-29T14:42:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 10.119
+      },
+      {
+        "eventDate": "2026-05-29T20:54:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 1.274
+      },
+      {
+        "eventDate": "2026-05-30T03:03:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 10.447
+      },
+      {
+        "eventDate": "2026-05-30T09:27:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 1.003
+      },
+      {
+        "eventDate": "2026-05-30T15:34:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 9.714
+      },
+      {
+        "eventDate": "2026-05-30T21:42:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2f",
+        "value": 1.739
+      }
+    ],
+    "count": 54
+  },
+  "Cape Enrage, NB": {
+    "stationId": "5cebf1df3d0f4a073c4bbc32",
+    "predictions": [
+      {
+        "eventDate": "2026-05-17T03:33:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 11.889
+      },
+      {
+        "eventDate": "2026-05-17T10:10:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 0.288
+      },
+      {
+        "eventDate": "2026-05-17T16:01:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 11.477
+      },
+      {
+        "eventDate": "2026-05-17T22:28:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 0.74
+      },
+      {
+        "eventDate": "2026-05-18T04:20:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 12.039
+      },
+      {
+        "eventDate": "2026-05-18T10:57:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 0.141
+      },
+      {
+        "eventDate": "2026-05-18T16:50:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 11.52
+      },
+      {
+        "eventDate": "2026-05-18T23:16:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 0.732
+      },
+      {
+        "eventDate": "2026-05-19T05:08:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 12.001
+      },
+      {
+        "eventDate": "2026-05-19T11:45:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 0.176
+      },
+      {
+        "eventDate": "2026-05-19T17:40:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 11.414
+      },
+      {
+        "eventDate": "2026-05-20T00:06:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 0.869
+      },
+      {
+        "eventDate": "2026-05-20T05:59:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 11.792
+      },
+      {
+        "eventDate": "2026-05-20T12:35:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 0.37
+      },
+      {
+        "eventDate": "2026-05-20T18:33:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 11.191
+      },
+      {
+        "eventDate": "2026-05-21T00:57:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 1.117
+      },
+      {
+        "eventDate": "2026-05-21T06:53:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 11.455
+      },
+      {
+        "eventDate": "2026-05-21T13:28:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 0.677
+      },
+      {
+        "eventDate": "2026-05-21T19:29:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 10.906
+      },
+      {
+        "eventDate": "2026-05-22T01:52:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 1.419
+      },
+      {
+        "eventDate": "2026-05-22T07:51:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 11.06
+      },
+      {
+        "eventDate": "2026-05-22T14:24:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 1.037
+      },
+      {
+        "eventDate": "2026-05-22T20:29:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 10.632
+      },
+      {
+        "eventDate": "2026-05-23T02:51:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 1.705
+      },
+      {
+        "eventDate": "2026-05-23T08:54:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 10.691
+      },
+      {
+        "eventDate": "2026-05-23T15:22:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 1.375
+      },
+      {
+        "eventDate": "2026-05-23T21:32:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 10.44
+      },
+      {
+        "eventDate": "2026-05-24T03:52:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 1.903
+      },
+      {
+        "eventDate": "2026-05-24T09:58:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 10.422
+      },
+      {
+        "eventDate": "2026-05-24T16:24:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 1.629
+      },
+      {
+        "eventDate": "2026-05-24T22:36:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 10.363
+      },
+      {
+        "eventDate": "2026-05-25T04:56:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 1.963
+      },
+      {
+        "eventDate": "2026-05-25T11:03:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 10.279
+      },
+      {
+        "eventDate": "2026-05-25T17:26:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 1.767
+      },
+      {
+        "eventDate": "2026-05-25T23:36:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 10.389
+      },
+      {
+        "eventDate": "2026-05-26T05:59:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 1.886
+      },
+      {
+        "eventDate": "2026-05-26T12:04:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 10.237
+      },
+      {
+        "eventDate": "2026-05-26T18:26:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 1.806
+      },
+      {
+        "eventDate": "2026-05-27T00:32:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 10.468
+      },
+      {
+        "eventDate": "2026-05-27T06:57:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 1.723
+      },
+      {
+        "eventDate": "2026-05-27T13:00:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 10.24
+      },
+      {
+        "eventDate": "2026-05-27T19:21:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 1.8
+      },
+      {
+        "eventDate": "2026-05-28T01:23:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 10.547
+      },
+      {
+        "eventDate": "2026-05-28T07:52:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 1.551
+      },
+      {
+        "eventDate": "2026-05-28T13:51:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 10.236
+      },
+      {
+        "eventDate": "2026-05-28T20:13:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 1.808
+      },
+      {
+        "eventDate": "2026-05-29T02:11:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 10.587
+      },
+      {
+        "eventDate": "2026-05-29T08:41:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 1.434
+      },
+      {
+        "eventDate": "2026-05-29T14:39:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 10.191
+      },
+      {
+        "eventDate": "2026-05-29T21:00:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 1.867
+      },
+      {
+        "eventDate": "2026-05-30T02:54:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 10.568
+      },
+      {
+        "eventDate": "2026-05-30T09:27:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 1.405
+      },
+      {
+        "eventDate": "2026-05-30T15:22:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 10.094
+      },
+      {
+        "eventDate": "2026-05-30T21:44:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f30",
+        "value": 1.99
+      }
+    ],
+    "count": 54
+  },
+  "Joggins, NS": {
+    "stationId": "5cebf1df3d0f4a073c4bbc44",
+    "predictions": [
+      {
+        "eventDate": "2026-05-17T03:43:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 12.558
+      },
+      {
+        "eventDate": "2026-05-17T10:14:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 0.439
+      },
+      {
+        "eventDate": "2026-05-17T16:12:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 12.161
+      },
+      {
+        "eventDate": "2026-05-17T22:33:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 0.971
+      },
+      {
+        "eventDate": "2026-05-18T04:29:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 12.69
+      },
+      {
+        "eventDate": "2026-05-18T11:02:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 0.333
+      },
+      {
+        "eventDate": "2026-05-18T16:58:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 12.172
+      },
+      {
+        "eventDate": "2026-05-18T23:21:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 0.976
+      },
+      {
+        "eventDate": "2026-05-19T05:16:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 12.667
+      },
+      {
+        "eventDate": "2026-05-19T11:50:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 0.369
+      },
+      {
+        "eventDate": "2026-05-19T17:46:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 12.07
+      },
+      {
+        "eventDate": "2026-05-20T00:10:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 1.076
+      },
+      {
+        "eventDate": "2026-05-20T06:05:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 12.495
+      },
+      {
+        "eventDate": "2026-05-20T12:40:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 0.53
+      },
+      {
+        "eventDate": "2026-05-20T18:37:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 11.877
+      },
+      {
+        "eventDate": "2026-05-21T01:02:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 1.247
+      },
+      {
+        "eventDate": "2026-05-21T06:57:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 12.203
+      },
+      {
+        "eventDate": "2026-05-21T13:32:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 0.784
+      },
+      {
+        "eventDate": "2026-05-21T19:31:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 11.632
+      },
+      {
+        "eventDate": "2026-05-22T01:56:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 1.452
+      },
+      {
+        "eventDate": "2026-05-22T07:53:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 11.844
+      },
+      {
+        "eventDate": "2026-05-22T14:26:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 1.081
+      },
+      {
+        "eventDate": "2026-05-22T20:28:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 11.393
+      },
+      {
+        "eventDate": "2026-05-23T02:53:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 1.644
+      },
+      {
+        "eventDate": "2026-05-23T08:53:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 11.493
+      },
+      {
+        "eventDate": "2026-05-23T15:23:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 1.37
+      },
+      {
+        "eventDate": "2026-05-23T21:29:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 11.217
+      },
+      {
+        "eventDate": "2026-05-24T03:51:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 1.779
+      },
+      {
+        "eventDate": "2026-05-24T09:57:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 11.223
+      },
+      {
+        "eventDate": "2026-05-24T16:21:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 1.604
+      },
+      {
+        "eventDate": "2026-05-24T22:32:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 11.146
+      },
+      {
+        "eventDate": "2026-05-25T04:51:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 1.826
+      },
+      {
+        "eventDate": "2026-05-25T11:01:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 11.076
+      },
+      {
+        "eventDate": "2026-05-25T17:20:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 1.76
+      },
+      {
+        "eventDate": "2026-05-25T23:33:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 11.175
+      },
+      {
+        "eventDate": "2026-05-26T05:51:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 1.789
+      },
+      {
+        "eventDate": "2026-05-26T12:03:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 11.036
+      },
+      {
+        "eventDate": "2026-05-26T18:17:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 1.844
+      },
+      {
+        "eventDate": "2026-05-27T00:31:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 11.261
+      },
+      {
+        "eventDate": "2026-05-27T06:48:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 1.701
+      },
+      {
+        "eventDate": "2026-05-27T13:00:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 11.048
+      },
+      {
+        "eventDate": "2026-05-27T19:12:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 1.887
+      },
+      {
+        "eventDate": "2026-05-28T01:23:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 11.347
+      },
+      {
+        "eventDate": "2026-05-28T07:42:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 1.609
+      },
+      {
+        "eventDate": "2026-05-28T13:52:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 11.058
+      },
+      {
+        "eventDate": "2026-05-28T20:04:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 1.925
+      },
+      {
+        "eventDate": "2026-05-29T02:11:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 11.391
+      },
+      {
+        "eventDate": "2026-05-29T08:32:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 1.555
+      },
+      {
+        "eventDate": "2026-05-29T14:39:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 11.03
+      },
+      {
+        "eventDate": "2026-05-29T20:52:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 1.988
+      },
+      {
+        "eventDate": "2026-05-30T02:55:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 11.378
+      },
+      {
+        "eventDate": "2026-05-30T09:19:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 1.559
+      },
+      {
+        "eventDate": "2026-05-30T15:22:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 10.959
+      },
+      {
+        "eventDate": "2026-05-30T21:37:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c433a9f593161c3f39",
+        "value": 2.084
+      }
+    ],
+    "count": 54
+  },
+  "Moncton, NB": {
+    "stationId": "5cebf1df3d0f4a073c4bbc3c",
+    "predictions": [],
+    "count": 0
+  },
+  "Fredericton, NB": {
+    "stationId": "5cebf1df3d0f4a073c4bbc2c",
+    "predictions": [
+      {
+        "eventDate": "2026-05-17T03:09:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.354
+      },
+      {
+        "eventDate": "2026-05-17T11:26:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.423
+      },
+      {
+        "eventDate": "2026-05-17T15:25:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.383
+      },
+      {
+        "eventDate": "2026-05-17T23:43:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.444
+      },
+      {
+        "eventDate": "2026-05-18T03:58:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.393
+      },
+      {
+        "eventDate": "2026-05-18T12:16:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.461
+      },
+      {
+        "eventDate": "2026-05-18T16:12:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.419
+      },
+      {
+        "eventDate": "2026-05-19T00:32:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.48
+      },
+      {
+        "eventDate": "2026-05-19T08:55:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.423
+      },
+      {
+        "eventDate": "2026-05-19T13:04:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.484
+      },
+      {
+        "eventDate": "2026-05-19T17:01:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.441
+      },
+      {
+        "eventDate": "2026-05-20T01:20:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.499
+      },
+      {
+        "eventDate": "2026-05-20T09:56:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.429
+      },
+      {
+        "eventDate": "2026-05-20T13:53:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.484
+      },
+      {
+        "eventDate": "2026-05-20T17:54:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.441
+      },
+      {
+        "eventDate": "2026-05-20T20:11:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.447
+      },
+      {
+        "eventDate": "2026-05-20T22:17:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.441
+      },
+      {
+        "eventDate": "2026-05-21T02:09:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.491
+      },
+      {
+        "eventDate": "2026-05-21T10:59:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.407
+      },
+      {
+        "eventDate": "2026-05-21T14:42:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.456
+      },
+      {
+        "eventDate": "2026-05-21T23:19:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.407
+      },
+      {
+        "eventDate": "2026-05-22T02:57:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.449
+      },
+      {
+        "eventDate": "2026-05-22T12:01:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.356
+      },
+      {
+        "eventDate": "2026-05-22T15:34:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.397
+      },
+      {
+        "eventDate": "2026-05-23T00:27:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.34
+      },
+      {
+        "eventDate": "2026-05-23T03:48:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.374
+      },
+      {
+        "eventDate": "2026-05-23T13:04:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.277
+      },
+      {
+        "eventDate": "2026-05-23T16:29:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.311
+      },
+      {
+        "eventDate": "2026-05-24T01:39:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.245
+      },
+      {
+        "eventDate": "2026-05-24T04:42:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.269
+      },
+      {
+        "eventDate": "2026-05-24T14:10:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.174
+      },
+      {
+        "eventDate": "2026-05-24T17:29:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.203
+      },
+      {
+        "eventDate": "2026-05-25T02:51:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.128
+      },
+      {
+        "eventDate": "2026-05-25T05:42:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.146
+      },
+      {
+        "eventDate": "2026-05-25T15:14:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.057
+      },
+      {
+        "eventDate": "2026-05-25T18:35:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.083
+      },
+      {
+        "eventDate": "2026-05-26T03:59:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.002
+      },
+      {
+        "eventDate": "2026-05-26T06:50:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 3.019
+      },
+      {
+        "eventDate": "2026-05-26T16:17:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 2.937
+      },
+      {
+        "eventDate": "2026-05-26T19:47:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 2.964
+      },
+      {
+        "eventDate": "2026-05-27T04:59:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 2.882
+      },
+      {
+        "eventDate": "2026-05-27T08:05:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 2.901
+      },
+      {
+        "eventDate": "2026-05-27T17:13:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 2.827
+      },
+      {
+        "eventDate": "2026-05-27T20:59:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 2.856
+      },
+      {
+        "eventDate": "2026-05-28T05:50:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 2.779
+      },
+      {
+        "eventDate": "2026-05-28T09:17:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 2.803
+      },
+      {
+        "eventDate": "2026-05-28T18:04:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 2.736
+      },
+      {
+        "eventDate": "2026-05-28T22:02:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 2.769
+      },
+      {
+        "eventDate": "2026-05-29T06:34:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 2.703
+      },
+      {
+        "eventDate": "2026-05-29T10:15:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 2.733
+      },
+      {
+        "eventDate": "2026-05-29T18:48:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 2.672
+      },
+      {
+        "eventDate": "2026-05-29T22:52:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 2.71
+      },
+      {
+        "eventDate": "2026-05-30T07:12:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 2.657
+      },
+      {
+        "eventDate": "2026-05-30T11:01:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 2.691
+      },
+      {
+        "eventDate": "2026-05-30T19:26:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 2.637
+      },
+      {
+        "eventDate": "2026-05-30T23:33:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f2d",
+        "value": 2.679
+      }
+    ],
+    "count": 56
+  },
+  "Reversing Falls, NB": {
+    "stationId": "5cebf1de3d0f4a073c4bb9f1",
+    "predictions": [],
+    "count": 0
+  },
+  "Welshpool (Campobello), NB": {
+    "stationId": "5cebf1df3d0f4a073c4bbc0f",
+    "predictions": [
+      {
+        "eventDate": "2026-05-17T03:26:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 7.305
+      },
+      {
+        "eventDate": "2026-05-17T09:53:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": -0.038
+      },
+      {
+        "eventDate": "2026-05-17T15:58:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 6.925
+      },
+      {
+        "eventDate": "2026-05-17T22:12:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 0.423
+      },
+      {
+        "eventDate": "2026-05-18T04:16:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 7.385
+      },
+      {
+        "eventDate": "2026-05-18T10:44:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": -0.106
+      },
+      {
+        "eventDate": "2026-05-18T16:49:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 6.92
+      },
+      {
+        "eventDate": "2026-05-18T23:04:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 0.46
+      },
+      {
+        "eventDate": "2026-05-19T05:08:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 7.351
+      },
+      {
+        "eventDate": "2026-05-19T11:37:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": -0.055
+      },
+      {
+        "eventDate": "2026-05-19T17:42:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 6.83
+      },
+      {
+        "eventDate": "2026-05-19T23:58:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 0.565
+      },
+      {
+        "eventDate": "2026-05-20T06:01:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 7.218
+      },
+      {
+        "eventDate": "2026-05-20T12:31:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 0.089
+      },
+      {
+        "eventDate": "2026-05-20T18:37:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 6.686
+      },
+      {
+        "eventDate": "2026-05-21T00:53:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 0.711
+      },
+      {
+        "eventDate": "2026-05-21T06:57:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 7.019
+      },
+      {
+        "eventDate": "2026-05-21T13:28:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 0.286
+      },
+      {
+        "eventDate": "2026-05-21T19:34:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 6.531
+      },
+      {
+        "eventDate": "2026-05-22T01:52:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 0.861
+      },
+      {
+        "eventDate": "2026-05-22T07:56:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 6.792
+      },
+      {
+        "eventDate": "2026-05-22T14:27:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 0.492
+      },
+      {
+        "eventDate": "2026-05-22T20:33:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 6.407
+      },
+      {
+        "eventDate": "2026-05-23T02:52:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 0.982
+      },
+      {
+        "eventDate": "2026-05-23T08:57:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 6.573
+      },
+      {
+        "eventDate": "2026-05-23T15:26:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 0.678
+      },
+      {
+        "eventDate": "2026-05-23T21:33:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 6.334
+      },
+      {
+        "eventDate": "2026-05-24T03:54:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 1.053
+      },
+      {
+        "eventDate": "2026-05-24T09:59:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 6.386
+      },
+      {
+        "eventDate": "2026-05-24T16:25:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 0.832
+      },
+      {
+        "eventDate": "2026-05-24T22:33:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 6.309
+      },
+      {
+        "eventDate": "2026-05-25T04:55:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 1.074
+      },
+      {
+        "eventDate": "2026-05-25T11:00:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 6.239
+      },
+      {
+        "eventDate": "2026-05-25T17:23:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 0.959
+      },
+      {
+        "eventDate": "2026-05-25T23:31:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 6.312
+      },
+      {
+        "eventDate": "2026-05-26T05:54:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 1.061
+      },
+      {
+        "eventDate": "2026-05-26T12:00:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 6.133
+      },
+      {
+        "eventDate": "2026-05-26T18:18:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 1.07
+      },
+      {
+        "eventDate": "2026-05-27T00:26:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 6.318
+      },
+      {
+        "eventDate": "2026-05-27T06:49:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 1.034
+      },
+      {
+        "eventDate": "2026-05-27T12:55:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 6.06
+      },
+      {
+        "eventDate": "2026-05-27T19:10:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 1.175
+      },
+      {
+        "eventDate": "2026-05-28T01:17:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 6.311
+      },
+      {
+        "eventDate": "2026-05-28T07:40:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 1.011
+      },
+      {
+        "eventDate": "2026-05-28T13:46:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 6.008
+      },
+      {
+        "eventDate": "2026-05-28T19:59:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 1.277
+      },
+      {
+        "eventDate": "2026-05-29T02:03:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 6.291
+      },
+      {
+        "eventDate": "2026-05-29T08:27:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 0.999
+      },
+      {
+        "eventDate": "2026-05-29T14:33:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 5.966
+      },
+      {
+        "eventDate": "2026-05-29T20:44:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 1.37
+      },
+      {
+        "eventDate": "2026-05-30T02:46:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 6.268
+      },
+      {
+        "eventDate": "2026-05-30T09:10:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 0.996
+      },
+      {
+        "eventDate": "2026-05-30T15:15:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 5.927
+      },
+      {
+        "eventDate": "2026-05-30T21:25:00Z",
+        "qcFlagCode": "1",
+        "reviewed": false,
+        "timeSeriesId": "5d9dd7c333a9f593161c3f21",
+        "value": 1.444
+      }
+    ],
+    "count": 54
+  }
+}

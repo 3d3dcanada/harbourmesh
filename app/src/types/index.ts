@@ -1302,7 +1302,7 @@ export interface AppState {
   modalData?: unknown;
 }
 
-export type ViewType = 
+export type ViewType =
   | 'dashboard'
   | 'vessel'
   | 'map'
@@ -1315,7 +1315,10 @@ export type ViewType =
   | 'ai'
   | 'settings'
   | 'fleet'
-  | 'onboarding';
+  | 'onboarding'
+  | 'pricing'
+  | 'updates'
+  | 'legal';
 
 export interface AppNotification {
   id: string;

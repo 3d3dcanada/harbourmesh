@@ -33,10 +33,12 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { FleetFriends } from '@/components/FleetFriends';
+import { FeatureGate } from '@/components/FeatureGate';
 import { Label } from '@/components/ui/label';
 import { cn, formatDate } from '@/lib/utils';
 import { DataSourceNotice } from '@/components/DataSourceNotice';
-import { useSettingsStore, useVesselStore, useLogTaskStore, useDocumentStore, useAppStore } from '@/store';
+import { useSettingsStore, useVesselStore, useLogTaskStore, useDocumentStore, useAppStore, useFleetStore } from '@/store';
 import { VesselType } from '@/types';
 
 // Demo fleet data
@@ -149,6 +151,7 @@ export function Fleet() {
   const { tasks } = useLogTaskStore();
   const { getExpiringDocuments } = useDocumentStore();
   const { setActiveView } = useAppStore();
+  const { manifests, procedures } = useFleetStore();
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedVessel, setSelectedVessel] = useState<string | null>(null);
   const [showAddVessel, setShowAddVessel] = useState(false);
@@ -156,6 +159,7 @@ export function Fleet() {
   const [newVesselType, setNewVesselType] = useState<VesselType>(VesselType.SAILBOAT_CRUISER);
 
   const realVessels = vessels.length > 0;
+  const showDemoFleet = demoModeEnabled && !realVessels;
 
   const vesselStats = realVessels ? vessels.map((v) => ({
     vessel: v,
@@ -168,14 +172,22 @@ export function Fleet() {
   const totalOverdue = tasks.filter((t) => t.status !== 'complete' && t.dueDate && new Date(t.dueDate) < new Date()).length;
   const totalExpiringDocs = getExpiringDocuments(30).length;
 
-  const statusCounts = {
-    underway: (demoFleet as typeof demoFleet).filter((v) => v.status === 'underway').length,
-    anchored: (demoFleet as typeof demoFleet).filter((v) => v.status === 'anchored').length,
-    inPort: (demoFleet as typeof demoFleet).filter((v) => v.status === 'in_port').length,
-    offline: (demoFleet as typeof demoFleet).filter((v) => v.status === 'offline').length,
+  const statusCounts = showDemoFleet ? {
+    underway: demoFleet.filter((v) => v.status === 'underway').length,
+    anchored: demoFleet.filter((v) => v.status === 'anchored').length,
+    inPort: demoFleet.filter((v) => v.status === 'in_port').length,
+    offline: demoFleet.filter((v) => v.status === 'offline').length,
+  } : {
+    underway: 0,
+    anchored: 0,
+    inPort: vessels.length,
+    offline: 0,
   };
 
-  const totalAlerts = demoFleet.reduce((acc, v) => acc + v.alerts.length, 0);
+  const totalAlerts = showDemoFleet ? demoFleet.reduce((acc, v) => acc + v.alerts.length, 0) : 0;
+
+  const currentManifests = manifests;
+  const currentProcedures = procedures;
 
   const handleAddVessel = () => {
     if (!newVesselName.trim()) return;
@@ -361,12 +373,22 @@ export function Fleet() {
       </div>
       
       {/* Main Content */}
+      <FeatureGate feature="fleet-console" fallback={
+        <Card>
+          <CardContent className="py-12 text-center">
+            <Ship className="mx-auto mb-3 h-12 w-12 text-muted-foreground/40" />
+            <p className="text-sm font-medium mb-1">Fleet Management Console</p>
+            <p className="text-xs text-muted-foreground mb-4">Multi-vessel monitoring, manifests, procedures, and compliance tracking require a Fleet subscription.</p>
+          </CardContent>
+        </Card>
+      }>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="overview">Fleet Overview</TabsTrigger>
           <TabsTrigger value="manifests">Manifests</TabsTrigger>
           <TabsTrigger value="procedures">Procedures</TabsTrigger>
           <TabsTrigger value="compliance">Compliance</TabsTrigger>
+          <TabsTrigger value="social">Social</TabsTrigger>
         </TabsList>
         
         {/* Fleet Overview */}
@@ -439,7 +461,7 @@ export function Fleet() {
                         onClick={(e) => { e.stopPropagation(); deleteVessel(vessel.id); }}
                       >×</Button>
                     </div>
-                  )) : (demoFleet as typeof demoFleet).map((vessel) => (
+                  )) : showDemoFleet ? demoFleet.map((vessel) => (
                     <div
                       key={vessel.id}
                       className={cn(
@@ -489,17 +511,26 @@ export function Fleet() {
                         </p>
                       </div>
                     </div>
-                  ))}
+                  )) : (
+                    <div className="p-8 text-center text-muted-foreground">
+                      <Ship className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                      <p className="font-medium">No vessels in fleet</p>
+                      <p className="text-sm mt-1">Add a vessel to start managing your fleet.</p>
+                      <Button className="mt-3" size="sm" onClick={() => setShowAddVessel(true)}>
+                        <Plus className="h-4 w-4 mr-2" /> Add Vessel
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </ScrollArea>
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         {/* Manifests */}
         <TabsContent value="manifests" className="mt-4">
           <div className="grid lg:grid-cols-2 gap-4">
-            {demoManifests.map((manifest) => (
+            {currentManifests.map((manifest) => (
               <Card key={manifest.id}>
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
@@ -591,7 +622,7 @@ export function Fleet() {
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y">
-                {demoProcedures.map((procedure) => (
+                {currentProcedures.map((procedure) => (
                   <div key={procedure.id} className="flex items-center justify-between p-4 hover:bg-muted/50">
                     <div className="flex items-center gap-4">
                       <div className="p-2 rounded-lg bg-blue-50 text-blue-500 dark:bg-blue-950/30">
@@ -635,20 +666,23 @@ export function Fleet() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {demoFleet.map((vessel) => (
+                {(showDemoFleet ? demoFleet : vessels.map((v) => ({ id: v.id, name: v.name, certificateExpiry: '', nextMaintenance: '' }))).map((vessel) => (
                   <div key={vessel.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                     <div>
                       <p className="font-medium text-sm">{vessel.name}</p>
                       <p className="text-xs text-muted-foreground">Certificate expires</p>
                     </div>
                     <Badge variant="outline">
-                      {formatDate(vessel.certificateExpiry)}
+                      {vessel.certificateExpiry ? formatDate(vessel.certificateExpiry) : 'Not set'}
                     </Badge>
                   </div>
                 ))}
+                {!showDemoFleet && vessels.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">No vessels configured</p>
+                )}
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -657,23 +691,31 @@ export function Fleet() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {demoFleet.map((vessel) => (
+                {(showDemoFleet ? demoFleet : vessels.map((v) => ({ id: v.id, name: v.name, nextMaintenance: '' }))).map((vessel) => (
                   <div key={vessel.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                     <div>
                       <p className="font-medium text-sm">{vessel.name}</p>
                       <p className="text-xs text-muted-foreground">Next maintenance</p>
                     </div>
                     <Badge variant="outline">
-                      {formatDate(vessel.nextMaintenance)}
+                      {vessel.nextMaintenance ? formatDate(vessel.nextMaintenance) : 'Not set'}
                     </Badge>
                   </div>
                 ))}
+                {!showDemoFleet && vessels.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">No vessels configured</p>
+                )}
               </CardContent>
             </Card>
           </div>
         </TabsContent>
+
+        <TabsContent value="social" className="mt-4">
+          <FleetFriends />
+        </TabsContent>
       </Tabs>
-      
+      </FeatureGate>
+
       {/* Add Vessel Dialog */}
       <Dialog open={showAddVessel} onOpenChange={setShowAddVessel}>
         <DialogContent>

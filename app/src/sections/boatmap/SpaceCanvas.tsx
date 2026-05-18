@@ -1,9 +1,10 @@
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { svgPoint, normalizeGeometry, pointsAttr, geometryCentroid } from '@/lib/geometry';
+import { svgPoint, normalizeGeometry, pointsAttr, geometryCentroid, nearestEdgePoint } from '@/lib/geometry';
 import { SpaceContextMenu } from './SpaceContextMenu';
 import type { Space, SpaceType } from '@/types';
 import type { RectGeometry, SpaceGeometry } from '@/types';
+import type { Point } from '@/lib/geometry';
 
 const SPACE_COLORS: Record<string, { fill: string; stroke: string }> = {
   cockpit:      { fill: '#3b82f6', stroke: '#1d4ed8' },
@@ -39,6 +40,9 @@ interface SpaceCanvasProps {
   pan: { x: number; y: number };
   blueprintImageUrl?: string | null;
   blueprintOpacity?: number;
+  blueprintRotation?: number;
+  editingHull?: boolean;
+  snapEnabled?: boolean;
   onSelectSpace: (id: string | null) => void;
   onUpdateSpaceGeometry: (id: string, geometry: SpaceGeometry) => void;
   onPanChange: (pan: { x: number; y: number }) => void;
@@ -47,6 +51,7 @@ interface SpaceCanvasProps {
   onViewInventory: (space: Space) => void;
   onDuplicateSpace: (space: Space) => void;
   onDeleteSpace: (space: Space) => void;
+  onUpdateHullPoints?: (points: Point[]) => void;
 }
 
 export function SpaceCanvas({
@@ -58,6 +63,9 @@ export function SpaceCanvas({
   pan,
   blueprintImageUrl,
   blueprintOpacity = 0.3,
+  blueprintRotation = 0,
+  editingHull = false,
+  snapEnabled = false,
   onSelectSpace,
   onUpdateSpaceGeometry,
   onPanChange,
@@ -66,24 +74,57 @@ export function SpaceCanvas({
   onViewInventory,
   onDuplicateSpace,
   onDeleteSpace,
+  onUpdateHullPoints,
 }: SpaceCanvasProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [dragging, setDragging] = useState<{ spaceId: string; offsetX: number; offsetY: number } | null>(null);
+  const [resizing, setResizing] = useState<{ spaceId: string; corner: string; startGeo: RectGeometry; startX: number; startY: number } | null>(null);
   const [panning, setPanning] = useState<{ startX: number; startY: number; startPan: { x: number; y: number } } | null>(null);
   const [draftPos, setDraftPos] = useState<{ x: number; y: number } | null>(null);
+  const [draftResize, setDraftResize] = useState<RectGeometry | null>(null);
+
+  const [draggingHullPoint, setDraggingHullPoint] = useState<number | null>(null);
+  const [draftHullPoints, setDraftHullPoints] = useState<Point[] | null>(null);
+  const [hullEdgeHover, setHullEdgeHover] = useState<Point | null>(null);
+  const [shiftHeld, setShiftHeld] = useState(false);
+  const snapToGrid = snapEnabled;
+
+  const activeHullPoints = draftHullPoints ?? hullPoints;
+  const hasBlueprint = Boolean(blueprintImageUrl);
+  const GRID = 20;
+
+  const snap = (v: number) => snapToGrid ? Math.round(v / GRID) * GRID : v;
+
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => { if (e.key === 'Shift') setShiftHeld(true); };
+    const up = (e: KeyboardEvent) => { if (e.key === 'Shift') setShiftHeld(false); };
+    window.addEventListener('keydown', down);
+    window.addEventListener('keyup', up);
+    return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); };
+  }, []);
 
   const visibleSpaces = spaces.filter((s) => (s.deck ?? 0) === activeDeck);
-  const hullPath = hullPoints.length >= 3
-    ? `M${hullPoints.map((p) => `${p.x},${p.y}`).join(' L')} Z`
+  const hullPath = activeHullPoints.length >= 3
+    ? `M${activeHullPoints.map((p) => `${p.x},${p.y}`).join(' L')} Z`
     : '';
 
   const handleSvgPointerDown = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
+    if (editingHull && svgRef.current && hullEdgeHover && onUpdateHullPoints) {
+      const pts = [...activeHullPoints];
+      const hit = nearestEdgePoint(hullEdgeHover, pts);
+      if (hit) {
+        pts.splice(hit.edgeIndex + 1, 0, { ...hullEdgeHover });
+        setDraftHullPoints(pts);
+        onUpdateHullPoints(pts);
+      }
+      setHullEdgeHover(null);
+      return;
+    }
     if (e.target === svgRef.current || (e.target as SVGElement).dataset.bg) {
-      // Start pan
       setPanning({ startX: e.clientX, startY: e.clientY, startPan: pan });
       onSelectSpace(null);
     }
-  }, [pan, onSelectSpace]);
+  }, [pan, onSelectSpace, editingHull, activeHullPoints, hullEdgeHover, onUpdateHullPoints]);
 
   const handleSvgPointerMove = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
     if (panning) {
@@ -92,14 +133,56 @@ export function SpaceCanvas({
         y: panning.startPan.y + (e.clientY - panning.startY),
       });
     }
+    if (draggingHullPoint !== null && svgRef.current) {
+      const pt = svgPoint(svgRef.current, e.clientX, e.clientY);
+      const pts = [...activeHullPoints];
+      pts[draggingHullPoint] = { x: pt.x, y: pt.y };
+      setDraftHullPoints(pts);
+    }
+    if (editingHull && draggingHullPoint === null && !panning && svgRef.current) {
+      const pt = svgPoint(svgRef.current, e.clientX, e.clientY);
+      const hit = nearestEdgePoint(pt, activeHullPoints, 8 / zoom);
+      setHullEdgeHover(hit ? hit.point : null);
+    }
     if (dragging && svgRef.current) {
       const pt = svgPoint(svgRef.current, e.clientX, e.clientY);
       setDraftPos({ x: pt.x - dragging.offsetX, y: pt.y - dragging.offsetY });
     }
-  }, [panning, dragging, onPanChange]);
+    if (resizing && svgRef.current) {
+      const pt = svgPoint(svgRef.current, e.clientX, e.clientY);
+      const g = resizing.startGeo;
+      let dx = pt.x - resizing.startX;
+      let dy = pt.y - resizing.startY;
+      const MIN = 30;
+
+      if (shiftHeld && (resizing.corner === 'nw' || resizing.corner === 'ne' || resizing.corner === 'sw' || resizing.corner === 'se')) {
+        const aspect = g.width / g.height;
+        if (Math.abs(dx) > Math.abs(dy)) {
+          dy = dx / aspect * (resizing.corner.includes('n') === resizing.corner.includes('w') ? 1 : -1);
+        } else {
+          dx = dy * aspect * (resizing.corner.includes('n') === resizing.corner.includes('w') ? 1 : -1);
+        }
+      }
+
+      let nx = g.x, ny = g.y, nw = g.width, nh = g.height;
+      if (resizing.corner.includes('e')) { nw = Math.max(MIN, g.width + dx); }
+      if (resizing.corner.includes('w')) { nx = g.x + dx; nw = Math.max(MIN, g.width - dx); }
+      if (resizing.corner.includes('s')) { nh = Math.max(MIN, g.height + dy); }
+      if (resizing.corner.includes('n')) { ny = g.y + dy; nh = Math.max(MIN, g.height - dy); }
+
+      setDraftResize({ kind: 'rect', x: snap(nx), y: snap(ny), width: snap(nw), height: snap(nh) });
+    }
+  }, [panning, dragging, draggingHullPoint, resizing, onPanChange, editingHull, activeHullPoints, zoom]);
 
   const handleSvgPointerUp = useCallback(() => {
     setPanning(null);
+    if (draggingHullPoint !== null && draftHullPoints && onUpdateHullPoints) {
+      onUpdateHullPoints(draftHullPoints);
+      setDraggingHullPoint(null);
+      setDraftHullPoints(null);
+      return;
+    }
+    setDraggingHullPoint(null);
     if (dragging && draftPos) {
       const space = spaces.find((s) => s.id === dragging.spaceId);
       if (space) {
@@ -115,9 +198,14 @@ export function SpaceCanvas({
         }
       }
     }
+    if (resizing && draftResize) {
+      onUpdateSpaceGeometry(resizing.spaceId, draftResize);
+    }
     setDragging(null);
     setDraftPos(null);
-  }, [dragging, draftPos, spaces, onUpdateSpaceGeometry]);
+    setResizing(null);
+    setDraftResize(null);
+  }, [dragging, draftPos, draggingHullPoint, draftHullPoints, resizing, draftResize, spaces, onUpdateSpaceGeometry, onUpdateHullPoints]);
 
   const handleSpacePointerDown = useCallback((e: React.PointerEvent, space: Space) => {
     e.stopPropagation();
@@ -146,9 +234,9 @@ export function SpaceCanvas({
       onPointerLeave={handleSvgPointerUp}
     >
       <defs>
-        {hullPoints.length >= 3 && (
+        {activeHullPoints.length >= 3 && (
           <clipPath id="hull-clip">
-            <polygon points={pointsAttr(hullPoints)} />
+            <polygon points={pointsAttr(activeHullPoints)} />
           </clipPath>
         )}
         <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -168,22 +256,24 @@ export function SpaceCanvas({
             width={CANVAS_W} height={CANVAS_H}
             opacity={blueprintOpacity}
             preserveAspectRatio="xMidYMid meet"
+            transform={blueprintRotation ? `rotate(${blueprintRotation}, ${CANVAS_W / 2}, ${CANVAS_H / 2})` : undefined}
           />
         )}
 
-        {/* Hull outline */}
-        {hullPath && (
+        {/* Hull outline - hidden when blueprint image is loaded */}
+        {hullPath && !hasBlueprint && (
           <path
             d={hullPath}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            className="text-foreground/40"
+            fill={editingHull ? 'hsl(205 100% 44% / 0.05)' : 'none'}
+            stroke={editingHull ? 'hsl(205 100% 44%)' : 'currentColor'}
+            strokeWidth={editingHull ? 2.5 : 2}
+            className={editingHull ? '' : 'text-foreground/40'}
+            strokeDasharray={editingHull ? '6 3' : undefined}
           />
         )}
 
         {/* Spaces clipped to hull */}
-        <g clipPath={hullPoints.length >= 3 ? 'url(#hull-clip)' : undefined}>
+        <g clipPath={activeHullPoints.length >= 3 && !hasBlueprint ? 'url(#hull-clip)' : undefined}>
           {visibleSpaces.map((space) => {
             const geo = normalizeGeometry(space.geometry);
             if (!geo) return null;
@@ -247,27 +337,128 @@ export function SpaceCanvas({
           })}
         </g>
 
-        {/* Selection outline outside clip */}
+        {/* Selection outline + resize handles */}
         {selectedSpaceId && (() => {
           const space = visibleSpaces.find((s) => s.id === selectedSpaceId);
           if (!space) return null;
           const geo = normalizeGeometry(space.geometry);
-          if (!geo) return null;
-          const pos = (dragging?.spaceId === selectedSpaceId && draftPos) ? draftPos : null;
-          if (geo.kind === 'rect') {
-            const x = pos?.x ?? geo.x;
-            const y = pos?.y ?? geo.y;
-            return (
+          if (!geo || geo.kind !== 'rect') return null;
+
+          const isDragging = dragging?.spaceId === selectedSpaceId;
+          const isResizingThis = resizing?.spaceId === selectedSpaceId;
+          const r = isResizingThis && draftResize ? draftResize : geo;
+          const x = isDragging && draftPos ? draftPos.x : r.x;
+          const y = isDragging && draftPos ? draftPos.y : r.y;
+          const w = r.width;
+          const h = r.height;
+          const hs = 6;
+
+          const handles = [
+            { id: 'nw', cx: x, cy: y, cursor: 'nwse-resize' },
+            { id: 'ne', cx: x + w, cy: y, cursor: 'nesw-resize' },
+            { id: 'sw', cx: x, cy: y + h, cursor: 'nesw-resize' },
+            { id: 'se', cx: x + w, cy: y + h, cursor: 'nwse-resize' },
+            { id: 'n', cx: x + w / 2, cy: y, cursor: 'ns-resize' },
+            { id: 's', cx: x + w / 2, cy: y + h, cursor: 'ns-resize' },
+            { id: 'w', cx: x, cy: y + h / 2, cursor: 'ew-resize' },
+            { id: 'e', cx: x + w, cy: y + h / 2, cursor: 'ew-resize' },
+          ];
+
+          const handleResizeStart = (e: React.PointerEvent, corner: string) => {
+            e.stopPropagation();
+            if (!svgRef.current) return;
+            const pt = svgPoint(svgRef.current, e.clientX, e.clientY);
+            setResizing({ spaceId: space.id, corner, startGeo: { kind: 'rect', x, y, width: w, height: h }, startX: pt.x, startY: pt.y });
+          };
+
+          return (
+            <g>
               <rect
                 x={x - 2} y={y - 2}
-                width={geo.width + 4} height={geo.height + 4}
+                width={w + 4} height={h + 4}
                 rx="4" fill="none" stroke="white" strokeWidth="1" strokeDasharray="4 2"
                 pointerEvents="none"
               />
-            );
-          }
-          return null;
+              {!isDragging && handles.map((h) => (
+                <rect
+                  key={h.id}
+                  x={h.cx - hs / 2} y={h.cy - hs / 2}
+                  width={hs} height={hs}
+                  rx="1"
+                  fill="white"
+                  stroke="hsl(205 100% 44%)"
+                  strokeWidth="1.5"
+                  style={{ cursor: h.cursor }}
+                  onPointerDown={(e) => handleResizeStart(e, h.id)}
+                />
+              ))}
+              {isResizingThis && draftResize && (
+                <g pointerEvents="none">
+                  <rect
+                    x={x + w / 2 - 28} y={y + h + 8}
+                    width="56" height="16" rx="3"
+                    fill="hsl(220 40% 11%)" fillOpacity="0.9"
+                  />
+                  <text
+                    x={x + w / 2} y={y + h + 18}
+                    textAnchor="middle" dominantBaseline="middle"
+                    fontSize="8" fill="white" fontWeight="600"
+                    className="select-none"
+                  >
+                    {Math.round(w)} x {Math.round(h)}
+                  </text>
+                </g>
+              )}
+            </g>
+          );
         })()}
+
+        {/* Hull point editing handles */}
+        {editingHull && activeHullPoints.length >= 3 && (
+          <g>
+            {activeHullPoints.map((p, i) => (
+              <g key={i}>
+                <circle
+                  cx={p.x} cy={p.y} r={7}
+                  fill="hsl(205 100% 44%)"
+                  stroke="white"
+                  strokeWidth="2"
+                  style={{ cursor: 'grab' }}
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    setDraggingHullPoint(i);
+                    setDraftHullPoints([...activeHullPoints]);
+                  }}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    if (activeHullPoints.length <= 3 || !onUpdateHullPoints) return;
+                    const pts = activeHullPoints.filter((_, idx) => idx !== i);
+                    setDraftHullPoints(pts);
+                    onUpdateHullPoints(pts);
+                  }}
+                />
+                <text
+                  x={p.x} y={p.y}
+                  textAnchor="middle" dominantBaseline="central"
+                  fontSize="7" fill="white" fontWeight="bold"
+                  pointerEvents="none" className="select-none"
+                >
+                  {i + 1}
+                </text>
+              </g>
+            ))}
+
+            {hullEdgeHover && (
+              <circle
+                cx={hullEdgeHover.x} cy={hullEdgeHover.y} r={5}
+                fill="hsl(160 84% 39%)"
+                stroke="white" strokeWidth="1.5"
+                opacity={0.8}
+                pointerEvents="none"
+              />
+            )}
+          </g>
+        )}
       </g>
     </svg>
   );

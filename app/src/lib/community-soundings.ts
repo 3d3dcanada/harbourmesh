@@ -1,7 +1,7 @@
 import { SharePositionLevel, TelemetryMessageType, type ConsentSettings, type EnvironmentPayload, type PositionPayload, type TelemetryMessage } from '@/types';
 
 export type DepthReference = 'below_surface' | 'below_transducer' | 'below_keel' | 'unknown';
-export type SoundingSourceProtocol = 'signalk' | 'nmea0183' | 'nmea2000' | 'manual' | 'replay' | 'simulated';
+export type SoundingSourceProtocol = 'signalk' | 'nmea0183' | 'nmea2000' | 'manual' | 'replay' | 'simulated' | 'phone';
 export type SoundingShareState = 'local_only' | 'shareable_blurred' | 'shareable_full';
 
 export type SoundingOffsets = {

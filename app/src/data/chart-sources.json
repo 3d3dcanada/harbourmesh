@@ -1,0 +1,166 @@
+{
+  "schemaVersion": "harbourmesh.chart-sources.v1",
+  "tileSources": [
+    {
+      "id": "osm-standard",
+      "name": "OpenStreetMap",
+      "type": "xyz",
+      "url": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      "subdomains": ["a", "b", "c"],
+      "attribution": "© OpenStreetMap contributors",
+      "maxZoom": 19,
+      "category": "base",
+      "default": true
+    },
+    {
+      "id": "openseamap-seamark",
+      "name": "OpenSeaMap Seamarks",
+      "type": "xyz",
+      "url": "https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png",
+      "attribution": "© OpenSeaMap contributors",
+      "maxZoom": 18,
+      "category": "overlay",
+      "description": "Buoys, lights, beacons, anchorages, marinas, harbours"
+    },
+    {
+      "id": "openseamap-depth",
+      "name": "OpenSeaMap Depth Contours",
+      "type": "xyz",
+      "url": "https://depth.openseamap.org/tiles/{z}/{x}/{y}.png",
+      "attribution": "© OpenSeaMap depth project",
+      "maxZoom": 18,
+      "category": "overlay",
+      "description": "Crowdsourced depth contours and soundings"
+    },
+    {
+      "id": "noaa-enc-display",
+      "name": "NOAA ENC Chart Display",
+      "type": "wmts",
+      "url": "https://gis.charttools.noaa.gov/arcgis/rest/services/MarineChart_Services/NOAACharts/MapServer/WMTS",
+      "attribution": "NOAA Office of Coast Survey",
+      "maxZoom": 18,
+      "category": "chart",
+      "description": "Official NOAA nautical chart rendering. US waters only.",
+      "region": "US"
+    },
+    {
+      "id": "noaa-enc-wms",
+      "name": "NOAA ENC (WMS)",
+      "type": "wms",
+      "url": "https://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/MaritimeChartService/WMSServer",
+      "layers": "0,1,2,3,4,5,6,7,8,9,10,11,12",
+      "attribution": "NOAA Office of Coast Survey",
+      "maxZoom": 18,
+      "category": "chart",
+      "region": "US"
+    },
+    {
+      "id": "chs-enc-wms",
+      "name": "CHS Canadian ENC Charts",
+      "type": "wms",
+      "url": "https://egisp.dfo-mpo.gc.ca/arcgis/rest/services/chs/ENC_MaritimeChartService/MapServer/exts/MaritimeChartService/WMSServer",
+      "layers": "10,6,8,2,0,9,1,12,3,7,11,5,4",
+      "attribution": "Canadian Hydrographic Service, Fisheries and Oceans Canada",
+      "maxZoom": 18,
+      "category": "chart",
+      "description": "Official Canadian ENC chart display. Covers all Canadian waters including Bay of Fundy, Nova Scotia, PEI.",
+      "region": "CA"
+    },
+    {
+      "id": "esri-ocean",
+      "name": "Esri Ocean Basemap",
+      "type": "xyz",
+      "url": "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}",
+      "attribution": "Esri, GEBCO, NOAA, National Geographic",
+      "maxZoom": 13,
+      "category": "base",
+      "description": "Bathymetric basemap with ocean floor detail"
+    },
+    {
+      "id": "esri-ocean-reference",
+      "name": "Esri Ocean Reference",
+      "type": "xyz",
+      "url": "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}",
+      "attribution": "Esri",
+      "maxZoom": 13,
+      "category": "overlay",
+      "description": "Labels and place names for ocean basemap"
+    },
+    {
+      "id": "esri-satellite",
+      "name": "Satellite Imagery",
+      "type": "xyz",
+      "url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      "attribution": "Esri, Maxar, Earthstar Geographics",
+      "maxZoom": 19,
+      "category": "base",
+      "description": "High-resolution satellite imagery. Useful for anchorage and marina approach planning."
+    }
+  ],
+  "apiEndpoints": {
+    "tides": {
+      "canada": {
+        "name": "IWLS (Integrated Water Level System)",
+        "baseUrl": "https://api-iwls.dfo-mpo.gc.ca/api/v1",
+        "endpoints": {
+          "stations": "/stations",
+          "stationsByRegion": "/stations?chs-region-code={region}",
+          "predictions": "/stations/{id}/data?time-series-code=wlp-hilo&from={from}&to={to}",
+          "observations": "/stations/{id}/data?time-series-code=wlo&from={from}&to={to}",
+          "metadata": "/stations/{id}"
+        },
+        "regionCodes": ["ATL", "CEN", "PAC", "ARC"],
+        "attribution": "Canadian Hydrographic Service"
+      },
+      "usa": {
+        "name": "CO-OPS Tides & Currents",
+        "baseUrl": "https://api.tidesandcurrents.noaa.gov/api/prod",
+        "endpoints": {
+          "predictions": "/datagetter?begin_date={begin}&end_date={end}&station={station}&product=predictions&datum=MLLW&units=metric&time_zone=gmt&application=harbormesh&format=json",
+          "waterLevels": "/datagetter?begin_date={begin}&end_date={end}&station={station}&product=water_level&datum=MLLW&units=metric&time_zone=gmt&application=harbormesh&format=json",
+          "stations": "/mdapi/v0/webapi/stations.json"
+        },
+        "attribution": "NOAA CO-OPS"
+      }
+    },
+    "weather": {
+      "canada": {
+        "name": "Environment Canada Weather",
+        "baseUrl": "https://dd.weather.gc.ca",
+        "marineForecasts": "/citypage_weather/xml/siteList.xml",
+        "attribution": "Environment and Climate Change Canada"
+      }
+    },
+    "ais": {
+      "name": "AISHub (Community AIS)",
+      "baseUrl": "https://data.aishub.net/ws.php",
+      "description": "Free community AIS data sharing network. Requires registration."
+    }
+  },
+  "maritimePorts": [
+    {"name": "Saint John", "province": "NB", "lat": 45.2546, "lon": -66.0600, "tideStationId": "5cebf1df3d0f4a073c4bbc24", "vhfChannel": 12, "facilities": ["fuel", "pumpout", "repair", "customs"]},
+    {"name": "Halifax", "province": "NS", "lat": 44.6459, "lon": -63.5711, "tideStationId": "5cebf1df3d0f4a073c4bbcbb", "vhfChannel": 12, "facilities": ["fuel", "pumpout", "repair", "customs", "haul-out"]},
+    {"name": "Charlottetown", "province": "PEI", "lat": 46.2301, "lon": -63.1222, "tideStationId": "5cebf1e33d0f4a073c4bc21f", "vhfChannel": 12, "facilities": ["fuel", "pumpout", "customs"]},
+    {"name": "Shediac Bay", "province": "NB", "lat": 46.2269, "lon": -64.5451, "tideStationId": "5cebf1e33d0f4a073c4bc23e", "vhfChannel": 68, "facilities": ["fuel", "pumpout"]},
+    {"name": "Grand Manan (North Head)", "province": "NB", "lat": 44.7631, "lon": -66.7490, "tideStationId": "5cebf1df3d0f4a073c4bbc0d", "vhfChannel": 16, "facilities": ["fuel"]},
+    {"name": "St. Andrews", "province": "NB", "lat": 45.0823, "lon": -67.0845, "tideStationId": "5cebf1df3d0f4a073c4bbc19", "vhfChannel": 68, "facilities": ["fuel", "pumpout", "customs"]},
+    {"name": "Campobello (Welshpool)", "province": "NB", "lat": 44.8889, "lon": -66.9576, "tideStationId": "5cebf1df3d0f4a073c4bbc0f", "vhfChannel": 16, "facilities": ["fuel"]},
+    {"name": "Digby", "province": "NS", "lat": 44.6208, "lon": -65.7599, "tideStationId": null, "vhfChannel": 12, "facilities": ["fuel", "pumpout", "repair"]},
+    {"name": "Yarmouth", "province": "NS", "lat": 43.8369, "lon": -66.1174, "tideStationId": null, "vhfChannel": 12, "facilities": ["fuel", "pumpout", "repair", "customs", "haul-out"]},
+    {"name": "Lunenburg", "province": "NS", "lat": 44.3767, "lon": -64.3093, "tideStationId": null, "vhfChannel": 68, "facilities": ["fuel", "pumpout", "repair", "haul-out"]},
+    {"name": "Chester", "province": "NS", "lat": 44.5482, "lon": -64.2381, "tideStationId": null, "vhfChannel": 68, "facilities": ["fuel", "pumpout"]},
+    {"name": "Mahone Bay", "province": "NS", "lat": 44.4485, "lon": -64.3807, "tideStationId": null, "vhfChannel": 68, "facilities": ["fuel"]},
+    {"name": "Pictou", "province": "NS", "lat": 45.6788, "lon": -62.7103, "tideStationId": null, "vhfChannel": 12, "facilities": ["fuel", "pumpout"]},
+    {"name": "Pugwash", "province": "NS", "lat": 45.8500, "lon": -63.6667, "tideStationId": null, "vhfChannel": 16, "facilities": ["fuel"]},
+    {"name": "Summerside", "province": "PEI", "lat": 46.3934, "lon": -63.7897, "tideStationId": null, "vhfChannel": 12, "facilities": ["fuel", "pumpout"]},
+    {"name": "Souris", "province": "PEI", "lat": 46.3536, "lon": -62.2517, "tideStationId": null, "vhfChannel": 16, "facilities": ["fuel"]},
+    {"name": "Georgetown", "province": "PEI", "lat": 46.1833, "lon": -62.5333, "tideStationId": null, "vhfChannel": 16, "facilities": ["fuel"]},
+    {"name": "Baddeck", "province": "NS", "lat": 46.0994, "lon": -60.7519, "tideStationId": null, "vhfChannel": 68, "facilities": ["fuel", "pumpout"]},
+    {"name": "Sydney", "province": "NS", "lat": 46.1368, "lon": -60.1942, "tideStationId": null, "vhfChannel": 12, "facilities": ["fuel", "pumpout", "repair", "customs"]},
+    {"name": "Bathurst", "province": "NB", "lat": 47.6186, "lon": -65.6517, "tideStationId": null, "vhfChannel": 12, "facilities": ["fuel", "pumpout"]},
+    {"name": "Caraquet", "province": "NB", "lat": 47.7905, "lon": -65.0003, "tideStationId": null, "vhfChannel": 16, "facilities": ["fuel"]},
+    {"name": "Shippagan", "province": "NB", "lat": 47.7481, "lon": -64.7106, "tideStationId": null, "vhfChannel": 16, "facilities": ["fuel"]},
+    {"name": "Miramichi", "province": "NB", "lat": 47.0296, "lon": -65.5083, "tideStationId": null, "vhfChannel": 12, "facilities": ["fuel", "pumpout"]},
+    {"name": "Richibucto", "province": "NB", "lat": 46.6817, "lon": -64.8739, "tideStationId": null, "vhfChannel": 16, "facilities": ["fuel"]}
+  ]
+}

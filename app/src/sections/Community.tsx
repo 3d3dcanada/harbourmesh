@@ -25,6 +25,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { NBPilotChart } from '@/components/NBPilotChart';
+import { FeatureGate } from '@/components/FeatureGate';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -1070,6 +1071,7 @@ export function Community() {
             </CardContent>
           </Card>
 
+          <FeatureGate feature="community-contribute">
           <Card className="mt-4">
             <CardHeader>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -1145,6 +1147,7 @@ export function Community() {
               )}
             </CardContent>
           </Card>
+          </FeatureGate>
         </TabsContent>
 
         <TabsContent value="hazards" className="mt-4">
@@ -1182,6 +1185,7 @@ export function Community() {
             )}
           </div>
 
+          <FeatureGate feature="community-contribute">
           <div className="mt-4 grid gap-3 md:grid-cols-3">
             <Button onClick={handleReportHazard} disabled={!latestPosition}>
               <AlertTriangle className="mr-2 h-4 w-4" />
@@ -1243,6 +1247,7 @@ export function Community() {
               )}
             </CardContent>
           </Card>
+          </FeatureGate>
 
           <Card className="mt-4">
             <CardHeader>
@@ -1536,10 +1541,12 @@ export function Community() {
                     Raw observations stay local. Upload records are derived after consent, quality, and position-sharing rules.
                   </CardDescription>
                 </div>
+                <FeatureGate feature="community-contribute">
                 <Button size="sm" onClick={handleQueueSoundings} disabled={pendingShareableCount === 0}>
                   <Database className="mr-2 h-4 w-4" />
                   Queue Batch
                 </Button>
+                </FeatureGate>
               </div>
             </CardHeader>
             <CardContent>

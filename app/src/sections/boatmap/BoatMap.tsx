@@ -6,17 +6,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import {
-  Map, Plus, Settings, Upload, ZoomIn, ZoomOut, Maximize2,
+  Map, Plus, Settings, Upload, ZoomIn, ZoomOut, Maximize2, FileText, RotateCw,
+  Pencil, RotateCcw, Grid3X3,
 } from 'lucide-react';
 import { useVesselStore, useAppStore, useSettingsStore } from '@/store';
 import { SpaceType } from '@/types';
 import type { Space, SpaceGeometry } from '@/types';
 import { normalizeGeometry } from '@/lib/geometry';
 import { DataSourceNotice } from '@/components/DataSourceNotice';
+import { AIAssistButton } from '@/components/AIAssistButton';
 import { SpaceCanvas } from './SpaceCanvas';
 import { DeckSelector } from './DeckSelector';
 import { TemplateChooser } from './TemplateChooser';
 import { SpaceDetailPanel } from './SpaceDetailPanel';
+import { BlueprintViewer } from '@/components/BlueprintViewer';
 import type { VesselTemplate } from '@/lib/vessel-templates';
 
 const SPACE_TYPE_LABELS: Record<SpaceType, string> = {
@@ -52,11 +55,17 @@ export function BoatMap() {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [templateChooserOpen, setTemplateChooserOpen] = useState(false);
+  const [showBlueprint, setShowBlueprint] = useState(false);
   const [addSpaceOpen, setAddSpaceOpen] = useState(false);
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [renamingSpace, setRenamingSpace] = useState<Space | null>(null);
   const [renameDraft, setRenameDraft] = useState('');
   const [newSpaceDraft, setNewSpaceDraft] = useState({ name: '', type: SpaceType.COMPARTMENT as SpaceType });
+  const [blueprintRotation, setBlueprintRotation] = useState(0);
+  const [editingHull, setEditingHull] = useState(false);
+  const [snapEnabled, setSnapEnabled] = useState(false);
+  const [showLegend, setShowLegend] = useState(false);
+  const [templateHullPoints, setTemplateHullPoints] = useState<Array<{ x: number; y: number }> | null>(null);
   const blueprintInputRef = useRef<HTMLInputElement>(null);
 
   const vesselSpaces = spaces.filter((s) => s.vesselId === currentVessel?.id);
@@ -121,6 +130,27 @@ export function BoatMap() {
     },
     [updateSpace]
   );
+
+  const handleUpdateHullPoints = useCallback(
+    (points: Array<{ x: number; y: number }>) => {
+      if (!currentVessel) return;
+      if (!templateHullPoints) {
+        setTemplateHullPoints([...hullPoints]);
+      }
+      updateVessel(currentVessel.id, {
+        deckPlan: { ...(currentVessel.deckPlan ?? { hullPoints: [] }), hullPoints: points },
+      });
+    },
+    [currentVessel, hullPoints, templateHullPoints, updateVessel]
+  );
+
+  const handleResetHull = useCallback(() => {
+    if (!currentVessel || !templateHullPoints) return;
+    updateVessel(currentVessel.id, {
+      deckPlan: { ...(currentVessel.deckPlan ?? { hullPoints: [] }), hullPoints: templateHullPoints },
+    });
+    setTemplateHullPoints(null);
+  }, [currentVessel, templateHullPoints, updateVessel]);
 
   const handleRename = (space: Space) => {
     setRenamingSpace(space);
@@ -220,6 +250,42 @@ export function BoatMap() {
             {hasHull ? 'Change Template' : 'Choose Template'}
           </Button>
 
+          {hasHull && (
+            <Button
+              variant={editingHull ? 'default' : 'ghost'}
+              size="sm"
+              className="h-7 px-2 text-xs gap-1"
+              onClick={() => setEditingHull(!editingHull)}
+            >
+              <Pencil className="h-3 w-3" />
+              {editingHull ? 'Done Editing' : 'Edit Hull'}
+            </Button>
+          )}
+
+          {editingHull && templateHullPoints && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs gap-1 text-amber-600"
+              onClick={handleResetHull}
+            >
+              <RotateCcw className="h-3 w-3" />
+              Reset Hull
+            </Button>
+          )}
+
+          {hasHull && (
+            <Button
+              variant={showBlueprint ? 'secondary' : 'ghost'}
+              size="sm"
+              className="h-7 px-2 text-xs gap-1"
+              onClick={() => setShowBlueprint(!showBlueprint)}
+            >
+              <FileText className="h-3 w-3" />
+              Blueprint
+            </Button>
+          )}
+
           <Button
             variant="ghost"
             size="sm"
@@ -227,7 +293,7 @@ export function BoatMap() {
             onClick={() => blueprintInputRef.current?.click()}
           >
             <Upload className="h-3 w-3" />
-            Blueprint
+            Import
           </Button>
           <input
             ref={blueprintInputRef}
@@ -236,6 +302,36 @@ export function BoatMap() {
             className="hidden"
             onChange={handleBlueprintUpload}
           />
+
+          {blueprintImageUrl && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs gap-1"
+                onClick={() => setBlueprintRotation((r) => (r + 90) % 360)}
+                title={`Rotate blueprint (${blueprintRotation}°)`}
+              >
+                <RotateCw className="h-3 w-3" />
+                {blueprintRotation}°
+              </Button>
+              <input
+                type="range"
+                min="10"
+                max="100"
+                value={Math.round(blueprintOpacity * 100)}
+                onChange={(e) => {
+                  if (!currentVessel) return;
+                  const val = parseInt(e.target.value) / 100;
+                  updateVessel(currentVessel.id, {
+                    deckPlan: { ...(currentVessel.deckPlan ?? { hullPoints: [] }), blueprintOpacity: val },
+                  });
+                }}
+                className="w-16 h-1 accent-primary cursor-pointer"
+                title={`Blueprint opacity: ${Math.round(blueprintOpacity * 100)}%`}
+              />
+            </>
+          )}
 
           <Button
             variant="outline"
@@ -249,6 +345,16 @@ export function BoatMap() {
 
           <div className="h-4 w-px bg-border mx-1" />
 
+          <Button
+            variant={snapEnabled ? 'secondary' : 'ghost'}
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => setSnapEnabled(!snapEnabled)}
+            title={snapEnabled ? 'Snap to grid ON' : 'Snap to grid OFF'}
+          >
+            <Grid3X3 className="h-3 w-3" />
+          </Button>
+
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setZoom((z) => Math.min(3, z * 1.2))}>
             <ZoomIn className="h-3 w-3" />
           </Button>
@@ -258,6 +364,9 @@ export function BoatMap() {
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }}>
             <Maximize2 className="h-3 w-3" />
           </Button>
+
+          <div className="h-4 w-px bg-border mx-1" />
+          <AIAssistButton prompt="Set up spaces for my boat" label="AI Setup" />
         </div>
       </div>
 
@@ -265,7 +374,14 @@ export function BoatMap() {
       <div className="flex flex-1 min-h-0">
         {/* Canvas */}
         <div className="flex-1 relative bg-muted/20">
-          {!hasHull && !hasSpaces ? (
+          {showBlueprint && currentVessel?.deckPlan?.templateId ? (
+            <div className="p-4 overflow-y-auto h-full">
+              <BlueprintViewer
+                templateId={currentVessel.deckPlan.templateId}
+                vesselName={currentVessel.name}
+              />
+            </div>
+          ) : !hasHull && !hasSpaces ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
               <Map className="h-12 w-12 text-muted-foreground/30" />
               <p className="text-sm text-muted-foreground">No deck plan yet</p>
@@ -284,6 +400,9 @@ export function BoatMap() {
               pan={pan}
               blueprintImageUrl={blueprintImageUrl}
               blueprintOpacity={blueprintOpacity}
+              blueprintRotation={blueprintRotation}
+              editingHull={editingHull}
+              snapEnabled={snapEnabled}
               onSelectSpace={setSelectedSpaceId}
               onUpdateSpaceGeometry={handleUpdateGeometry}
               onPanChange={setPan}
@@ -292,6 +411,7 @@ export function BoatMap() {
               onViewInventory={handleViewInventory}
               onDuplicateSpace={handleDuplicate}
               onDeleteSpace={handleDelete}
+              onUpdateHullPoints={handleUpdateHullPoints}
             />
           )}
         </div>
@@ -330,6 +450,38 @@ export function BoatMap() {
                     </button>
                   );
                 })
+              )}
+            </div>
+
+            {/* Color Legend */}
+            <div className="border-t">
+              <button
+                onClick={() => setShowLegend(!showLegend)}
+                className="w-full p-3 flex items-center justify-between text-xs font-medium text-muted-foreground uppercase tracking-wide hover:bg-muted/50"
+              >
+                Legend
+                <span className="text-[10px] normal-case font-normal">{showLegend ? 'Hide' : 'Show'}</span>
+              </button>
+              {showLegend && (
+                <div className="px-2 pb-3 space-y-1">
+                  {Object.entries(SPACE_TYPE_LABELS).map(([type, label]) => {
+                    const colors: Record<string, string> = {
+                      cockpit: '#3b82f6', cabin: '#8b5cf6', locker: '#6b7280',
+                      compartment: '#6b7280', bilge: '#06b6d4', galley: '#f97316',
+                      head: '#14b8a6', berth: '#a78bfa', salon: '#f59e0b',
+                      engine_room: '#ef4444', lazarette: '#78716c', anchor_locker: '#64748b',
+                      deck_storage: '#84cc16', flybridge: '#22d3ee', tender_garage: '#a3a3a3',
+                      fuel_tank: '#dc2626', water_tank: '#2563eb', hold: '#a16207',
+                      custom: '#d946ef',
+                    };
+                    return (
+                      <div key={type} className="flex items-center gap-2 px-1 py-0.5">
+                        <span className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: colors[type] ?? '#888' }} />
+                        <span className="text-[11px] text-foreground truncate">{label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
           </div>

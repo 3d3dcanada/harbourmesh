@@ -7,8 +7,10 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { useTelemetryStore, useAppStore, useSettingsStore, useCommunityDataStore, useVesselStore } from '@/store';
 import { createCommunityObservationsFromTelemetry } from '@/lib/community-observations';
 import { createSoundingsFromTelemetry, type SoundingSourceProtocol } from '@/lib/community-soundings';
-import { buildSignalKStreamUrl, mapSignalKDeltaToTelemetry, type SignalKDelta } from '@/lib/signalk';
+import { mapSignalKDeltaToTelemetry, type SignalKDelta } from '@/lib/signalk';
+import { SignalKClient } from '@/lib/signalk-client';
 import { mapRecordedSignalKDelta } from '@/lib/signalk-replay';
+import { PhoneSensorManager } from '@/lib/phone-sensors';
 import type { TelemetryMessage, GeoPosition } from '@/types';
 
 interface UseTelemetryOptions {
@@ -25,7 +27,16 @@ interface UseTelemetryReturn {
   disconnect: () => void;
   sendCommand: (command: unknown) => void;
   latestPosition: GeoPosition | null;
-  latestMotion: { roll: number; pitch: number; yaw: number } | null;
+  latestMotion: {
+    roll: number;
+    pitch: number;
+    yaw: number;
+    heave?: number;
+    surge?: number;
+    sway?: number;
+    linearAcceleration?: { x: number; y: number; z: number };
+    angularVelocity?: { x: number; y: number; z: number };
+  } | null;
   latestEnvironment: {
     depth?: number;
     waterTemp?: number;
@@ -42,6 +53,7 @@ interface UseTelemetryReturn {
     sog: number;
     lastUpdate: string;
   }>;
+  phoneSensorManager: PhoneSensorManager | null;
 }
 
 // Simulated telemetry for demo purposes
@@ -139,12 +151,14 @@ export function useTelemetry(options: UseTelemetryOptions = {}): UseTelemetryRet
   const [error, setError] = useState<Error | null>(null);
   
   const wsRef = useRef<WebSocket | null>(null);
+  const signalKClientRef = useRef<SignalKClient | null>(null);
   const reconnectAttemptsRef = useRef(0);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const simulationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const connectionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const manualDisconnectRef = useRef(false);
   const replayIndexRef = useRef(0);
+  const phoneSensorRef = useRef<PhoneSensorManager | null>(null);
   
   const { addMessage, latestPosition, latestMotion, latestEnvironment, latestEngine, aisTargets } = useTelemetryStore();
   const { setConnectionStatus, addNotification } = useAppStore();
@@ -171,10 +185,20 @@ export function useTelemetry(options: UseTelemetryOptions = {}): UseTelemetryRet
       simulationIntervalRef.current = null;
     }
 
+    if (signalKClientRef.current) {
+      signalKClientRef.current.disconnect();
+      signalKClientRef.current = null;
+    }
+
     if (wsRef.current) {
       const socket = wsRef.current;
       wsRef.current = null;
       socket.close();
+    }
+
+    if (phoneSensorRef.current) {
+      phoneSensorRef.current.stop();
+      phoneSensorRef.current = null;
     }
   }, []);
 
@@ -270,10 +294,54 @@ export function useTelemetry(options: UseTelemetryOptions = {}): UseTelemetryRet
       message: 'Using generated demo telemetry.',
     });
   }, [addNotification, boatNode.deviceId, consent?.vesselId, currentVessel?.id, pushMessages, setConnectionStatus, stopStreams]);
-  
+
+  const startPhoneSensors = useCallback(async () => {
+    stopStreams();
+    setError(null);
+    setIsConnecting(true);
+    setConnectionStatus('connecting');
+
+    const manager = new PhoneSensorManager(
+      { gpsIntervalMs: 1000, motionIntervalMs: 100, enableWakeLock: true, highAccuracyGps: true },
+      (messages) => pushMessages(messages, 'phone'),
+      consent?.vesselId ?? currentVessel?.id ?? `local-vessel-${boatNode.deviceId}`,
+      boatNode.deviceId || 'phone-sensor',
+    );
+    phoneSensorRef.current = manager;
+
+    try {
+      await manager.requestPermissions();
+
+      if (manager.getState().permissions.deviceOrientation === 'requires-gesture') {
+        await manager.requestIOSPermissions();
+      }
+
+      await manager.start();
+
+      const state = manager.getState();
+      setIsConnected(state.activeSensors.length > 0);
+      setIsConnecting(false);
+      setConnectionStatus(state.activeSensors.length > 0 ? 'online' : 'error');
+
+      addNotification({
+        type: state.activeSensors.length > 0 ? 'success' : 'warning',
+        title: 'Phone Sensors',
+        message: state.activeSensors.length > 0
+          ? `Active: ${state.activeSensors.join(', ')}`
+          : 'No sensors available. Check permissions.',
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Phone sensor permission denied'));
+      setIsConnected(false);
+      setIsConnecting(false);
+      setConnectionStatus('error');
+    }
+  }, [addNotification, boatNode.deviceId, consent?.vesselId, currentVessel?.id, pushMessages, setConnectionStatus, stopStreams]);
+
   // Connect to WebSocket
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
+    if (signalKClientRef.current?.getConnectionState() === 'connected') return;
     
     manualDisconnectRef.current = false;
     stopStreams();
@@ -282,21 +350,26 @@ export function useTelemetry(options: UseTelemetryOptions = {}): UseTelemetryRet
     setError(null);
 
     if (boatNode.telemetryMode === 'replay') {
+      if (!demoModeEnabled) {
+        setIsConnected(false);
+        setIsConnecting(false);
+        setConnectionStatus('offline');
+        return;
+      }
       startReplay();
+      return;
+    }
+
+    if (boatNode.telemetryMode === 'phone') {
+      startPhoneSensors();
       return;
     }
 
     if (boatNode.telemetryMode === 'simulated') {
       if (!demoModeEnabled) {
-        setError(new Error('Demo Mode is required for generated telemetry simulation'));
         setIsConnected(false);
         setIsConnecting(false);
         setConnectionStatus('offline');
-        addNotification({
-          type: 'warning',
-          title: 'Simulation Disabled',
-          message: 'Enable Demo Mode in Settings before using generated telemetry.',
-        });
         return;
       }
       startSimulation();
@@ -312,81 +385,59 @@ export function useTelemetry(options: UseTelemetryOptions = {}): UseTelemetryRet
     };
 
     try {
-      const streamUrl = buildSignalKStreamUrl(boatNode.signalKBaseUrl, boatNode.signalKSubscribe);
-      const socket = new WebSocket(streamUrl);
-      wsRef.current = socket;
+      const subscribePaths = boatNode.signalKSubscribe === 'all'
+        ? ['*']
+        : ['navigation.*', 'environment.*', 'propulsion.*'];
 
-      connectionTimeoutRef.current = setTimeout(() => {
-        if (wsRef.current === socket && socket.readyState !== WebSocket.OPEN) {
-          socket.close();
-          if (!fallbackToReplay()) {
-            setError(new Error('Signal K connection timed out'));
+      const client = new SignalKClient(boatNode.signalKBaseUrl, {
+        subscribe: subscribePaths,
+        reconnectMaxDelay: reconnectInterval * maxReconnectAttempts,
+        healthTimeout: boatNode.connectionTimeoutSeconds * 1000,
+      });
+
+      client.onDelta((delta) => {
+        pushMessages(mapSignalKDeltaToTelemetry(delta as unknown as SignalKDelta, {
+          vesselId: consent?.vesselId ?? currentVessel?.id ?? `local-vessel-${boatNode.deviceId}`,
+          sourceDeviceId: 'signalk',
+        }), 'signalk');
+      });
+
+      client.onConnectionChange((state) => {
+        switch (state) {
+          case 'connected':
+            setIsConnected(true);
+            setIsConnecting(false);
+            setConnectionStatus('online');
+            reconnectAttemptsRef.current = 0;
+            addNotification({
+              type: 'success',
+              title: 'Signal K Connected',
+              message: 'Receiving live Boat Node telemetry.',
+            });
+            break;
+          case 'connecting':
+            setIsConnecting(true);
+            break;
+          case 'disconnected':
             setIsConnected(false);
             setIsConnecting(false);
-            setConnectionStatus('error');
-          }
+            if (!manualDisconnectRef.current && !fallbackToReplay()) {
+              setConnectionStatus('error');
+            }
+            break;
+          case 'error':
+            setError(new Error('Signal K stream error'));
+            setIsConnected(false);
+            setIsConnecting(false);
+            if (!fallbackToReplay()) {
+              setConnectionStatus('error');
+            }
+            break;
         }
-      }, boatNode.connectionTimeoutSeconds * 1000);
+      });
 
-      socket.onopen = () => {
-        if (wsRef.current !== socket) return;
-        if (connectionTimeoutRef.current) {
-          clearTimeout(connectionTimeoutRef.current);
-          connectionTimeoutRef.current = null;
-        }
-
-        setIsConnected(true);
-        setIsConnecting(false);
-        setConnectionStatus('online');
-        reconnectAttemptsRef.current = 0;
-
-        addNotification({
-          type: 'success',
-          title: 'Signal K Connected',
-          message: 'Receiving live Boat Node telemetry.',
-        });
-      };
-
-      socket.onmessage = (event) => {
-        try {
-          const parsed = JSON.parse(event.data) as SignalKDelta | SignalKDelta[];
-          const deltas = Array.isArray(parsed) ? parsed : [parsed];
-          for (const delta of deltas) {
-            pushMessages(mapSignalKDeltaToTelemetry(delta, {
-              vesselId: consent?.vesselId ?? currentVessel?.id ?? `local-vessel-${boatNode.deviceId}`,
-              sourceDeviceId: 'signalk',
-            }), 'signalk');
-          }
-        } catch {
-          setError(new Error('Signal K stream sent invalid JSON'));
-        }
-      };
-
-      socket.onerror = () => {
-        if (wsRef.current !== socket) return;
-        setError(new Error('Signal K stream error'));
-      };
-
-      socket.onclose = () => {
-        if (wsRef.current !== socket || manualDisconnectRef.current) return;
-        wsRef.current = null;
-
-        if (connectionTimeoutRef.current) {
-          clearTimeout(connectionTimeoutRef.current);
-          connectionTimeoutRef.current = null;
-        }
-
-        setIsConnected(false);
-        setIsConnecting(false);
-
-        if (fallbackToReplay()) return;
-
-        setConnectionStatus('error');
-        if (reconnectAttemptsRef.current < maxReconnectAttempts) {
-          reconnectAttemptsRef.current++;
-          reconnectTimeoutRef.current = setTimeout(connect, reconnectInterval);
-        }
-      };
+      void client.connect();
+      signalKClientRef.current = client;
     } catch (err) {
       const nextError = err instanceof Error ? err : new Error('Failed to connect');
       setError(nextError);
@@ -411,6 +462,7 @@ export function useTelemetry(options: UseTelemetryOptions = {}): UseTelemetryRet
     pushMessages,
     reconnectInterval,
     setConnectionStatus,
+    startPhoneSensors,
     startReplay,
     startSimulation,
     stopStreams,
@@ -439,16 +491,16 @@ export function useTelemetry(options: UseTelemetryOptions = {}): UseTelemetryRet
     }
   }, []);
   
-  // Auto-connect on mount
+  // Auto-connect on mount or when telemetry mode changes
   useEffect(() => {
     if (autoConnect) {
       connect();
     }
-    
+
     return () => {
       disconnect();
     };
-  }, [autoConnect, connect, disconnect]);
+  }, [autoConnect, connect, disconnect, boatNode.telemetryMode]);
   
   return {
     isConnected,
@@ -462,6 +514,7 @@ export function useTelemetry(options: UseTelemetryOptions = {}): UseTelemetryRet
     latestEnvironment,
     latestEngine,
     aisTargets,
+    phoneSensorManager: phoneSensorRef.current,
   };
 }
 

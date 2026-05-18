@@ -4,48 +4,70 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 210 20% 98%;
+    --foreground: 220 30% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 220 30% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 201 96% 42%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 201 96% 42%;
-    --radius: 0.5rem;
+    --popover-foreground: 220 30% 10%;
+    --primary: 205 100% 44%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 25% 93%;
+    --secondary-foreground: 220 30% 15%;
+    --muted: 210 20% 95%;
+    --muted-foreground: 215 15% 48%;
+    --accent: 210 25% 93%;
+    --accent-foreground: 220 30% 15%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 25% 89%;
+    --input: 214 25% 89%;
+    --ring: 205 100% 44%;
+    --radius: 0.625rem;
+
+    --cyan: 187 90% 45%;
+    --cyan-foreground: 0 0% 100%;
+    --amber: 38 95% 52%;
+    --amber-foreground: 30 50% 12%;
+    --emerald: 160 84% 39%;
+    --emerald-foreground: 0 0% 100%;
+
+    --surface-1: 0 0% 100%;
+    --surface-2: 210 20% 97%;
+    --surface-3: 210 18% 94%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 9.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 199 89% 48%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 199 89% 48%;
+    --background: 222 47% 8%;
+    --foreground: 210 30% 96%;
+    --card: 220 40% 11%;
+    --card-foreground: 210 30% 96%;
+    --popover: 222 47% 8%;
+    --popover-foreground: 210 30% 96%;
+    --primary: 199 90% 52%;
+    --primary-foreground: 220 40% 8%;
+    --secondary: 218 30% 16%;
+    --secondary-foreground: 210 30% 96%;
+    --muted: 218 30% 16%;
+    --muted-foreground: 215 18% 62%;
+    --accent: 218 30% 16%;
+    --accent-foreground: 210 30% 96%;
+    --destructive: 0 62% 35%;
+    --destructive-foreground: 210 30% 96%;
+    --border: 218 25% 18%;
+    --input: 218 25% 18%;
+    --ring: 199 90% 52%;
+
+    --cyan: 187 85% 50%;
+    --cyan-foreground: 220 40% 8%;
+    --amber: 38 92% 55%;
+    --amber-foreground: 30 50% 10%;
+    --emerald: 160 80% 44%;
+    --emerald-foreground: 220 40% 8%;
+
+    --surface-1: 220 40% 11%;
+    --surface-2: 220 38% 14%;
+    --surface-3: 220 35% 18%;
   }
 }
 
@@ -168,4 +190,147 @@
     min-height: 44px;
     min-width: 44px;
   }
+
+  button, a, [role="button"] {
+    touch-action: manipulation;
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Marine-critical readings: larger on mobile */
+@media (max-width: 1023px) {
+  .marine-reading {
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* View transition animations */
+@keyframes view-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.view-enter {
+  animation: view-fade-in 200ms ease-out;
+}
+
+/* Dashboard card stagger animation */
+@keyframes card-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card-stagger {
+  opacity: 0;
+  animation: card-slide-up 300ms ease-out forwards;
+}
+
+/* Alert scale-in animation */
+@keyframes alert-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.alert-enter {
+  animation: alert-scale-in 250ms ease-out;
+}
+
+/* Touch feedback */
+@media (pointer: coarse) {
+  .tap-highlight {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .tap-highlight:active {
+    transform: scale(0.97);
+    transition: transform 100ms ease;
+  }
+}
+
+/* Button press feedback */
+button:not(:disabled):active,
+[role="button"]:not(:disabled):active {
+  transform: scale(0.97);
+  transition: transform 80ms ease;
+}
+
+/* Card lift hover effect */
+.card-lift {
+  transition: box-shadow 150ms ease, transform 150ms ease;
+}
+
+.card-lift:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Section heading style */
+.section-heading {
+  font-weight: 900;
+  letter-spacing: -0.025em;
+}
+
+/* Colored left border cards */
+.card-accent-primary { border-left: 3px solid hsl(var(--primary)); }
+.card-accent-cyan { border-left: 3px solid hsl(var(--cyan)); }
+.card-accent-amber { border-left: 3px solid hsl(var(--amber)); }
+.card-accent-emerald { border-left: 3px solid hsl(var(--emerald)); }
+.card-accent-destructive { border-left: 3px solid hsl(var(--destructive)); }
+
+/* Shimmer skeleton */
+@keyframes shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, transparent 25%, hsl(var(--muted-foreground) / 0.08) 50%, transparent 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Bottom nav active indicator slide */
+@keyframes nav-underline {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.nav-active-indicator {
+  animation: nav-underline 200ms ease-out;
+  transform-origin: center;
+}
+
+/* Mobile instrument strip */
+.instrument-strip {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }

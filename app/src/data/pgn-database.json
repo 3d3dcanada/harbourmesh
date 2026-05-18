@@ -1,0 +1,1342 @@
+[
+  {
+    "pgn": 60928,
+    "id": "isoAddressClaim",
+    "description": "ISO Address Claim",
+    "length": 8,
+    "fields": [
+      {
+        "id": "uniqueNumber",
+        "name": "Unique Number",
+        "bitLength": 21,
+        "bitOffset": 0
+      },
+      {
+        "id": "manufacturerCode",
+        "name": "Manufacturer Code",
+        "bitLength": 11,
+        "bitOffset": 21
+      },
+      {
+        "id": "deviceInstanceLower",
+        "name": "Device Instance Lower",
+        "bitLength": 3,
+        "bitOffset": 32
+      },
+      {
+        "id": "deviceInstanceUpper",
+        "name": "Device Instance Upper",
+        "bitLength": 5,
+        "bitOffset": 35
+      },
+      {
+        "id": "deviceFunction",
+        "name": "Device Function",
+        "bitLength": 8,
+        "bitOffset": 40
+      },
+      {
+        "id": "spare",
+        "name": "Spare",
+        "bitLength": 1,
+        "bitOffset": 48
+      },
+      {
+        "id": "deviceClass",
+        "name": "Device Class",
+        "bitLength": 7,
+        "bitOffset": 49
+      },
+      {
+        "id": "systemInstance",
+        "name": "System Instance",
+        "bitLength": 4,
+        "bitOffset": 56
+      },
+      {
+        "id": "industryGroup",
+        "name": "Industry Group",
+        "bitLength": 3,
+        "bitOffset": 60
+      },
+      {
+        "id": "arbitraryAddressCapable",
+        "name": "Arbitrary address capable",
+        "bitLength": 1,
+        "bitOffset": 63
+      }
+    ]
+  },
+  {
+    "pgn": 126992,
+    "id": "systemTime",
+    "description": "System Time",
+    "length": 8,
+    "fields": [
+      {
+        "id": "sid",
+        "name": "SID",
+        "bitLength": 8,
+        "bitOffset": 0
+      },
+      {
+        "id": "source",
+        "name": "Source",
+        "bitLength": 4,
+        "bitOffset": 8
+      },
+      {
+        "id": "reserved",
+        "name": "Reserved",
+        "bitLength": 4,
+        "bitOffset": 12
+      },
+      {
+        "id": "date",
+        "name": "Date",
+        "bitLength": 16,
+        "bitOffset": 16
+      },
+      {
+        "id": "time",
+        "name": "Time",
+        "bitLength": 32,
+        "bitOffset": 32,
+        "resolution": 0.0001
+      }
+    ]
+  },
+  {
+    "pgn": 127250,
+    "id": "vesselHeading",
+    "description": "Vessel Heading",
+    "length": 8,
+    "fields": [
+      {
+        "id": "sid",
+        "name": "SID",
+        "bitLength": 8,
+        "bitOffset": 0
+      },
+      {
+        "id": "heading",
+        "name": "Heading",
+        "bitLength": 16,
+        "bitOffset": 8,
+        "resolution": 0.0001
+      },
+      {
+        "id": "deviation",
+        "name": "Deviation",
+        "bitLength": 16,
+        "bitOffset": 24,
+        "resolution": 0.0001,
+        "signed": true
+      },
+      {
+        "id": "variation",
+        "name": "Variation",
+        "bitLength": 16,
+        "bitOffset": 40,
+        "resolution": 0.0001,
+        "signed": true
+      },
+      {
+        "id": "reference",
+        "name": "Reference",
+        "bitLength": 2,
+        "bitOffset": 56
+      },
+      {
+        "id": "reserved",
+        "name": "Reserved",
+        "bitLength": 6,
+        "bitOffset": 58
+      }
+    ]
+  },
+  {
+    "pgn": 127488,
+    "id": "engineParametersRapidUpdate",
+    "description": "Engine Parameters, Rapid Update",
+    "length": 8,
+    "fields": [
+      {
+        "id": "instance",
+        "name": "Instance",
+        "bitLength": 8,
+        "bitOffset": 0
+      },
+      {
+        "id": "speed",
+        "name": "Speed",
+        "bitLength": 16,
+        "bitOffset": 8,
+        "resolution": 0.25
+      },
+      {
+        "id": "boostPressure",
+        "name": "Boost Pressure",
+        "bitLength": 16,
+        "bitOffset": 24,
+        "resolution": 100
+      },
+      {
+        "id": "tiltTrim",
+        "name": "Tilt/Trim",
+        "bitLength": 8,
+        "bitOffset": 40,
+        "signed": true
+      },
+      {
+        "id": "reserved",
+        "name": "Reserved",
+        "bitLength": 16,
+        "bitOffset": 48
+      }
+    ]
+  },
+  {
+    "pgn": 127489,
+    "id": "engineParametersDynamic",
+    "description": "Engine Parameters, Dynamic",
+    "length": 26,
+    "fields": [
+      {
+        "id": "instance",
+        "name": "Instance",
+        "bitLength": 8,
+        "bitOffset": 0
+      },
+      {
+        "id": "oilPressure",
+        "name": "Oil pressure",
+        "bitLength": 16,
+        "bitOffset": 8,
+        "resolution": 100
+      },
+      {
+        "id": "oilTemperature",
+        "name": "Oil temperature",
+        "bitLength": 16,
+        "bitOffset": 24,
+        "resolution": 0.1
+      },
+      {
+        "id": "temperature",
+        "name": "Temperature",
+        "bitLength": 16,
+        "bitOffset": 40,
+        "resolution": 0.01
+      },
+      {
+        "id": "alternatorPotential",
+        "name": "Alternator Potential",
+        "bitLength": 16,
+        "bitOffset": 56,
+        "resolution": 0.01,
+        "signed": true
+      },
+      {
+        "id": "fuelRate",
+        "name": "Fuel Rate",
+        "bitLength": 16,
+        "bitOffset": 72,
+        "resolution": 0.1,
+        "signed": true
+      },
+      {
+        "id": "totalEngineHours",
+        "name": "Total Engine hours",
+        "bitLength": 32,
+        "bitOffset": 88
+      },
+      {
+        "id": "coolantPressure",
+        "name": "Coolant Pressure",
+        "bitLength": 16,
+        "bitOffset": 120,
+        "resolution": 100
+      },
+      {
+        "id": "fuelPressure",
+        "name": "Fuel Pressure",
+        "bitLength": 16,
+        "bitOffset": 136,
+        "resolution": 1000
+      },
+      {
+        "id": "reserved",
+        "name": "Reserved",
+        "bitLength": 8,
+        "bitOffset": 152
+      },
+      {
+        "id": "discreteStatus1",
+        "name": "Discrete Status 1",
+        "bitLength": 16,
+        "bitOffset": 160
+      },
+      {
+        "id": "discreteStatus2",
+        "name": "Discrete Status 2",
+        "bitLength": 16,
+        "bitOffset": 176
+      },
+      {
+        "id": "engineLoad",
+        "name": "Engine Load",
+        "bitLength": 8,
+        "bitOffset": 192,
+        "signed": true
+      },
+      {
+        "id": "engineTorque",
+        "name": "Engine Torque",
+        "bitLength": 8,
+        "bitOffset": 200,
+        "signed": true
+      }
+    ]
+  },
+  {
+    "pgn": 127493,
+    "id": "transmissionParametersDynamic",
+    "description": "Transmission Parameters, Dynamic",
+    "length": 8,
+    "fields": [
+      {
+        "id": "instance",
+        "name": "Instance",
+        "bitLength": 8,
+        "bitOffset": 0
+      },
+      {
+        "id": "transmissionGear",
+        "name": "Transmission Gear",
+        "bitLength": 2,
+        "bitOffset": 8
+      },
+      {
+        "id": "reserved",
+        "name": "Reserved",
+        "bitLength": 6,
+        "bitOffset": 10
+      },
+      {
+        "id": "oilPressure",
+        "name": "Oil pressure",
+        "bitLength": 16,
+        "bitOffset": 16,
+        "resolution": 100
+      },
+      {
+        "id": "oilTemperature",
+        "name": "Oil temperature",
+        "bitLength": 16,
+        "bitOffset": 32,
+        "resolution": 0.1
+      },
+      {
+        "id": "discreteStatus1",
+        "name": "Discrete Status 1",
+        "bitLength": 8,
+        "bitOffset": 48
+      },
+      {
+        "id": "reserved7",
+        "name": "Reserved",
+        "bitLength": 8,
+        "bitOffset": 56
+      }
+    ]
+  },
+  {
+    "pgn": 127506,
+    "id": "dcDetailedStatus",
+    "description": "DC Detailed Status",
+    "length": 11,
+    "fields": [
+      {
+        "id": "sid",
+        "name": "SID",
+        "bitLength": 8,
+        "bitOffset": 0
+      },
+      {
+        "id": "instance",
+        "name": "Instance",
+        "bitLength": 8,
+        "bitOffset": 8
+      },
+      {
+        "id": "dcType",
+        "name": "DC Type",
+        "bitLength": 8,
+        "bitOffset": 16
+      },
+      {
+        "id": "stateOfCharge",
+        "name": "State of Charge",
+        "bitLength": 8,
+        "bitOffset": 24
+      },
+      {
+        "id": "stateOfHealth",
+        "name": "State of Health",
+        "bitLength": 8,
+        "bitOffset": 32
+      },
+      {
+        "id": "timeRemaining",
+        "name": "Time Remaining",
+        "bitLength": 16,
+        "bitOffset": 40,
+        "resolution": 60
+      },
+      {
+        "id": "rippleVoltage",
+        "name": "Ripple Voltage",
+        "bitLength": 16,
+        "bitOffset": 56,
+        "resolution": 0.001
+      },
+      {
+        "id": "remainingCapacity",
+        "name": "Remaining capacity",
+        "bitLength": 16,
+        "bitOffset": 72
+      }
+    ]
+  },
+  {
+    "pgn": 127508,
+    "id": "batteryStatus",
+    "description": "Battery Status",
+    "length": 8,
+    "fields": [
+      {
+        "id": "instance",
+        "name": "Instance",
+        "bitLength": 8,
+        "bitOffset": 0
+      },
+      {
+        "id": "voltage",
+        "name": "Voltage",
+        "bitLength": 16,
+        "bitOffset": 8,
+        "resolution": 0.01,
+        "signed": true
+      },
+      {
+        "id": "current",
+        "name": "Current",
+        "bitLength": 16,
+        "bitOffset": 24,
+        "resolution": 0.1,
+        "signed": true
+      },
+      {
+        "id": "temperature",
+        "name": "Temperature",
+        "bitLength": 16,
+        "bitOffset": 40,
+        "resolution": 0.01
+      },
+      {
+        "id": "sid",
+        "name": "SID",
+        "bitLength": 8,
+        "bitOffset": 56
+      }
+    ]
+  },
+  {
+    "pgn": 128259,
+    "id": "speed",
+    "description": "Speed",
+    "length": 8,
+    "fields": [
+      {
+        "id": "sid",
+        "name": "SID",
+        "bitLength": 8,
+        "bitOffset": 0
+      },
+      {
+        "id": "speedWaterReferenced",
+        "name": "Speed Water Referenced",
+        "bitLength": 16,
+        "bitOffset": 8,
+        "resolution": 0.01
+      },
+      {
+        "id": "speedGroundReferenced",
+        "name": "Speed Ground Referenced",
+        "bitLength": 16,
+        "bitOffset": 24,
+        "resolution": 0.01
+      },
+      {
+        "id": "speedWaterReferencedType",
+        "name": "Speed Water Referenced Type",
+        "bitLength": 8,
+        "bitOffset": 40
+      },
+      {
+        "id": "speedDirection",
+        "name": "Speed Direction",
+        "bitLength": 4,
+        "bitOffset": 48
+      },
+      {
+        "id": "reserved",
+        "name": "Reserved",
+        "bitLength": 12,
+        "bitOffset": 52
+      }
+    ]
+  },
+  {
+    "pgn": 128267,
+    "id": "waterDepth",
+    "description": "Water Depth",
+    "length": 8,
+    "fields": [
+      {
+        "id": "sid",
+        "name": "SID",
+        "bitLength": 8,
+        "bitOffset": 0
+      },
+      {
+        "id": "depth",
+        "name": "Depth",
+        "bitLength": 32,
+        "bitOffset": 8,
+        "resolution": 0.01
+      },
+      {
+        "id": "offset",
+        "name": "Offset",
+        "bitLength": 16,
+        "bitOffset": 40,
+        "resolution": 0.001,
+        "signed": true
+      },
+      {
+        "id": "range",
+        "name": "Range",
+        "bitLength": 8,
+        "bitOffset": 56,
+        "resolution": 10
+      }
+    ]
+  },
+  {
+    "pgn": 129025,
+    "id": "positionRapidUpdate",
+    "description": "Position, Rapid Update",
+    "length": 8,
+    "fields": [
+      {
+        "id": "latitude",
+        "name": "Latitude",
+        "bitLength": 32,
+        "bitOffset": 0,
+        "resolution": 1e-07,
+        "signed": true
+      },
+      {
+        "id": "longitude",
+        "name": "Longitude",
+        "bitLength": 32,
+        "bitOffset": 32,
+        "resolution": 1e-07,
+        "signed": true
+      }
+    ]
+  },
+  {
+    "pgn": 129026,
+    "id": "cogSogRapidUpdate",
+    "description": "COG & SOG, Rapid Update",
+    "length": 8,
+    "fields": [
+      {
+        "id": "sid",
+        "name": "SID",
+        "bitLength": 8,
+        "bitOffset": 0
+      },
+      {
+        "id": "cogReference",
+        "name": "COG Reference",
+        "bitLength": 2,
+        "bitOffset": 8
+      },
+      {
+        "id": "reserved",
+        "name": "Reserved",
+        "bitLength": 6,
+        "bitOffset": 10
+      },
+      {
+        "id": "cog",
+        "name": "COG",
+        "bitLength": 16,
+        "bitOffset": 16,
+        "resolution": 0.0001
+      },
+      {
+        "id": "sog",
+        "name": "SOG",
+        "bitLength": 16,
+        "bitOffset": 32,
+        "resolution": 0.01
+      },
+      {
+        "id": "reserved6",
+        "name": "Reserved",
+        "bitLength": 16,
+        "bitOffset": 48
+      }
+    ]
+  },
+  {
+    "pgn": 129029,
+    "id": "gnssPositionData",
+    "description": "GNSS Position Data",
+    "length": 0,
+    "fields": [
+      {
+        "id": "sid",
+        "name": "SID",
+        "bitLength": 8,
+        "bitOffset": 0
+      },
+      {
+        "id": "date",
+        "name": "Date",
+        "bitLength": 16,
+        "bitOffset": 8
+      },
+      {
+        "id": "time",
+        "name": "Time",
+        "bitLength": 32,
+        "bitOffset": 24,
+        "resolution": 0.0001
+      },
+      {
+        "id": "latitude",
+        "name": "Latitude",
+        "bitLength": 64,
+        "bitOffset": 56,
+        "resolution": 1e-16,
+        "signed": true
+      },
+      {
+        "id": "longitude",
+        "name": "Longitude",
+        "bitLength": 64,
+        "bitOffset": 120,
+        "resolution": 1e-16,
+        "signed": true
+      },
+      {
+        "id": "altitude",
+        "name": "Altitude",
+        "bitLength": 64,
+        "bitOffset": 184,
+        "resolution": 1e-06,
+        "signed": true
+      },
+      {
+        "id": "gnssType",
+        "name": "GNSS type",
+        "bitLength": 4,
+        "bitOffset": 248
+      },
+      {
+        "id": "method",
+        "name": "Method",
+        "bitLength": 4,
+        "bitOffset": 252
+      },
+      {
+        "id": "integrity",
+        "name": "Integrity",
+        "bitLength": 2,
+        "bitOffset": 256
+      },
+      {
+        "id": "reserved",
+        "name": "Reserved",
+        "bitLength": 6,
+        "bitOffset": 258
+      },
+      {
+        "id": "numberOfSvs",
+        "name": "Number of SVs",
+        "bitLength": 8,
+        "bitOffset": 264
+      },
+      {
+        "id": "hdop",
+        "name": "HDOP",
+        "bitLength": 16,
+        "bitOffset": 272,
+        "resolution": 0.01,
+        "signed": true
+      },
+      {
+        "id": "pdop",
+        "name": "PDOP",
+        "bitLength": 16,
+        "bitOffset": 288,
+        "resolution": 0.01,
+        "signed": true
+      },
+      {
+        "id": "geoidalSeparation",
+        "name": "Geoidal Separation",
+        "bitLength": 32,
+        "bitOffset": 304,
+        "resolution": 0.01,
+        "signed": true
+      },
+      {
+        "id": "referenceStations",
+        "name": "Reference Stations",
+        "bitLength": 8,
+        "bitOffset": 336
+      },
+      {
+        "id": "referenceStationType",
+        "name": "Reference Station Type",
+        "bitLength": 4,
+        "bitOffset": 344
+      },
+      {
+        "id": "referenceStationId",
+        "name": "Reference Station ID",
+        "bitLength": 12,
+        "bitOffset": 348
+      },
+      {
+        "id": "ageOfDgnssCorrections",
+        "name": "Age of DGNSS Corrections",
+        "bitLength": 16,
+        "bitOffset": 360,
+        "resolution": 0.01
+      }
+    ]
+  },
+  {
+    "pgn": 129038,
+    "id": "aisClassAPositionReport",
+    "description": "AIS Class A Position Report",
+    "length": 28,
+    "fields": [
+      {
+        "id": "messageId",
+        "name": "Message ID",
+        "bitLength": 6,
+        "bitOffset": 0
+      },
+      {
+        "id": "repeatIndicator",
+        "name": "Repeat Indicator",
+        "bitLength": 2,
+        "bitOffset": 6
+      },
+      {
+        "id": "userId",
+        "name": "User ID",
+        "bitLength": 32,
+        "bitOffset": 8
+      },
+      {
+        "id": "longitude",
+        "name": "Longitude",
+        "bitLength": 32,
+        "bitOffset": 40,
+        "resolution": 1e-07,
+        "signed": true
+      },
+      {
+        "id": "latitude",
+        "name": "Latitude",
+        "bitLength": 32,
+        "bitOffset": 72,
+        "resolution": 1e-07,
+        "signed": true
+      },
+      {
+        "id": "positionAccuracy",
+        "name": "Position Accuracy",
+        "bitLength": 1,
+        "bitOffset": 104
+      },
+      {
+        "id": "raim",
+        "name": "RAIM",
+        "bitLength": 1,
+        "bitOffset": 105
+      },
+      {
+        "id": "timeStamp",
+        "name": "Time Stamp",
+        "bitLength": 6,
+        "bitOffset": 106
+      },
+      {
+        "id": "cog",
+        "name": "COG",
+        "bitLength": 16,
+        "bitOffset": 112,
+        "resolution": 0.0001
+      },
+      {
+        "id": "sog",
+        "name": "SOG",
+        "bitLength": 16,
+        "bitOffset": 128,
+        "resolution": 0.01
+      },
+      {
+        "id": "communicationState",
+        "name": "Communication State",
+        "bitLength": 19,
+        "bitOffset": 144
+      },
+      {
+        "id": "aisTransceiverInformation",
+        "name": "AIS Transceiver information",
+        "bitLength": 5,
+        "bitOffset": 163
+      },
+      {
+        "id": "heading",
+        "name": "Heading",
+        "bitLength": 16,
+        "bitOffset": 168,
+        "resolution": 0.0001
+      },
+      {
+        "id": "rateOfTurn",
+        "name": "Rate of Turn",
+        "bitLength": 16,
+        "bitOffset": 184,
+        "resolution": 3.125e-05,
+        "signed": true
+      },
+      {
+        "id": "navStatus",
+        "name": "Nav Status",
+        "bitLength": 4,
+        "bitOffset": 200
+      },
+      {
+        "id": "specialManeuverIndicator",
+        "name": "Special Maneuver Indicator",
+        "bitLength": 2,
+        "bitOffset": 204
+      },
+      {
+        "id": "reserved",
+        "name": "Reserved",
+        "bitLength": 2,
+        "bitOffset": 206
+      },
+      {
+        "id": "spare18",
+        "name": "Spare",
+        "bitLength": 3,
+        "bitOffset": 208
+      },
+      {
+        "id": "reserved19",
+        "name": "Reserved",
+        "bitLength": 5,
+        "bitOffset": 211
+      },
+      {
+        "id": "sequenceId",
+        "name": "Sequence ID",
+        "bitLength": 8,
+        "bitOffset": 216
+      }
+    ]
+  },
+  {
+    "pgn": 129039,
+    "id": "aisClassBPositionReport",
+    "description": "AIS Class B Position Report",
+    "length": 27,
+    "fields": [
+      {
+        "id": "messageId",
+        "name": "Message ID",
+        "bitLength": 6,
+        "bitOffset": 0
+      },
+      {
+        "id": "repeatIndicator",
+        "name": "Repeat Indicator",
+        "bitLength": 2,
+        "bitOffset": 6
+      },
+      {
+        "id": "userId",
+        "name": "User ID",
+        "bitLength": 32,
+        "bitOffset": 8
+      },
+      {
+        "id": "longitude",
+        "name": "Longitude",
+        "bitLength": 32,
+        "bitOffset": 40,
+        "resolution": 1e-07,
+        "signed": true
+      },
+      {
+        "id": "latitude",
+        "name": "Latitude",
+        "bitLength": 32,
+        "bitOffset": 72,
+        "resolution": 1e-07,
+        "signed": true
+      },
+      {
+        "id": "positionAccuracy",
+        "name": "Position Accuracy",
+        "bitLength": 1,
+        "bitOffset": 104
+      },
+      {
+        "id": "raim",
+        "name": "RAIM",
+        "bitLength": 1,
+        "bitOffset": 105
+      },
+      {
+        "id": "timeStamp",
+        "name": "Time Stamp",
+        "bitLength": 6,
+        "bitOffset": 106
+      },
+      {
+        "id": "cog",
+        "name": "COG",
+        "bitLength": 16,
+        "bitOffset": 112,
+        "resolution": 0.0001
+      },
+      {
+        "id": "sog",
+        "name": "SOG",
+        "bitLength": 16,
+        "bitOffset": 128,
+        "resolution": 0.01
+      },
+      {
+        "id": "communicationState",
+        "name": "Communication State",
+        "bitLength": 19,
+        "bitOffset": 144
+      },
+      {
+        "id": "aisTransceiverInformation",
+        "name": "AIS Transceiver information",
+        "bitLength": 5,
+        "bitOffset": 163
+      },
+      {
+        "id": "heading",
+        "name": "Heading",
+        "bitLength": 16,
+        "bitOffset": 168,
+        "resolution": 0.0001
+      },
+      {
+        "id": "regionalApplication",
+        "name": "Regional Application",
+        "bitLength": 8,
+        "bitOffset": 184
+      },
+      {
+        "id": "regionalApplicationB",
+        "name": "Regional Application B",
+        "bitLength": 2,
+        "bitOffset": 192
+      },
+      {
+        "id": "unitType",
+        "name": "Unit type",
+        "bitLength": 1,
+        "bitOffset": 194
+      },
+      {
+        "id": "integratedDisplay",
+        "name": "Integrated Display",
+        "bitLength": 1,
+        "bitOffset": 195
+      },
+      {
+        "id": "dsc",
+        "name": "DSC",
+        "bitLength": 1,
+        "bitOffset": 196
+      },
+      {
+        "id": "band",
+        "name": "Band",
+        "bitLength": 1,
+        "bitOffset": 197
+      },
+      {
+        "id": "canHandleMsg22",
+        "name": "Can handle Msg 22",
+        "bitLength": 1,
+        "bitOffset": 198
+      },
+      {
+        "id": "aisMode",
+        "name": "AIS mode",
+        "bitLength": 1,
+        "bitOffset": 199
+      },
+      {
+        "id": "aisCommunicationState",
+        "name": "AIS communication state",
+        "bitLength": 1,
+        "bitOffset": 200
+      },
+      {
+        "id": "reserved",
+        "name": "Reserved",
+        "bitLength": 15,
+        "bitOffset": 201
+      }
+    ]
+  },
+  {
+    "pgn": 129794,
+    "id": "aisClassAStaticAndVoyageRelatedData",
+    "description": "AIS Class A Static and Voyage Related Data",
+    "length": 75,
+    "fields": [
+      {
+        "id": "messageId",
+        "name": "Message ID",
+        "bitLength": 6,
+        "bitOffset": 0
+      },
+      {
+        "id": "repeatIndicator",
+        "name": "Repeat Indicator",
+        "bitLength": 2,
+        "bitOffset": 6
+      },
+      {
+        "id": "userId",
+        "name": "User ID",
+        "bitLength": 32,
+        "bitOffset": 8
+      },
+      {
+        "id": "imoNumber",
+        "name": "IMO number",
+        "bitLength": 32,
+        "bitOffset": 40
+      },
+      {
+        "id": "callsign",
+        "name": "Callsign",
+        "bitLength": 56,
+        "bitOffset": 72
+      },
+      {
+        "id": "name",
+        "name": "Name",
+        "bitLength": 160,
+        "bitOffset": 128
+      },
+      {
+        "id": "typeOfShip",
+        "name": "Type of ship",
+        "bitLength": 8,
+        "bitOffset": 288
+      },
+      {
+        "id": "length",
+        "name": "Length",
+        "bitLength": 16,
+        "bitOffset": 296,
+        "resolution": 0.1
+      },
+      {
+        "id": "beam",
+        "name": "Beam",
+        "bitLength": 16,
+        "bitOffset": 312,
+        "resolution": 0.1
+      },
+      {
+        "id": "positionReferenceFromStarboard",
+        "name": "Position reference from Starboard",
+        "bitLength": 16,
+        "bitOffset": 328,
+        "resolution": 0.1
+      },
+      {
+        "id": "positionReferenceFromBow",
+        "name": "Position reference from Bow",
+        "bitLength": 16,
+        "bitOffset": 344,
+        "resolution": 0.1
+      },
+      {
+        "id": "etaDate",
+        "name": "ETA Date",
+        "bitLength": 16,
+        "bitOffset": 360
+      },
+      {
+        "id": "etaTime",
+        "name": "ETA Time",
+        "bitLength": 32,
+        "bitOffset": 376,
+        "resolution": 0.0001
+      },
+      {
+        "id": "draft",
+        "name": "Draft",
+        "bitLength": 16,
+        "bitOffset": 408,
+        "resolution": 0.01
+      },
+      {
+        "id": "destination",
+        "name": "Destination",
+        "bitLength": 160,
+        "bitOffset": 424
+      },
+      {
+        "id": "aisVersionIndicator",
+        "name": "AIS version indicator",
+        "bitLength": 2,
+        "bitOffset": 584
+      },
+      {
+        "id": "gnssType",
+        "name": "GNSS type",
+        "bitLength": 4,
+        "bitOffset": 586
+      },
+      {
+        "id": "dte",
+        "name": "DTE",
+        "bitLength": 1,
+        "bitOffset": 590
+      },
+      {
+        "id": "reserved",
+        "name": "Reserved",
+        "bitLength": 1,
+        "bitOffset": 591
+      },
+      {
+        "id": "aisTransceiverInformation",
+        "name": "AIS Transceiver information",
+        "bitLength": 5,
+        "bitOffset": 592
+      },
+      {
+        "id": "reserved21",
+        "name": "Reserved",
+        "bitLength": 3,
+        "bitOffset": 597
+      }
+    ]
+  },
+  {
+    "pgn": 130306,
+    "id": "windData",
+    "description": "Wind Data",
+    "length": 8,
+    "fields": [
+      {
+        "id": "sid",
+        "name": "SID",
+        "bitLength": 8,
+        "bitOffset": 0
+      },
+      {
+        "id": "windSpeed",
+        "name": "Wind Speed",
+        "bitLength": 16,
+        "bitOffset": 8,
+        "resolution": 0.01
+      },
+      {
+        "id": "windAngle",
+        "name": "Wind Angle",
+        "bitLength": 16,
+        "bitOffset": 24,
+        "resolution": 0.0001
+      },
+      {
+        "id": "reference",
+        "name": "Reference",
+        "bitLength": 3,
+        "bitOffset": 40
+      },
+      {
+        "id": "reserved",
+        "name": "Reserved",
+        "bitLength": 21,
+        "bitOffset": 43
+      }
+    ]
+  },
+  {
+    "pgn": 130310,
+    "id": "environmentalParametersObsolete",
+    "description": "Environmental Parameters (obsolete)",
+    "length": 8,
+    "fields": [
+      {
+        "id": "sid",
+        "name": "SID",
+        "bitLength": 8,
+        "bitOffset": 0
+      },
+      {
+        "id": "waterTemperature",
+        "name": "Water Temperature",
+        "bitLength": 16,
+        "bitOffset": 8,
+        "resolution": 0.01
+      },
+      {
+        "id": "outsideAmbientAirTemperature",
+        "name": "Outside Ambient Air Temperature",
+        "bitLength": 16,
+        "bitOffset": 24,
+        "resolution": 0.01
+      },
+      {
+        "id": "atmosphericPressure",
+        "name": "Atmospheric Pressure",
+        "bitLength": 16,
+        "bitOffset": 40,
+        "resolution": 100
+      },
+      {
+        "id": "reserved",
+        "name": "Reserved",
+        "bitLength": 8,
+        "bitOffset": 56
+      }
+    ]
+  },
+  {
+    "pgn": 130311,
+    "id": "environmentalParameters",
+    "description": "Environmental Parameters",
+    "length": 8,
+    "fields": [
+      {
+        "id": "sid",
+        "name": "SID",
+        "bitLength": 8,
+        "bitOffset": 0
+      },
+      {
+        "id": "temperatureSource",
+        "name": "Temperature Source",
+        "bitLength": 6,
+        "bitOffset": 8
+      },
+      {
+        "id": "humiditySource",
+        "name": "Humidity Source",
+        "bitLength": 2,
+        "bitOffset": 14
+      },
+      {
+        "id": "temperature",
+        "name": "Temperature",
+        "bitLength": 16,
+        "bitOffset": 16,
+        "resolution": 0.01
+      },
+      {
+        "id": "humidity",
+        "name": "Humidity",
+        "bitLength": 16,
+        "bitOffset": 32,
+        "resolution": 0.004,
+        "signed": true
+      },
+      {
+        "id": "atmosphericPressure",
+        "name": "Atmospheric Pressure",
+        "bitLength": 16,
+        "bitOffset": 48,
+        "resolution": 100
+      }
+    ]
+  },
+  {
+    "pgn": 130312,
+    "id": "temperature",
+    "description": "Temperature",
+    "length": 8,
+    "fields": [
+      {
+        "id": "sid",
+        "name": "SID",
+        "bitLength": 8,
+        "bitOffset": 0
+      },
+      {
+        "id": "instance",
+        "name": "Instance",
+        "bitLength": 8,
+        "bitOffset": 8
+      },
+      {
+        "id": "source",
+        "name": "Source",
+        "bitLength": 8,
+        "bitOffset": 16
+      },
+      {
+        "id": "actualTemperature",
+        "name": "Actual Temperature",
+        "bitLength": 16,
+        "bitOffset": 24,
+        "resolution": 0.01
+      },
+      {
+        "id": "setTemperature",
+        "name": "Set Temperature",
+        "bitLength": 16,
+        "bitOffset": 40,
+        "resolution": 0.01
+      },
+      {
+        "id": "reserved",
+        "name": "Reserved",
+        "bitLength": 8,
+        "bitOffset": 56
+      }
+    ]
+  }
+]

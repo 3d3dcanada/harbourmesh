@@ -28,6 +28,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AIAssistButton } from '@/components/AIAssistButton';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
@@ -40,6 +41,23 @@ import { Separator } from '@/components/ui/separator';
 import { cn, formatRelativeTime, formatCoordinate } from '@/lib/utils';
 import { useAppStore, useLogTaskStore, useSettingsStore, useVesselStore } from '@/store';
 import { LogEntryType, TaskType, TaskStatus, Severity, type LogEntry, type Task } from '@/types';
+import maintenanceSchedule from '@/data/maintenance-schedule.json';
+
+type MaintenanceTask = {
+  id: string;
+  name: string;
+  intervalHours: number | null;
+  intervalMonths: number | null;
+  priority: string;
+  description: string;
+  parts?: string[];
+};
+
+const maintenanceCategories = maintenanceSchedule.categories as {
+  id: string;
+  name: string;
+  tasks: MaintenanceTask[];
+}[];
 
 // Log type icons
 const logTypeIcons: Record<string, React.ElementType> = {
@@ -272,7 +290,31 @@ export function LogsTasks() {
     dueDate: '',
     requiresApproval: false,
   });
+  const [showMaintenanceTemplates, setShowMaintenanceTemplates] = useState(false);
   
+  const handleAddMaintenanceTemplate = (task: MaintenanceTask) => {
+    if (!currentVessel) return;
+    const now = new Date().toISOString();
+    const dueDate = task.intervalMonths
+      ? new Date(Date.now() + task.intervalMonths * 30 * 24 * 60 * 60 * 1000).toISOString()
+      : undefined;
+
+    addTask({
+      id: crypto.randomUUID(),
+      vesselId: currentVessel.id,
+      title: task.name,
+      description: task.description + (task.parts?.length ? `\nParts: ${task.parts.join(', ')}` : ''),
+      type: TaskType.MAINTENANCE,
+      status: TaskStatus.OPEN,
+      dueDate,
+      createdBy: 'local-user',
+      assignedTo: 'local-user',
+      requiresApproval: task.priority === 'critical',
+      createdAt: now,
+      updatedAt: now,
+    });
+  };
+
   const usingDemoLogs = logs.length === 0 && demoModeEnabled;
   const usingDemoTasks = tasks.length === 0 && demoModeEnabled;
   const currentLogs = usingDemoLogs ? demoLogs : logs;
@@ -372,7 +414,7 @@ export function LogsTasks() {
   };
   
   return (
-    <div className="flex h-[calc(100vh-4.5rem)] flex-col gap-2">
+    <div className="flex h-[calc(100dvh-3.5rem-4rem)] lg:h-[calc(100dvh-3.5rem)] flex-col gap-2">
       {/* Compact toolbar */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
@@ -400,12 +442,16 @@ export function LogsTasks() {
               ))}
             </SelectContent>
           </Select>
+          <Button variant="outline" size="sm" className="h-8" onClick={() => setShowMaintenanceTemplates(true)} disabled={!currentVessel}>
+            <Wrench className="h-3.5 w-3.5 mr-1.5" /> Templates
+          </Button>
           <Button variant="outline" size="sm" className="h-8" onClick={() => setShowAddLog(true)} disabled={!currentVessel}>
             <ClipboardList className="h-3.5 w-3.5 mr-1.5" /> Log
           </Button>
           <Button size="sm" className="h-8" onClick={() => setShowAddTask(true)} disabled={!currentVessel}>
             <Plus className="h-3.5 w-3.5 mr-1.5" /> Task
           </Button>
+          <AIAssistButton prompt="Create a maintenance schedule for my vessel" label="Ask AI" />
         </div>
       </div>
 
@@ -675,6 +721,55 @@ export function LogsTasks() {
               </div>
             </>
           )}
+        </SheetContent>
+      </Sheet>
+
+      {/* Maintenance Templates Sheet */}
+      <Sheet open={showMaintenanceTemplates} onOpenChange={setShowMaintenanceTemplates}>
+        <SheetContent side="right" className="w-full sm:max-w-lg flex flex-col">
+          <SheetHeader className="pb-3 border-b">
+            <SheetTitle className="flex items-center gap-2">
+              <Wrench className="h-4 w-4" />
+              Maintenance Templates
+            </SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto py-4 space-y-6">
+            {maintenanceCategories.map((category) => (
+              <div key={category.id} className="space-y-2">
+                <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">{category.name}</h4>
+                <div className="space-y-1.5">
+                  {category.tasks.map((task) => (
+                    <div key={task.id} className="flex items-start justify-between gap-2 p-2 rounded-lg border hover:bg-muted/50 transition-colors">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium truncate">{task.name}</p>
+                          <Badge
+                            variant={task.priority === 'critical' ? 'destructive' : task.priority === 'high' ? 'default' : 'secondary'}
+                            className="text-[9px] px-1 h-4 shrink-0"
+                          >
+                            {task.priority}
+                          </Badge>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">{task.description}</p>
+                        <div className="flex gap-2 mt-1 text-[10px] text-muted-foreground">
+                          {task.intervalHours && <span>{task.intervalHours}h</span>}
+                          {task.intervalMonths && <span>{task.intervalMonths}mo</span>}
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 w-7 p-0 shrink-0"
+                        onClick={() => handleAddMaintenanceTemplate(task)}
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </SheetContent>
       </Sheet>
 

@@ -4,6 +4,7 @@
  */
 import { useState, useMemo } from 'react';
 import { Package, Search, Plus, ArrowUpDown, Edit3, Trash2 } from 'lucide-react';
+import { AIAssistButton } from '@/components/AIAssistButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -192,7 +193,7 @@ export function Inventory() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-4.5rem)] flex-col gap-2">
+    <div className="flex h-[calc(100dvh-3.5rem-4rem)] lg:h-[calc(100dvh-3.5rem)] flex-col gap-2">
       {/* Compact toolbar */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
@@ -239,6 +240,7 @@ export function Inventory() {
           <Button size="sm" className="h-8" onClick={openAddItem} disabled={!currentVessel}>
             <Plus className="h-3.5 w-3.5 mr-1.5" /> Add
           </Button>
+          <AIAssistButton prompt="What am I missing for a coastal passage?" label="Ask AI" />
         </div>
       </div>
 
@@ -256,8 +258,8 @@ export function Inventory() {
           </div>
         </div>
       ) : (
-        <div className="flex-1 overflow-auto rounded-lg border bg-card">
-          <table className="w-full text-sm">
+        <div className="flex-1 overflow-x-auto overflow-y-auto rounded-lg border bg-card">
+          <table className="w-full min-w-[600px] text-sm">
             <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm border-b">
               <tr>
                 {(['category', 'name', 'quantity', 'expiry'] as const).map((field) => (

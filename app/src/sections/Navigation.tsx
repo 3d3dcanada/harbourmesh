@@ -3,7 +3,7 @@
  * Real-time HUD with charts, AIS, and telemetry display
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Navigation as NavigationIcon,
   MapPin,
@@ -25,17 +25,30 @@ import {
   Info,
   Clock,
   Zap,
-  TrendingUp,
+  Waves,
+  Compass,
+  Anchor,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 import { cn, formatCoordinate, formatHeading } from '@/lib/utils';
+import { resolveHeading } from '@/lib/heading';
+import { optimizeRouteForConditions, type OptimizedRoute } from '@/lib/navigation-planning';
+import { FeatureGate } from '@/components/FeatureGate';
 import { useTelemetry } from '@/hooks/useTelemetry';
+import { getNearestTideInfo, type NearestTideInfo } from '@/lib/tide-service';
+import { AnimatedNumber } from '@/components/AnimatedNumber';
 import { NBPilotChart } from '@/components/NBPilotChart';
-import { useNavigationPlanStore, useSettingsStore, useTelemetryStore } from '@/store';
+import { useNavigationPlanStore, useSettingsStore, useTelemetryStore, useAnchorWatchStore, useVesselStore } from '@/store';
 import { useMeshStore } from '@/store/meshStore';
+import { AnchorWatchPanel } from '@/components/AnchorWatchPanel';
+import { WeatherTimelineCard } from '@/components/WeatherOverlay';
+import { fetchMarineWeather, type MarineWeatherData } from '@/lib/weather-service';
+import { DeparturePlanner } from '@/components/DeparturePlanner';
+import { OfflineChartManager } from '@/components/OfflineChartManager';
 import { ChartBuilderDrawer } from '@/components/ChartBuilderDrawer';
 import {
   fetchNBPilotChartPackageArtifacts,
@@ -54,6 +67,7 @@ import {
   type LocalChartFormat,
   type LocalChartLibrary,
 } from '@/lib/local-chart-library';
+import { AIAssistButton } from '@/components/AIAssistButton';
 
 const LOCAL_CHART_FORMAT_LABELS: Record<LocalChartFormat, string> = {
   's57-enc': 'S-57 ENC',
@@ -255,11 +269,14 @@ export function Navigation() {
   const [localChartLibrary, setLocalChartLibrary] = useState<LocalChartLibrary>(() => loadLocalChartLibrary());
   const [localChartImportError, setLocalChartImportError] = useState<string | null>(null);
   const [routeImportError, setRouteImportError] = useState<string | null>(null);
+  const [navSidebarOpen, setNavSidebarOpen] = useState(false);
   const gpxInputRef = useRef<HTMLInputElement>(null);
   const localChartInputRef = useRef<HTMLInputElement>(null);
   const telemetryMessages = useTelemetryStore((state) => state.messages);
   const demoModeEnabled = useSettingsStore((state) => state.demoModeEnabled);
   const boatNode = useSettingsStore((state) => state.boatNode);
+  const updateBoatNodeSettings = useSettingsStore((state) => state.updateBoatNodeSettings);
+  const currentVessel = useVesselStore((state) => state.currentVessel);
   const telemetryHealth = getTelemetryHealth(telemetryMessages);
   const {
     routes,
@@ -270,8 +287,38 @@ export function Navigation() {
   } = useNavigationPlanStore();
   
   const { meshVessels, isConnected: isMeshConnected } = useMeshStore();
+  const anchorWatch = useAnchorWatchStore();
   const meshVesselsList = Object.values(meshVessels);
-  
+  const [mobileInstrumentExpanded, setMobileInstrumentExpanded] = useState<string | null>(null);
+  const [weatherData, setWeatherData] = useState<MarineWeatherData | null>(null);
+  const [showWeatherWind, setShowWeatherWind] = useState(true);
+  const [showWeatherWaves, setShowWeatherWaves] = useState(true);
+  const [showWeatherPressure, setShowWeatherPressure] = useState(false);
+  const [optimization, setOptimization] = useState<OptimizedRoute | null>(null);
+  const [optimizing, setOptimizing] = useState(false);
+
+  useEffect(() => { setOptimization(null); }, [activeRouteId]);
+
+  useEffect(() => {
+    if (!latestPosition) return;
+    const lat = Math.round(latestPosition.latitude * 10) / 10;
+    const lon = Math.round(latestPosition.longitude * 10) / 10;
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      fetchMarineWeather(lat, lon, 12)
+        .then((data) => { if (!cancelled) setWeatherData(data); })
+        .catch(() => { if (!cancelled) setWeatherData(null); });
+    }, 800);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [latestPosition && Math.round(latestPosition.latitude * 10), latestPosition && Math.round(latestPosition.longitude * 10)]);
+
+  const resolvedHead = resolveHeading(latestMotion?.yaw, latestPosition?.cog, latestPosition?.sog);
+
+  const tideInfo = useMemo<NearestTideInfo | null>(() => {
+    if (!latestPosition) return null;
+    return getNearestTideInfo(latestPosition.latitude, latestPosition.longitude);
+  }, [latestPosition?.latitude, latestPosition?.longitude]);
+
   // Get first engine data
   const engineData = Object.entries(latestEngine)[0]?.[1];
   const activeRoute = routes.find((route) => route.id === activeRouteId) ?? null;
@@ -504,7 +551,7 @@ export function Navigation() {
   
   return (
     <div className={cn(
-      'flex h-[calc(100vh-4.5rem)] w-full overflow-hidden',
+      'flex h-[calc(100dvh-3.5rem-4rem)] lg:h-[calc(100dvh-3.5rem)] w-full overflow-hidden',
       isFullscreen && 'fixed inset-0 z-50 bg-background'
     )}>
       {/* Main Chart Area */}
@@ -562,11 +609,19 @@ export function Navigation() {
               latitude: latestPosition.latitude,
               longitude: latestPosition.longitude,
             } : null}
-            heading={latestMotion?.yaw || 0}
+            heading={resolvedHead.heading}
             aisTargets={aisTargets}
             meshVessels={meshVesselsList}
             routes={routes}
             activeRouteId={activeRouteId}
+            anchorWatch={anchorWatch.active && anchorWatch.anchorPosition && anchorWatch.maxRadius ? {
+              position: anchorWatch.anchorPosition,
+              maxRadius: anchorWatch.maxRadius,
+              currentRadius: anchorWatch.currentRadius,
+              track: anchorWatch.track,
+            } : null}
+            weatherData={weatherData}
+            weatherLayers={{ wind: showWeatherWind, waves: showWeatherWaves, pressure: showWeatherPressure }}
           />
         </div>
 
@@ -574,16 +629,21 @@ export function Navigation() {
         <div className="absolute top-16 left-4 bottom-4 w-64 z-10 overflow-y-auto pointer-events-none custom-scrollbar pb-4 pr-2 space-y-4 hidden sm:block">
           <Card className="pointer-events-auto bg-background/80 backdrop-blur-md border-muted-foreground/20 shadow-lg">
             <CardContent className="p-4 flex flex-col items-center justify-center">
-              <CompassRose 
-                heading={latestMotion?.yaw || 0} 
+              <CompassRose
+                heading={resolvedHead.heading}
                 course={latestPosition?.cog}
                 size={160}
               />
               <div className="mt-4 text-center">
-                <p className="text-2xl font-bold">{Math.round(latestMotion?.yaw || 0)}°</p>
-                <p className="text-xs text-muted-foreground">
-                  {formatHeading(latestMotion?.yaw || 0).split(' ').slice(1).join(' ')}
-                </p>
+                <p className="text-2xl font-bold">{Math.round(resolvedHead.heading)}°</p>
+                <div className="flex items-center justify-center gap-1.5">
+                  <p className="text-xs text-muted-foreground">
+                    {formatHeading(resolvedHead.heading).split(' ').slice(1).join(' ')}
+                  </p>
+                  <span className="text-[10px] px-1 py-0.5 rounded bg-muted text-muted-foreground uppercase">
+                    {resolvedHead.source === 'cog' ? 'CoG' : resolvedHead.source === 'compass' ? 'Compass' : '--'}
+                  </span>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -604,13 +664,26 @@ export function Navigation() {
                   </p>
                 </div>
               ) : (
-                <p className="text-muted-foreground">--</p>
+                <div className="space-y-2">
+                  <p className="text-muted-foreground text-sm">No position data</p>
+                  {boatNode.telemetryMode !== 'phone' && 'geolocation' in navigator && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full text-xs h-7"
+                      onClick={() => updateBoatNodeSettings({ telemetryMode: 'phone' })}
+                    >
+                      <MapPin className="h-3 w-3 mr-1" />
+                      Enable GPS
+                    </Button>
+                  )}
+                </div>
               )}
             </CardContent>
           </Card>
 
           <div className="grid grid-cols-2 gap-2 pointer-events-auto">
-            <DigitalGauge label="Speed" value={latestPosition?.sog} unit="kn" icon={NavigationIcon} />
+            <DigitalGauge label="Speed" value={latestPosition?.sog || undefined} unit="kn" icon={NavigationIcon} />
             <DigitalGauge label="Depth" value={latestEnvironment?.depth} unit="m" min={0} max={50} warning={5} danger={3} icon={Droplets} />
             <DigitalGauge label="Wind" value={latestEnvironment?.windSpeed} unit="kn" icon={Wind} />
             <DigitalGauge label="Water" value={latestEnvironment?.waterTemp} unit="°C" icon={Thermometer} />
@@ -644,14 +717,168 @@ export function Navigation() {
               </CardContent>
             </Card>
           ))}
+
+          <AnchorWatchPanel
+            vesselLat={latestPosition?.latitude ?? null}
+            vesselLon={latestPosition?.longitude ?? null}
+          />
+
+          {tideInfo && (
+            <Card className="pointer-events-auto bg-background/80 backdrop-blur-md border-muted-foreground/20 shadow-lg">
+              <CardContent className="p-3">
+                <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                  <Waves className="h-4 w-4" />
+                  <span className="text-xs uppercase tracking-wider">Tides</span>
+                </div>
+                <p className="text-xs text-muted-foreground truncate mb-1">{tideInfo.stationName}</p>
+                <div className="space-y-1">
+                  {tideInfo.nextHigh && (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-blue-500 font-medium">High</span>
+                      <span>{tideInfo.nextHigh.height.toFixed(1)}m @ {new Date(tideInfo.nextHigh.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                  )}
+                  {tideInfo.nextLow && (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-amber-500 font-medium">Low</span>
+                      <span>{tideInfo.nextLow.height.toFixed(1)}m @ {new Date(tideInfo.nextLow.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* Mobile Instrument Strip - visible only on small screens */}
+        <div className="absolute bottom-0 left-0 right-0 z-10 sm:hidden instrument-strip bg-background/90 border-t">
+          <div className="grid grid-cols-5 divide-x">
+            <button
+              type="button"
+              className="flex flex-col items-center py-2 px-1 tap-highlight"
+              onClick={() => setMobileInstrumentExpanded(mobileInstrumentExpanded === 'speed' ? null : 'speed')}
+            >
+              <NavigationIcon className="h-3.5 w-3.5 text-muted-foreground mb-0.5" />
+              <span className="text-[10px] text-muted-foreground">Speed</span>
+              <span className="text-sm font-bold tabular-nums">
+                <AnimatedNumber value={latestPosition?.sog || undefined} decimals={1} />
+              </span>
+              <span className="text-[9px] text-muted-foreground">kn</span>
+            </button>
+            <button
+              type="button"
+              className="flex flex-col items-center py-2 px-1 tap-highlight"
+              onClick={() => setMobileInstrumentExpanded(mobileInstrumentExpanded === 'heading' ? null : 'heading')}
+            >
+              <Compass className="h-3.5 w-3.5 text-muted-foreground mb-0.5" />
+              <span className="text-[10px] text-muted-foreground">Heading</span>
+              <span className="text-sm font-bold tabular-nums">
+                <AnimatedNumber value={resolvedHead.heading} decimals={0} />°
+              </span>
+            </button>
+            <button
+              type="button"
+              className="flex flex-col items-center py-2 px-1 tap-highlight"
+              onClick={() => setMobileInstrumentExpanded(mobileInstrumentExpanded === 'depth' ? null : 'depth')}
+            >
+              <Droplets className="h-3.5 w-3.5 text-muted-foreground mb-0.5" />
+              <span className="text-[10px] text-muted-foreground">Depth</span>
+              <span className={cn("text-sm font-bold tabular-nums", latestEnvironment?.depth && latestEnvironment.depth < 5 ? 'text-amber-500' : '')}>
+                <AnimatedNumber value={latestEnvironment?.depth} decimals={1} />
+              </span>
+              <span className="text-[9px] text-muted-foreground">m</span>
+            </button>
+            <button
+              type="button"
+              className="flex flex-col items-center py-2 px-1 tap-highlight"
+              onClick={() => setMobileInstrumentExpanded(mobileInstrumentExpanded === 'wind' ? null : 'wind')}
+            >
+              <Wind className="h-3.5 w-3.5 text-muted-foreground mb-0.5" />
+              <span className="text-[10px] text-muted-foreground">Wind</span>
+              <span className="text-sm font-bold tabular-nums">
+                <AnimatedNumber value={latestEnvironment?.windSpeed} decimals={0} />
+              </span>
+              <span className="text-[9px] text-muted-foreground">kn</span>
+            </button>
+            <button
+              type="button"
+              className={cn("flex flex-col items-center py-2 px-1 tap-highlight", anchorWatch.active && "bg-emerald-50 dark:bg-emerald-950/30")}
+              onClick={() => setMobileInstrumentExpanded(mobileInstrumentExpanded === 'anchor' ? null : 'anchor')}
+            >
+              <Anchor className={cn("h-3.5 w-3.5 mb-0.5", anchorWatch.active ? "text-emerald-500" : "text-muted-foreground")} />
+              <span className="text-[10px] text-muted-foreground">Anchor</span>
+              <span className={cn("text-sm font-bold tabular-nums", anchorWatch.active ? "text-emerald-500" : "")}>
+                {anchorWatch.active ? `${anchorWatch.currentRadius?.toFixed(0) ?? '—'}` : 'Off'}
+              </span>
+              {anchorWatch.active && <span className="text-[9px] text-muted-foreground">m</span>}
+            </button>
+          </div>
+
+          {mobileInstrumentExpanded && (
+            <div className="border-t p-3 animate-in slide-in-from-bottom-2 duration-200">
+              {mobileInstrumentExpanded === 'speed' && (
+                <DigitalGauge label="Speed Over Ground" value={latestPosition?.sog || undefined} unit="kn" icon={NavigationIcon} />
+              )}
+              {mobileInstrumentExpanded === 'heading' && (
+                <div className="flex flex-col items-center">
+                  <CompassRose heading={resolvedHead.heading} course={latestPosition?.cog} size={140} />
+                  <p className="mt-2 text-lg font-bold">{Math.round(resolvedHead.heading)}°</p>
+                </div>
+              )}
+              {mobileInstrumentExpanded === 'depth' && (
+                <DigitalGauge label="Depth Below Transducer" value={latestEnvironment?.depth} unit="m" min={0} max={50} warning={5} danger={3} icon={Droplets} />
+              )}
+              {mobileInstrumentExpanded === 'wind' && (
+                <div className="grid grid-cols-2 gap-2">
+                  <DigitalGauge label="Speed" value={latestEnvironment?.windSpeed} unit="kn" icon={Wind} />
+                  <DigitalGauge label="Direction" value={latestEnvironment?.windDirection} unit="°" icon={Wind} />
+                </div>
+              )}
+              {mobileInstrumentExpanded === 'anchor' && (
+                <div className="max-h-[200px] overflow-y-auto">
+                  <AnchorWatchPanel
+                    vesselLat={latestPosition?.latitude ?? null}
+                    vesselLon={latestPosition?.longitude ?? null}
+                    compact
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Right Sidebar */}
+      {/* Right Sidebar Toggle (tablet/mobile) */}
+      <div className="absolute top-2 right-2 z-20 xl:hidden">
+        <Sheet open={navSidebarOpen} onOpenChange={setNavSidebarOpen}>
+          <SheetTrigger asChild>
+            <Button variant="secondary" size="sm" className="h-8 text-xs gap-1.5 shadow-md">
+              <NavigationIcon className="h-3.5 w-3.5" />
+              Nav Manager
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-80 p-0 flex flex-col">
+            <div className="h-12 border-b bg-muted/30 flex items-center justify-between px-4 shrink-0">
+              <div className="flex items-center">
+                <NavigationIcon className="h-4 w-4 mr-2" />
+                <span className="font-medium text-sm">Navigation Manager</span>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-6">
+              {/* Route, AIS, Mesh, Weather, Charts content duplicated below in desktop sidebar */}
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      {/* Right Sidebar (desktop) */}
       <div className="w-80 border-l bg-card hidden xl:flex flex-col shrink-0">
-        <div className="h-12 border-b bg-muted/30 flex items-center px-4 shrink-0">
-          <NavigationIcon className="h-4 w-4 mr-2" />
-          <span className="font-medium text-sm">Navigation Manager</span>
+        <div className="h-12 border-b bg-muted/30 flex items-center justify-between px-4 shrink-0">
+          <div className="flex items-center">
+            <NavigationIcon className="h-4 w-4 mr-2" />
+            <span className="font-medium text-sm">Navigation Manager</span>
+          </div>
+          <AIAssistButton prompt="Plan a route from my current position" />
         </div>
         
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
@@ -724,6 +951,104 @@ export function Navigation() {
               <div className="rounded bg-muted p-2 text-xs flex items-center justify-between">
                 <span className="text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" /> Est. Duration</span>
                 <span className="font-medium">{activeRoute.estimatedDuration} min</span>
+              </div>
+            )}
+            {activeRoute && (
+              <FeatureGate feature="route-optimization">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full text-xs h-7 mt-2"
+                  disabled={optimizing}
+                  onClick={async () => {
+                    setOptimizing(true);
+                    try {
+                      const draft = currentVessel?.draft ?? 1.5;
+                      const result = await optimizeRouteForConditions(activeRoute, { vesselDraft: draft });
+                      setOptimization(result);
+                    } finally {
+                      setOptimizing(false);
+                    }
+                  }}
+                >
+                  <Zap className="h-3 w-3 mr-1" />
+                  {optimizing ? 'Analyzing conditions...' : 'Optimize Route'}
+                </Button>
+              </FeatureGate>
+            )}
+            {optimization && activeRoute && optimization.routeId === activeRoute.id && (
+              <div className="mt-2 space-y-2 rounded border p-2 text-xs bg-card">
+                <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                  <span>{optimization.legs.length} legs · {optimization.totalDistanceNm.toFixed(1)} nm</span>
+                  <span>Draft: {currentVessel?.draft ?? 1.5}m</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <div className="flex justify-between text-[10px] mb-0.5">
+                      <span className="text-muted-foreground">Comfort</span>
+                      <span className={cn(
+                        'font-medium',
+                        optimization.overallComfort >= 70 ? 'text-emerald-600' :
+                        optimization.overallComfort >= 40 ? 'text-amber-600' : 'text-red-600'
+                      )}>
+                        {optimization.overallComfort >= 70 ? 'Good' : optimization.overallComfort >= 40 ? 'Fair' : 'Poor'}
+                      </span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className={cn(
+                          'h-full rounded-full transition-all',
+                          optimization.overallComfort >= 70 ? 'bg-emerald-500' :
+                          optimization.overallComfort >= 40 ? 'bg-amber-500' : 'bg-red-500'
+                        )}
+                        style={{ width: `${Math.min(100, optimization.overallComfort)}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="font-medium">{Math.round(optimization.totalAdjustedMinutes)} min</p>
+                    {optimization.totalAdjustedMinutes > optimization.totalBaseMinutes && (
+                      <p className="text-[9px] text-muted-foreground line-through">{Math.round(optimization.totalBaseMinutes)}</p>
+                    )}
+                  </div>
+                </div>
+                {optimization.legs[0] && (
+                  <div className="flex items-center gap-1 text-[9px] text-muted-foreground bg-muted/50 rounded px-1.5 py-0.5">
+                    <Wind className="h-2.5 w-2.5" />
+                    <span>{Math.round(optimization.legs[0].windSpeed)}kn {Math.round(optimization.legs[0].windDirection)}°</span>
+                    <Waves className="h-2.5 w-2.5 ml-1" />
+                    <span>{optimization.legs[0].waveHeight.toFixed(1)}m</span>
+                  </div>
+                )}
+                <div className="space-y-1 pt-1 border-t">
+                  {optimization.legs.map((leg, i) => (
+                    <div key={i} className="space-y-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between">
+                            <span className="truncate text-[10px]">{leg.from} → {leg.to}</span>
+                            <span className="tabular-nums text-[10px] shrink-0 ml-1">{Math.round(leg.adjustedEtaMinutes)}m</span>
+                          </div>
+                          <div className="h-1 rounded-full bg-muted overflow-hidden mt-0.5">
+                            <div
+                              className={cn(
+                                'h-full rounded-full',
+                                leg.comfortScore >= 70 ? 'bg-emerald-500' :
+                                leg.comfortScore >= 40 ? 'bg-amber-500' : 'bg-red-500'
+                              )}
+                              style={{ width: `${Math.min(100, leg.comfortScore)}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      {leg.warnings.length > 0 && leg.warnings.map((w, j) => (
+                        <p key={j} className="text-[9px] text-amber-600 flex items-center gap-1 pl-1">
+                          <AlertTriangle className="h-2 w-2 shrink-0" />{w}
+                        </p>
+                      ))}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -809,6 +1134,42 @@ export function Navigation() {
               </div>
             )}
           </div>
+
+          {/* Departure Planner */}
+          <DeparturePlanner
+            originLat={latestPosition?.latitude ?? null}
+            originLon={latestPosition?.longitude ?? null}
+          />
+
+          {/* Weather Layers */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold flex items-center gap-2">
+              <Wind className="h-4 w-4" /> Weather Layers
+            </h3>
+            <div className="flex flex-wrap gap-1.5">
+              <button onClick={() => setShowWeatherWind(!showWeatherWind)}
+                className={cn('px-2 py-1 text-xs rounded-md border transition-colors', showWeatherWind ? 'bg-primary/10 border-primary/30 text-primary' : 'border-border text-muted-foreground')}>
+                Wind
+              </button>
+              <button onClick={() => setShowWeatherWaves(!showWeatherWaves)}
+                className={cn('px-2 py-1 text-xs rounded-md border transition-colors', showWeatherWaves ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-600' : 'border-border text-muted-foreground')}>
+                Waves
+              </button>
+              <button onClick={() => setShowWeatherPressure(!showWeatherPressure)}
+                className={cn('px-2 py-1 text-xs rounded-md border transition-colors', showWeatherPressure ? 'bg-amber-500/10 border-amber-500/30 text-amber-600' : 'border-border text-muted-foreground')}>
+                Pressure
+              </button>
+            </div>
+          </div>
+
+          {/* Weather Forecast */}
+          <WeatherTimelineCard
+            latitude={latestPosition?.latitude ?? null}
+            longitude={latestPosition?.longitude ?? null}
+          />
+
+          {/* Offline Charts */}
+          <OfflineChartManager />
 
           {/* Chart Packages Section */}
           <div className="space-y-3">

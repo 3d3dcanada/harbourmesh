@@ -3,7 +3,9 @@
  * Application preferences, AI configuration, and consent management
  */
 
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useAuthStore } from '@/store/authStore';
+import { PhoneSensorStatus } from '@/components/PhoneSensorPermissions';
 import {
   User,
   Shield,
@@ -24,6 +26,10 @@ import {
   KeyRound,
   LogOut,
   FlaskConical,
+  Smartphone,
+  Mic,
+  CloudSun,
+  QrCode,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,6 +42,7 @@ import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { FeatureGate } from '@/components/FeatureGate';
 import { buildSignalKStreamUrl } from '@/lib/signalk';
 import { buildBoatNodeRegistrationPayload, registerBoatNode } from '@/lib/device-registration';
 import {
@@ -65,8 +72,228 @@ import {
   savePilotReviewSession,
 } from '@/lib/pilot-api-credentials';
 import { useSettingsStore, useAIStore, useAppStore, useVesselStore, type TelemetryMode } from '@/store';
+import {
+  getDeviceId,
+  getDeviceName,
+  setDeviceName as saveDeviceName,
+  getSyncGroupId,
+  createSyncGroup,
+  generatePairingUrl,
+  DeviceSyncManager,
+} from '@/lib/device-sync';
 import { useMeshStore } from '@/store/meshStore';
 import { ThemeMode, UnitSystem, AIProviderType, SharePositionLevel } from '@/types';
+import equipmentData from '@/data/marine-equipment.json';
+
+const equipmentManufacturers = equipmentData.manufacturers;
+
+function DeviceSyncSection() {
+  const currentVessel = useVesselStore((state) => state.currentVessel);
+  const { addNotification } = useAppStore();
+  const [deviceNameInput, setDeviceNameInput] = useState(getDeviceName());
+  const [syncGroupId, setSyncGroupIdState] = useState(getSyncGroupId());
+  const [pairingUrl, setPairingUrl] = useState<string | null>(null);
+  const [connectedDevices, setConnectedDevices] = useState<Array<{ id: string; name: string; lastSeen: string }>>([]);
+
+  const handleSaveDeviceName = () => {
+    saveDeviceName(deviceNameInput);
+    addNotification({ type: 'success', title: 'Device Name Updated', message: `This device is now "${deviceNameInput}".` });
+  };
+
+  const handleCreateSyncGroup = () => {
+    if (!currentVessel) return;
+    const groupId = createSyncGroup(currentVessel.id);
+    setSyncGroupIdState(groupId);
+    setPairingUrl(generatePairingUrl(groupId));
+    addNotification({ type: 'success', title: 'Sync Group Created', message: 'Share the QR code or URL with other devices.' });
+  };
+
+  const handleLeaveSyncGroup = () => {
+    localStorage.removeItem('harbormesh-sync-group');
+    setSyncGroupIdState(null);
+    setPairingUrl(null);
+    setConnectedDevices([]);
+    addNotification({ type: 'info', title: 'Left Sync Group', message: 'Device sync disabled.' });
+  };
+
+  useEffect(() => {
+    if (!syncGroupId) return;
+    const manager = new DeviceSyncManager(syncGroupId);
+    manager.announceDevice();
+    manager.getConnectedDevices(setConnectedDevices);
+    return () => manager.destroy();
+  }, [syncGroupId]);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Smartphone className="h-5 w-5" />
+          Device Sync
+        </CardTitle>
+        <CardDescription>Sync vessel data across your devices using peer-to-peer connections.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Device Name</Label>
+            <div className="flex gap-2">
+              <Input value={deviceNameInput} onChange={(e) => setDeviceNameInput(e.target.value)} />
+              <Button variant="outline" size="sm" onClick={handleSaveDeviceName}>Save</Button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Device ID</Label>
+            <Input value={getDeviceId()} readOnly className="font-mono text-xs" />
+          </div>
+        </div>
+
+        <Separator />
+
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Sync Group</p>
+              <p className="text-sm text-muted-foreground">
+                {syncGroupId ? `Group: ${syncGroupId}` : 'Not synced'}
+              </p>
+            </div>
+            {syncGroupId ? (
+              <Button variant="outline" size="sm" onClick={handleLeaveSyncGroup}>Leave Group</Button>
+            ) : (
+              <Button size="sm" onClick={handleCreateSyncGroup} disabled={!currentVessel}>Create Sync Group</Button>
+            )}
+          </div>
+
+          {pairingUrl && (
+            <div className="space-y-2 rounded-lg border p-3 bg-muted/30">
+              <div className="flex items-center gap-2">
+                <QrCode className="h-4 w-4" />
+                <Label>Pairing URL</Label>
+              </div>
+              <Input value={pairingUrl} readOnly className="font-mono text-xs" onClick={(e) => (e.target as HTMLInputElement).select()} />
+              <p className="text-xs text-muted-foreground">Open this URL on another device to join the sync group.</p>
+            </div>
+          )}
+
+          {connectedDevices.length > 0 && (
+            <div className="space-y-2">
+              <Label>Connected Devices</Label>
+              {connectedDevices.map((device) => (
+                <div key={device.id} className="flex items-center justify-between rounded border p-2 text-sm">
+                  <span className="font-medium">{device.name}</span>
+                  <span className="text-xs text-muted-foreground">
+                    Last seen {new Date(device.lastSeen).toLocaleTimeString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function VoiceInputSection() {
+  const { voiceAutoSend, setVoiceAutoSend, voiceLanguage, setVoiceLanguage } = useSettingsStore();
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Mic className="h-5 w-5" />
+          Voice Input
+        </CardTitle>
+        <CardDescription>Configure voice recognition for the AI Companion.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-medium">Auto-send voice messages</p>
+            <p className="text-sm text-muted-foreground">Automatically send transcribed speech without pressing Enter.</p>
+          </div>
+          <Switch checked={voiceAutoSend} onCheckedChange={setVoiceAutoSend} />
+        </div>
+        <Separator />
+        <div className="space-y-2">
+          <Label>Recognition Language</Label>
+          <Select value={voiceLanguage} onValueChange={setVoiceLanguage}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="en-US">English (US)</SelectItem>
+              <SelectItem value="en-GB">English (UK)</SelectItem>
+              <SelectItem value="fr-FR">Français</SelectItem>
+              <SelectItem value="es-ES">Español</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function WeatherDisplaySection() {
+  const {
+    weatherLayers,
+    setWeatherLayers,
+    weatherRefreshInterval,
+    setWeatherRefreshInterval,
+  } = useSettingsStore();
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <CloudSun className="h-5 w-5" />
+          Weather Display
+        </CardTitle>
+        <CardDescription>Default weather layers for the Navigation view.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-medium">Show wind barbs</p>
+            <p className="text-sm text-muted-foreground">Display wind speed and direction on the chart.</p>
+          </div>
+          <Switch checked={weatherLayers.wind} onCheckedChange={(v) => setWeatherLayers({ wind: v })} />
+        </div>
+        <Separator />
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-medium">Show wave contours</p>
+            <p className="text-sm text-muted-foreground">Display wave height contour lines.</p>
+          </div>
+          <Switch checked={weatherLayers.waves} onCheckedChange={(v) => setWeatherLayers({ waves: v })} />
+        </div>
+        <Separator />
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-medium">Show pressure labels</p>
+            <p className="text-sm text-muted-foreground">Display barometric pressure isobars.</p>
+          </div>
+          <Switch checked={weatherLayers.pressure} onCheckedChange={(v) => setWeatherLayers({ pressure: v })} />
+        </div>
+        <Separator />
+        <div className="space-y-2">
+          <Label>Auto-refresh interval</Label>
+          <Select value={String(weatherRefreshInterval)} onValueChange={(v) => setWeatherRefreshInterval(Number(v))}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="15">Every 15 minutes</SelectItem>
+              <SelectItem value="30">Every 30 minutes</SelectItem>
+              <SelectItem value="60">Every 60 minutes</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export function Settings() {
   const {
@@ -386,6 +613,7 @@ export function Settings() {
     setAccountContributions(null);
     setAccountPasswordInput('');
     setAccountError(null);
+    useAuthStore.getState().logout();
     addNotification({
       type: 'info',
       title: 'Account Signed Out',
@@ -481,9 +709,13 @@ export function Settings() {
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="account">Account</TabsTrigger>
           <TabsTrigger value="appearance">Appearance</TabsTrigger>
+          <TabsTrigger value="devices">Devices</TabsTrigger>
           <TabsTrigger value="ai">AI & Models</TabsTrigger>
+          <TabsTrigger value="voice">Voice</TabsTrigger>
+          <TabsTrigger value="weather">Weather</TabsTrigger>
           <TabsTrigger value="privacy">Privacy & Consent</TabsTrigger>
           <TabsTrigger value="network">Network</TabsTrigger>
+          <TabsTrigger value="equipment">Equipment</TabsTrigger>
           <TabsTrigger value="data">Data & Storage</TabsTrigger>
         </TabsList>
         
@@ -922,6 +1154,21 @@ export function Settings() {
           </Card>
         </TabsContent>
         
+        {/* Device Sync Settings */}
+        <TabsContent value="devices" className="space-y-6">
+          <DeviceSyncSection />
+        </TabsContent>
+
+        {/* Voice Input Settings */}
+        <TabsContent value="voice" className="space-y-6">
+          <VoiceInputSection />
+        </TabsContent>
+
+        {/* Weather Display Settings */}
+        <TabsContent value="weather" className="space-y-6">
+          <WeatherDisplaySection />
+        </TabsContent>
+
         {/* AI Settings */}
         <TabsContent value="ai" className="space-y-6">
           <Card>
@@ -1360,17 +1607,21 @@ export function Settings() {
 	                    <SelectValue />
 	                  </SelectTrigger>
 	                  <SelectContent>
+	                    <SelectItem value="phone">Phone sensors (GPS, compass, motion)</SelectItem>
 	                    <SelectItem value="replay">Recorded Signal K replay</SelectItem>
 	                    <SelectItem value="signalk">Live Signal K Boat Node</SelectItem>
 	                    <SelectItem value="simulated" disabled={!demoModeEnabled}>Generated simulation</SelectItem>
 	                  </SelectContent>
 	                </Select>
-                  {!demoModeEnabled && (
+                  {!demoModeEnabled && boatNode.telemetryMode === 'simulated' && (
                     <p className="text-xs text-muted-foreground">
                       Generated simulation is available only when Demo Mode is enabled in General settings.
                     </p>
                   )}
+                  {boatNode.telemetryMode === 'phone' && <PhoneSensorStatus />}
 	              </div>
+	              <FeatureGate feature="signal-k">
+	              <div className="space-y-4">
 	              <div className="space-y-2">
 	                <Label>Boat Node URL</Label>
 	                <Input
@@ -1479,10 +1730,54 @@ export function Settings() {
 	                <RefreshCw className="h-4 w-4 mr-2" />
 	                Apply Settings
 	              </Button>
+	              </div>
+	              </FeatureGate>
             </CardContent>
           </Card>
         </TabsContent>
         
+        {/* Equipment Profile */}
+        <TabsContent value="equipment" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Wifi className="h-5 w-5" />
+                Marine Equipment Profile
+              </CardTitle>
+              <CardDescription>
+                Select your installed electronics so HarborMesh knows what NMEA data to expect.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {equipmentManufacturers.map((mfg) => (
+                <div key={mfg.name} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">{mfg.name}</p>
+                      <p className="text-xs text-muted-foreground">{mfg.era}</p>
+                    </div>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-2">
+                    {mfg.series.map((series) => (
+                      <div key={`${mfg.name}-${series.model}`} className="rounded-lg border p-3 hover:bg-muted/50 cursor-pointer transition-colors">
+                        <p className="text-sm font-medium">{series.model}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{series.use}</p>
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          <Badge variant="outline" className="text-[9px] px-1 h-4">{series.connection}</Badge>
+                          {series.nmea.length > 0 && (
+                            <Badge variant="secondary" className="text-[9px] px-1 h-4">{series.nmea.length} sentences</Badge>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <Separator />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Data Settings */}
         <TabsContent value="data" className="space-y-6">
           <Card>

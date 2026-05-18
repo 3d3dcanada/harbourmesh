@@ -11,7 +11,7 @@ import {
   type WeatherPayload,
 } from '@/types';
 
-export type CommunityObservationSourceProtocol = 'signalk' | 'nmea0183' | 'nmea2000' | 'manual' | 'replay' | 'simulated';
+export type CommunityObservationSourceProtocol = 'signalk' | 'nmea0183' | 'nmea2000' | 'manual' | 'replay' | 'simulated' | 'phone';
 export type CommunityObservationType = 'ais_target' | 'radar_contact' | 'weather' | 'condition' | 'track_point' | 'system_health' | 'other';
 export type CommunityObservationSharingState = 'shareable_no_position' | 'shareable_blurred' | 'shareable_full';
 export type CommunityObservationMetricValue = string | number | boolean | null;

@@ -3,7 +3,7 @@
  * Step-by-step vessel setup wizard for new users
  */
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Ship,
   ChevronRight,
@@ -21,6 +21,9 @@ import {
   Anchor,
   Compass,
   Info,
+  Bot,
+  Zap,
+  Settings2,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,6 +36,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils';
 import { useOnboardingStore, useAppStore, useVesselStore } from '@/store';
 import { VesselType, SpaceType, ItemCategory, type Item, type OnboardingStep, type Space, type Vessel } from '@/types';
+import vesselSpecsData from '@/data/vessel-specs-maritime.json';
+
+const vesselTemplates = vesselSpecsData.vessels.slice(0, 10);
 
 const steps: { id: OnboardingStep; title: string; description: string; icon: React.ElementType }[] = [
   { id: 'welcome', title: 'Welcome', description: 'Introduction to HarborMesh', icon: Anchor },
@@ -104,7 +110,37 @@ export function Onboarding() {
     addItem: saveItem,
   } = useVesselStore();
   const [activeStep, setActiveStep] = useState(0);
-  
+  const [setupMode, setSetupMode] = useState<'choose' | 'ai' | 'template' | 'manual'>('choose');
+  const [aiDescription, setAiDescription] = useState('');
+  const [customSpaceName, setCustomSpaceName] = useState('');
+  const [customSpaceType, setCustomSpaceType] = useState(SpaceType.LOCKER);
+  const [customItemName, setCustomItemName] = useState('');
+  const [customItemCategory, setCustomItemCategory] = useState(ItemCategory.SAFETY);
+  const blueprintInputRef = useRef<HTMLInputElement>(null);
+
+  const handleBlueprintUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      updateVesselData({ deckPlan: { ...vesselData.deckPlan, hullPoints: vesselData.deckPlan?.hullPoints ?? [], blueprintImageUrl: reader.result as string } });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleAddCustomSpace = () => {
+    if (!customSpaceName.trim()) return;
+    addSpace({ name: customSpaceName.trim(), type: customSpaceType, vesselId: vesselData.id ?? 'onboarding-vessel' });
+    setCustomSpaceName('');
+  };
+
+  const handleAddCustomItem = () => {
+    if (!customItemName.trim()) return;
+    addItem({ name: customItemName.trim(), category: customItemCategory, vesselId: vesselData.id ?? 'onboarding-vessel', spaceId: '', quantity: 1, unit: 'each' });
+    setCustomItemName('');
+  };
+
   // Calculate progress
   const progress = ((activeStep) / (steps.length - 1)) * 100;
   
@@ -197,33 +233,121 @@ export function Onboarding() {
     
     switch (step.id) {
       case 'welcome':
+        if (setupMode === 'ai') {
+          return (
+            <div className="space-y-6 py-4 max-w-lg mx-auto">
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 mb-3">
+                  <Bot className="h-8 w-8 text-white" />
+                </div>
+                <h2 className="text-2xl font-black">Describe Your Boat</h2>
+                <p className="text-muted-foreground mt-1">Tell the AI about your vessel and it will set everything up.</p>
+              </div>
+              <div className="space-y-2">
+                <Input
+                  placeholder='e.g. "1986 Catalina 36 sailboat with Yanmar diesel"'
+                  value={aiDescription}
+                  onChange={(e) => setAiDescription(e.target.value)}
+                  className="h-12 text-base"
+                  autoFocus
+                />
+                <p className="text-xs text-muted-foreground">Include: year, make, model, type, engine if known</p>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setSetupMode('choose')}>Back</Button>
+                <Button className="flex-1" disabled={!aiDescription.trim()} onClick={() => {
+                  const name = aiDescription.trim();
+                  updateVesselData({ name });
+                  setSetupMode('manual');
+                  setActiveStep(7);
+                  for (let i = 0; i < 7; i++) nextStep();
+                }}>
+                  <Sparkles className="h-4 w-4 mr-2" /> Set Up With AI
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground text-center">You can refine details after setup</p>
+            </div>
+          );
+        }
+
+        if (setupMode === 'template') {
+          return (
+            <div className="space-y-4 py-4">
+              <div className="text-center">
+                <h2 className="text-2xl font-black">Pick Your Boat</h2>
+                <p className="text-muted-foreground mt-1">Select a template and start using HarborMesh immediately.</p>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-1">
+                {vesselTemplates.map((template) => (
+                  <button
+                    key={template.model}
+                    className="text-left p-4 rounded-xl border-2 transition-all hover:border-primary hover:bg-primary/5"
+                    onClick={() => {
+                      updateVesselData({
+                        name: template.model,
+                        type: template.type.replace(/_/g, '_') as VesselType,
+                        lengthOverall: template.loa,
+                        lengthWaterline: template.lwl,
+                        beam: template.beam,
+                        draft: template.draft,
+                        displacement: template.displacement,
+                      });
+                      setSetupMode('manual');
+                      setActiveStep(7);
+                      for (let i = 0; i < 7; i++) nextStep();
+                    }}
+                  >
+                    <p className="font-bold text-sm">{template.model}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {template.manufacturer} &middot; {template.loa}m &middot; {template.yearRange}
+                    </p>
+                  </button>
+                ))}
+              </div>
+              <Button variant="outline" className="w-full" onClick={() => setSetupMode('choose')}>Back</Button>
+            </div>
+          );
+        }
+
         return (
-          <div className="text-center space-y-6 py-8">
-            <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600">
-              <Anchor className="h-12 w-12 text-white" />
+          <div className="text-center space-y-6 py-6">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary to-cyan-600 shadow-lg shadow-primary/20">
+              <Anchor className="h-10 w-10 text-white" />
             </div>
             <div>
-              <h2 className="text-3xl font-bold">Welcome to HarborMesh</h2>
+              <h2 className="text-3xl font-black">Welcome to HarborMesh</h2>
               <p className="text-muted-foreground mt-2 max-w-md mx-auto">
-                Your complete AI-powered vessel management system. Let's get your boat set up in just a few minutes.
+                How would you like to set up your vessel?
               </p>
             </div>
             <div className="grid sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
-              <div className="p-4 rounded-lg bg-muted">
-                <Ship className="h-8 w-8 mx-auto mb-2 text-primary" />
-                <p className="font-medium">Digital Twin</p>
-                <p className="text-sm text-muted-foreground">Complete vessel profile</p>
-              </div>
-              <div className="p-4 rounded-lg bg-muted">
-                <Package className="h-8 w-8 mx-auto mb-2 text-primary" />
-                <p className="font-medium">Smart Inventory</p>
-                <p className="text-sm text-muted-foreground">Track everything onboard</p>
-              </div>
-              <div className="p-4 rounded-lg bg-muted">
-                <Sparkles className="h-8 w-8 mx-auto mb-2 text-primary" />
-                <p className="font-medium">AI Assistant</p>
-                <p className="text-sm text-muted-foreground">24/7 vessel companion</p>
-              </div>
+              <button
+                onClick={() => setSetupMode('ai')}
+                className="p-5 rounded-xl border-2 transition-all hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-950/20 text-left"
+              >
+                <Bot className="h-8 w-8 mb-3 text-purple-500" />
+                <p className="font-bold">AI Setup</p>
+                <p className="text-sm text-muted-foreground mt-1">Describe your boat, AI does the rest</p>
+                <Badge className="mt-2 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">Fastest</Badge>
+              </button>
+              <button
+                onClick={() => setSetupMode('template')}
+                className="p-5 rounded-xl border-2 transition-all hover:border-primary hover:bg-primary/5 text-left"
+              >
+                <Zap className="h-8 w-8 mb-3 text-primary" />
+                <p className="font-bold">Pick a Template</p>
+                <p className="text-sm text-muted-foreground mt-1">Choose your boat type with pre-filled specs</p>
+                <Badge variant="secondary" className="mt-2">Recommended</Badge>
+              </button>
+              <button
+                onClick={() => { setSetupMode('manual'); handleNext(); }}
+                className="p-5 rounded-xl border-2 transition-all hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/20 text-left"
+              >
+                <Settings2 className="h-8 w-8 mb-3 text-amber-500" />
+                <p className="font-bold">Manual Setup</p>
+                <p className="text-sm text-muted-foreground mt-1">Full step-by-step wizard, enter everything yourself</p>
+                <Badge variant="outline" className="mt-2">Detailed</Badge>
+              </button>
             </div>
           </div>
         );
@@ -233,9 +357,42 @@ export function Onboarding() {
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-medium">Tell us about your vessel</h3>
-              <p className="text-muted-foreground">Basic information to create your digital twin</p>
+              <p className="text-muted-foreground">Select a template or enter details manually</p>
             </div>
-            
+
+            {/* Vessel Template Selection */}
+            <div className="space-y-3">
+              <p className="text-sm font-medium">Popular Maritime Vessels</p>
+              <div className="grid sm:grid-cols-2 gap-2 max-h-[200px] overflow-y-auto pr-1">
+                {vesselTemplates.map((template) => (
+                  <button
+                    key={template.model}
+                    type="button"
+                    className={cn(
+                      'text-left p-3 rounded-lg border transition-colors hover:bg-muted/50',
+                      vesselData.name === template.model && 'border-primary bg-primary/5'
+                    )}
+                    onClick={() => updateVesselData({
+                      name: template.model,
+                      type: template.type.replace(/_/g, '_') as VesselType,
+                      lengthOverall: template.loa,
+                      lengthWaterline: template.lwl,
+                      beam: template.beam,
+                      draft: template.draft,
+                      displacement: template.displacement,
+                    })}
+                  >
+                    <p className="font-medium text-sm">{template.model}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      {template.manufacturer} &middot; {template.loa}m &middot; {template.yearRange}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <Separator />
+
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Vessel Name</Label>
@@ -309,38 +466,41 @@ export function Onboarding() {
       case 'blueprint':
         return (
           <div className="space-y-6">
+            <input ref={blueprintInputRef} type="file" accept="image/*,.pdf" className="hidden" onChange={handleBlueprintUpload} />
             <div>
               <h3 className="text-lg font-medium">Create your vessel blueprint</h3>
               <p className="text-muted-foreground">Map out the layout of your boat</p>
             </div>
-            
-            <div className="aspect-video rounded-lg border-2 border-dashed bg-muted flex items-center justify-center">
-              <div className="text-center">
-                <Map className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-                <p className="font-medium">Upload deck plan or draw layout</p>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Supported: PDF, Image, or CAD files
-                </p>
-                <div className="flex gap-2 justify-center">
-                  <Button variant="outline">
+
+            {vesselData.deckPlan?.blueprintImageUrl ? (
+              <div className="relative group">
+                <img src={vesselData.deckPlan.blueprintImageUrl} alt="Deck plan" className="w-full max-h-64 object-contain rounded-lg border" />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                  <Button size="sm" variant="secondary" onClick={() => blueprintInputRef.current?.click()}>
                     <Camera className="h-4 w-4 mr-2" />
-                    Take Photo
-                  </Button>
-                  <Button variant="outline">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Upload File
+                    Change Image
                   </Button>
                 </div>
               </div>
-            </div>
-            
+            ) : (
+              <button
+                onClick={() => blueprintInputRef.current?.click()}
+                className="w-full aspect-video rounded-lg border-2 border-dashed bg-muted flex items-center justify-center hover:border-primary hover:bg-muted/80 transition-colors cursor-pointer"
+              >
+                <div className="text-center">
+                  <Map className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+                  <p className="font-medium">Click to upload deck plan image</p>
+                  <p className="text-sm text-muted-foreground">JPG, PNG, or PDF</p>
+                </div>
+              </button>
+            )}
+
             <div className="flex items-start gap-3 p-4 rounded-lg bg-blue-50 text-blue-800 dark:bg-blue-950/30 dark:text-blue-200">
               <Lightbulb className="h-5 w-5 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium">Tip</p>
                 <p className="text-sm">
-                  You can skip this step and create your blueprint later in the Boat Map section. 
-                  A simple layout helps track where items are stored.
+                  You can skip this step and create your blueprint later in the Boat Map section.
                 </p>
               </div>
             </div>
@@ -398,13 +558,23 @@ export function Onboarding() {
               </>
             )}
             
-            <Button variant="outline" className="w-full">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Custom Space
-            </Button>
+            <div className="flex gap-2">
+              <Input placeholder="Space name" value={customSpaceName} onChange={(e) => setCustomSpaceName(e.target.value)} className="flex-1" />
+              <Select value={customSpaceType} onValueChange={(v) => setCustomSpaceType(v as SpaceType)}>
+                <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Object.values(SpaceType).map((t) => (
+                    <SelectItem key={t} value={t}>{t.replace(/_/g, ' ')}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button variant="outline" onClick={handleAddCustomSpace} disabled={!customSpaceName.trim()}>
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         );
-        
+
       case 'inventory':
         return (
           <div className="space-y-6">
@@ -462,80 +632,53 @@ export function Onboarding() {
               </>
             )}
             
-            <Button variant="outline" className="w-full">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Custom Item
-            </Button>
+            <div className="flex gap-2">
+              <Input placeholder="Item name" value={customItemName} onChange={(e) => setCustomItemName(e.target.value)} className="flex-1" />
+              <Select value={customItemCategory} onValueChange={(v) => setCustomItemCategory(v as ItemCategory)}>
+                <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Object.values(ItemCategory).map((c) => (
+                    <SelectItem key={c} value={c}>{c.replace(/_/g, ' ')}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button variant="outline" onClick={handleAddCustomItem} disabled={!customItemName.trim()}>
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         );
-        
+
       case 'documents':
         return (
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-medium">Upload important documents</h3>
-              <p className="text-muted-foreground">Store manuals, registrations, and certificates securely</p>
+              <h3 className="text-lg font-medium">Documents</h3>
+              <p className="text-muted-foreground">You can upload documents after setup from the Documents section</p>
             </div>
-            
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="p-4 rounded-lg border border-dashed hover:bg-muted/50 cursor-pointer transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-blue-50 text-blue-500 dark:bg-blue-950/30">
-                    <FileText className="h-5 w-5" />
-                  </div>
+
+            <div className="grid sm:grid-cols-2 gap-3">
+              {[
+                { label: 'Registration', desc: 'Vessel documentation', color: 'bg-blue-50 text-blue-500 dark:bg-blue-950/30' },
+                { label: 'Insurance', desc: 'Policy documents', color: 'bg-green-50 text-green-500 dark:bg-green-950/30' },
+                { label: 'Manuals', desc: 'Engine, systems, equipment', color: 'bg-amber-50 text-amber-500 dark:bg-amber-950/30' },
+                { label: 'Certificates', desc: 'Safety, compliance', color: 'bg-purple-50 text-purple-500 dark:bg-purple-950/30' },
+              ].map((doc) => (
+                <div key={doc.label} className="p-3 rounded-lg border flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${doc.color}`}><FileText className="h-4 w-4" /></div>
                   <div>
-                    <p className="font-medium">Registration</p>
-                    <p className="text-xs text-muted-foreground">Vessel documentation</p>
+                    <p className="font-medium text-sm">{doc.label}</p>
+                    <p className="text-xs text-muted-foreground">{doc.desc}</p>
                   </div>
                 </div>
-              </div>
-              
-              <div className="p-4 rounded-lg border border-dashed hover:bg-muted/50 cursor-pointer transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-green-50 text-green-500 dark:bg-green-950/30">
-                    <FileText className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Insurance</p>
-                    <p className="text-xs text-muted-foreground">Policy documents</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-4 rounded-lg border border-dashed hover:bg-muted/50 cursor-pointer transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-amber-50 text-amber-500 dark:bg-amber-950/30">
-                    <FileText className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Manuals</p>
-                    <p className="text-xs text-muted-foreground">Engine, systems, equipment</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-4 rounded-lg border border-dashed hover:bg-muted/50 cursor-pointer transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-purple-50 text-purple-500 dark:bg-purple-950/30">
-                    <FileText className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Certificates</p>
-                    <p className="text-xs text-muted-foreground">Safety, compliance</p>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
-            
-            <div className="flex items-start gap-3 p-4 rounded-lg bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
+
+            <div className="flex items-start gap-3 p-4 rounded-lg bg-blue-50 text-blue-800 dark:bg-blue-950/30 dark:text-blue-200">
               <Info className="h-5 w-5 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-medium">Privacy Note</p>
-                <p className="text-sm">
-                  All documents are encrypted and stored locally. Sensitive documents like passports 
-                  are never used for AI training.
-                </p>
-              </div>
+              <p className="text-sm">
+                Skip this for now. Upload registrations, insurance, manuals, and certificates from the Documents section anytime. All documents are stored locally on your device.
+              </p>
             </div>
           </div>
         );
@@ -544,72 +687,33 @@ export function Onboarding() {
         return (
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-medium">Document your systems</h3>
-              <p className="text-muted-foreground">Track engines, electrical, plumbing, and more</p>
+              <h3 className="text-lg font-medium">Vessel Systems</h3>
+              <p className="text-muted-foreground">Configure engines and tanks from the Vessel section after setup</p>
             </div>
-            
-            <div className="grid sm:grid-cols-2 gap-4">
-              <Card className="cursor-pointer hover:border-primary transition-colors">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-red-50 text-red-500 dark:bg-red-950/30">
-                      <Wrench className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="font-medium">Engine</p>
-                      <p className="text-xs text-muted-foreground">Propulsion system</p>
-                    </div>
+
+            <div className="grid sm:grid-cols-2 gap-3">
+              {[
+                { label: 'Engine', desc: 'Propulsion system', color: 'bg-red-50 text-red-500 dark:bg-red-950/30' },
+                { label: 'Electrical', desc: 'Batteries, panels, wiring', color: 'bg-yellow-50 text-yellow-500 dark:bg-yellow-950/30' },
+                { label: 'Plumbing', desc: 'Water, waste systems', color: 'bg-blue-50 text-blue-500 dark:bg-blue-950/30' },
+                { label: 'Navigation', desc: 'GPS, charts, instruments', color: 'bg-green-50 text-green-500 dark:bg-green-950/30' },
+              ].map((sys) => (
+                <div key={sys.label} className="p-3 rounded-lg border flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${sys.color}`}><Wrench className="h-4 w-4" /></div>
+                  <div>
+                    <p className="font-medium text-sm">{sys.label}</p>
+                    <p className="text-xs text-muted-foreground">{sys.desc}</p>
                   </div>
-                </CardContent>
-              </Card>
-              
-              <Card className="cursor-pointer hover:border-primary transition-colors">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-yellow-50 text-yellow-500 dark:bg-yellow-950/30">
-                      <Wrench className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="font-medium">Electrical</p>
-                      <p className="text-xs text-muted-foreground">Batteries, panels, wiring</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card className="cursor-pointer hover:border-primary transition-colors">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-blue-50 text-blue-500 dark:bg-blue-950/30">
-                      <Wrench className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="font-medium">Plumbing</p>
-                      <p className="text-xs text-muted-foreground">Water, waste systems</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card className="cursor-pointer hover:border-primary transition-colors">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-green-50 text-green-500 dark:bg-green-950/30">
-                      <Wrench className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="font-medium">Navigation</p>
-                      <p className="text-xs text-muted-foreground">GPS, charts, instruments</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                </div>
+              ))}
             </div>
-            
-            <Button variant="outline" className="w-full">
-              <Plus className="h-4 w-4 mr-2" />
-              Add System
-            </Button>
+
+            <div className="flex items-start gap-3 p-4 rounded-lg bg-blue-50 text-blue-800 dark:bg-blue-950/30 dark:text-blue-200">
+              <Info className="h-5 w-5 flex-shrink-0 mt-0.5" />
+              <p className="text-sm">
+                Skip this for now. Add engines, tanks, and system details from the Vessel &gt; Systems tab after setup is complete.
+              </p>
+            </div>
           </div>
         );
         
@@ -639,28 +743,11 @@ export function Onboarding() {
                 </CardContent>
               </Card>
               
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Auto-summarize logs</p>
-                    <p className="text-sm text-muted-foreground">AI will summarize your voyage logs</p>
-                  </div>
-                  <input type="checkbox" defaultChecked className="rounded" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Suggest maintenance</p>
-                    <p className="text-sm text-muted-foreground">Get proactive maintenance reminders</p>
-                  </div>
-                  <input type="checkbox" defaultChecked className="rounded" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Voice input</p>
-                    <p className="text-sm text-muted-foreground">Use voice commands with the AI</p>
-                  </div>
-                  <input type="checkbox" className="rounded" />
-                </div>
+              <div className="flex items-start gap-3 p-4 rounded-lg bg-blue-50 text-blue-800 dark:bg-blue-950/30 dark:text-blue-200">
+                <Info className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                <p className="text-sm">
+                  Configure AI providers and preferences in the AI Companion section after setup. Supports local models (Ollama, LM Studio) and cloud AI (NVIDIA).
+                </p>
               </div>
             </div>
           </div>

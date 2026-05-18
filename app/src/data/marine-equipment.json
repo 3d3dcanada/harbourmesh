@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "harbourmesh.marine-equipment.v1",
+  "manufacturers": [
+    {
+      "name": "Raymarine",
+      "era": "1990-present",
+      "series": [
+        {"model": "ST40/ST60", "era": "1990s-2000s", "connection": "SeaTalk", "nmea": ["HDG", "VHW", "DBT", "MTW"], "use": "Wind, speed, depth instruments"},
+        {"model": "i50/i60/i70", "era": "2010s-present", "connection": "SeaTalk-NG / NMEA 2000", "nmea": ["HDG", "VHW", "DBT", "MTW", "MWV"], "use": "Multifunction instrument displays"},
+        {"model": "Axiom / Axiom+", "era": "2017-present", "connection": "NMEA 2000 / WiFi", "nmea": ["RMC", "GGA", "GLL", "VTG", "HDT", "DBT"], "use": "Chartplotter/MFD"},
+        {"model": "Evolution EV-100/200", "era": "2013-present", "connection": "SeaTalk-NG / NMEA 2000", "nmea": ["HDG", "HDT", "APB", "XTE"], "use": "Autopilot"}
+      ]
+    },
+    {
+      "name": "Garmin",
+      "era": "2000-present",
+      "series": [
+        {"model": "GPSMAP 76/78", "era": "2000s", "connection": "NMEA 0183", "nmea": ["RMC", "GGA", "GLL", "VTG"], "use": "Handheld GPS"},
+        {"model": "GPSMAP 7x2/9x2/12x2", "era": "2018-present", "connection": "NMEA 2000 / WiFi", "nmea": ["RMC", "GGA", "GLL", "VTG", "HDT", "DBT"], "use": "Chartplotter/MFD"},
+        {"model": "GNX 20/21", "era": "2016-present", "connection": "NMEA 2000", "nmea": ["HDG", "VHW", "DBT", "MTW", "MWV"], "use": "Sailing instrument display"},
+        {"model": "Reactor 40", "era": "2018-present", "connection": "NMEA 2000", "nmea": ["HDG", "HDT", "APB", "XTE"], "use": "Autopilot"}
+      ]
+    },
+    {
+      "name": "Furuno",
+      "era": "1960-present",
+      "series": [
+        {"model": "GP-32/33", "era": "2000s", "connection": "NMEA 0183", "nmea": ["RMC", "GGA", "GLL", "VTG", "ZDA"], "use": "GPS navigator"},
+        {"model": "NavNet TZtouch3", "era": "2018-present", "connection": "NMEA 2000 / Ethernet", "nmea": ["RMC", "GGA", "HDT", "DBT", "VHW"], "use": "Chartplotter/MFD"},
+        {"model": "FI-50/70", "era": "2010s-present", "connection": "NMEA 2000", "nmea": ["HDG", "VHW", "DBT", "MTW", "MWV"], "use": "Instrument display"},
+        {"model": "NAVpilot 300/700", "era": "2015-present", "connection": "NMEA 2000", "nmea": ["HDG", "HDT", "APB", "XTE"], "use": "Autopilot"}
+      ]
+    },
+    {
+      "name": "Simrad / B&G",
+      "era": "1990-present",
+      "series": [
+        {"model": "Triton2", "era": "2018-present", "connection": "NMEA 2000", "nmea": ["HDG", "VHW", "DBT", "MTW", "MWV"], "use": "Sailing instrument display"},
+        {"model": "NSX / NSO Evo3S", "era": "2020-present", "connection": "NMEA 2000 / Ethernet", "nmea": ["RMC", "GGA", "HDT", "DBT", "VHW"], "use": "Chartplotter/MFD"},
+        {"model": "Pilot NAC-2/3", "era": "2015-present", "connection": "NMEA 2000", "nmea": ["HDG", "HDT", "APB", "XTE"], "use": "Autopilot computer"},
+        {"model": "Zeus3S", "era": "2021-present", "connection": "NMEA 2000 / WiFi", "nmea": ["RMC", "GGA", "HDT", "DBT", "VHW", "MWV"], "use": "Chartplotter/MFD (sailing)"}
+      ]
+    },
+    {
+      "name": "Datamarine / Datalink",
+      "era": "1970s-1990s",
+      "series": [
+        {"model": "Corinthian", "era": "1980s", "connection": "Proprietary analog", "nmea": [], "use": "Depth, speed, wind (early analog gauges)"},
+        {"model": "Datalink 3000/5000", "era": "1985-1995", "connection": "NMEA 0183 (early)", "nmea": ["DBT", "VHW"], "use": "Digital depth/speed instruments"},
+        {"model": "Offshore 2000", "era": "1990s", "connection": "NMEA 0183", "nmea": ["DBT", "VHW", "MTW", "MWV"], "use": "Multi-instrument system"}
+      ]
+    },
+    {
+      "name": "Autohelm",
+      "era": "1970s-2000s",
+      "series": [
+        {"model": "ST1000/2000/3000/4000", "era": "1980s-2000s", "connection": "SeaTalk / NMEA 0183", "nmea": ["HDG", "APB", "XTE"], "use": "Tiller/wheel autopilot"},
+        {"model": "ST5000/6000/7000", "era": "1990s-2000s", "connection": "SeaTalk / NMEA 0183", "nmea": ["HDG", "HDT", "APB", "XTE", "VHW"], "use": "Course computer autopilot"}
+      ]
+    },
+    {
+      "name": "Si-Tex",
+      "era": "1960-present",
+      "series": [
+        {"model": "SVS-880C/1010C", "era": "2010s-present", "connection": "NMEA 0183 / NMEA 2000", "nmea": ["RMC", "GGA", "GLL", "DBT"], "use": "Chartplotter"},
+        {"model": "SP-36", "era": "2015-present", "connection": "NMEA 0183 / NMEA 2000", "nmea": ["HDG", "HDT", "APB", "XTE"], "use": "Autopilot system"},
+        {"model": "CVS-126/128", "era": "2010s-present", "connection": "NMEA 0183", "nmea": ["DBT", "DPT"], "use": "Fish finder / depth sounder"}
+      ]
+    },
+    {
+      "name": "Humminbird",
+      "era": "1970-present",
+      "series": [
+        {"model": "HELIX 7/9/10/12/15", "era": "2018-present", "connection": "NMEA 0183 / Ethernet", "nmea": ["RMC", "GGA", "GLL", "DBT", "DPT"], "use": "Fish finder / chartplotter combo"},
+        {"model": "SOLIX 10/12/15", "era": "2017-present", "connection": "NMEA 2000 / Ethernet", "nmea": ["RMC", "GGA", "GLL", "DBT", "DPT", "VHW"], "use": "Premium fish finder / chartplotter"}
+      ]
+    }
+  ]
+}
